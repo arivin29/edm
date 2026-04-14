@@ -35,8 +35,8 @@
 | Layer           | Teknologi                      | Fungsi                                                       |
 | --------------- | ------------------------------ | ------------------------------------------------------------ |
 | Frontend        | React                          | UI, dashboard, form, workflow view                           |
-| Backend API     | Laravel (PHP)                  | Auth, RBAC, CRUD, workflow engine, template engine (PHPWord) |
-| Microservice    | Go                             | Document processing, convert, generate, file handling        |
+| Backend API     | Go (Gin)                       | Auth, RBAC, CRUD, workflow engine, template engine (UniOffice) |
+| Background Jobs | Go (asynq + Redis)             | Email queue, PDF conversion, deadline checker, notification  |
 | Document Editor | OnlyOffice Document Server     | Embedded editor di browser (Word/Excel)                      |
 | Database        | PostgreSQL                     | Semua data                                                   |
 | Storage         | Server filesystem / MinIO      | File .docx, .pdf, template                                   |
@@ -63,29 +63,25 @@
             │ REST API
             ▼
 ┌───────────────────────┐    ┌──────────────────────────┐
-│   Laravel Backend     │    │  OnlyOffice Server       │
+│   Go Backend (Gin)    │    │  OnlyOffice Server       │
 │                       │    │  (Docker/On-premise)     │
-│ - Auth & RBAC         │◄──►│  - Document Service      │
+│ - Auth & RBAC (JWT)   │◄──►│  - Document Service      │
 │ - Workflow Engine     │    │  - Conversion Service    │
 │ - Template Engine     │    │    (.docx → .pdf)        │
-│   (PHPWord)           │    │  - Callback API          │
-│ - Notification        │    └──────────────────────────┘
+│   (UniOffice)         │    │  - Callback API          │
+│ - Notification (WS)   │    └──────────────────────────┘
 │ - Audit Log           │
-│ - API Gateway         │
-└────────┬──────────────┘
-         │
-         ▼
-┌────────────────────┐    ┌──────────────────────┐
-│   Go Microservice  │    │   PostgreSQL          │
-│                    │    │                       │
-│ - PDF Generation   │    │ - Users & Roles       │
-│ - Bulk Document    │    │ - Documents Meta      │
-│   Processing       │    │ - Templates           │
-│ - File Conversion  │    │ - Workflow States     │
-│ - Signature Embed  │    │ - Audit Logs          │
-│                    │    │ - Companies/Depts     │
-└────────────────────┘    │ - Notifications       │
-                          └──────────────────────┘
+│ - Background Jobs     │    ┌──────────────────────┐
+│   (asynq + Redis)     │    │   PostgreSQL          │
+│ - API Gateway         │    │                       │
+└────────┬──────────────┘    │ - Users & Roles       │
+         │                   │ - Documents Meta      │
+         ├──────────────────►│ - Templates           │
+         │                   │ - Workflow States     │
+         │                   │ - Audit Logs          │
+         │                   │ - Companies/Depts     │
+         │                   │ - Notifications       │
+         │                   └──────────────────────┘
          +
   ┌──────────────┐
   │ File Storage │
@@ -129,7 +125,7 @@
 #### Modul 3: Document Creation & Editing
 
 - User pilih template → isi metadata (nomor, dept, tanggal)
-- Backend generate `.docx` dari template (PHPWord replace tags)
+- Backend generate `.docx` dari template (UniOffice replace tags)
 - Dokumen terbuka di **OnlyOffice** (embedded di browser)
 - User tulis konten bebas di body dokumen (paragraf, tabel, gambar)
 - Auto-save ke server
@@ -254,11 +250,11 @@
 ### Cara Kerja Integrasi
 
 1. User klik "Edit Dokumen" di React frontend
-2. Laravel generate config (document URL, callback URL, user info, permissions)
+2. Go backend generate config (document URL, callback URL, user info, permissions)
 3. React render OnlyOffice editor via JavaScript API (iframe)
 4. User edit dokumen di browser (tampilan seperti Word)
-5. OnlyOffice kirim callback ke Laravel saat save/close
-6. Laravel simpan file baru ke storage, update versi di database
+5. OnlyOffice kirim callback ke Go backend saat save/close
+6. Backend simpan file baru ke storage, update versi di database
 
 ### Contoh Config OnlyOffice
 
@@ -293,7 +289,7 @@
 
 - Template = file `.docx` yang di-design di Word/WPS
 - Berisi placeholder tags: `${TAG_NAME}`
-- Backend (PHPWord) replace tags dengan data aktual saat generate
+- Backend (UniOffice) replace tags dengan data aktual saat generate
 
 ### Daftar Tags
 
@@ -315,7 +311,7 @@
 1. Admin design template `.docx` di Word/WPS (taruh tags di posisi yang tepat)
 2. Admin upload template ke sistem via web
 3. User pilih template → isi form metadata di web
-4. Laravel panggil PHPWord → replace tags → generate `.docx` baru
+4. Go backend panggil UniOffice → replace tags → generate `.docx` baru
 5. Hasil `.docx` tampil di OnlyOffice untuk editing konten bebas
 
 ---
@@ -386,10 +382,10 @@
 
 | Komponen                         | Minimum Spec                     |
 | -------------------------------- | -------------------------------- |
-| Web Server (Laravel + React)     | 4 CPU, 8GB RAM, 100GB SSD       |
+| Web Server (Go + React)          | 4 CPU, 8GB RAM, 100GB SSD       |
 | OnlyOffice Document Server       | 4 CPU, 8GB RAM, 50GB SSD        |
 | PostgreSQL                       | 2 CPU, 4GB RAM, 100GB SSD       |
-| Go Microservice                  | 2 CPU, 4GB RAM                   |
+| Redis (Background Jobs)          | 1 CPU, 1GB RAM                   |
 | File Storage                     | Sesuai kebutuhan (estimasi 500GB+)|
 
 > Untuk < 50 user, semua bisa dijalankan di **1 server** dengan spec: **8 CPU, 16GB RAM, 500GB SSD**. Menggunakan Docker Compose di satu mesin.
@@ -399,8 +395,8 @@
 - OS: Ubuntu Server 22.04 LTS
 - Docker & Docker Compose
 - Nginx (reverse proxy)
-- PHP 8.2+ / Laravel 11
-- Go 1.21+
+- Go 1.22+
+- Redis 7+ (background job queue)
 - Node.js 20+ (React build)
 - PostgreSQL 16
 - OnlyOffice Document Server (Docker)

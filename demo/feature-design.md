@@ -253,8 +253,10 @@ User → POST /auth/login (email + password)
 5. Backend:
    a. Generate document_number (dari numbering config)
    b. Load template .docx
-   c. PHPWord replace semua tags dengan nilai dari form
-   d. Simpan .docx ke storage: /{company}/{documents}/{category}/{year}/{month}/{doc_number}/v1.docx
+   c. UniOffice replace semua tags dengan nilai dari form
+   d. Generate folder_name: sanitize document_number → replace `/` `.` spasi → `-`, lowercase
+      Contoh: "SOP/QMS/001/IV/2026" → "sop-qms-001-iv-2026"
+   e. Simpan .docx ke storage: /{company}/documents/{category}/{year}/{month}/{folder_name}/v1.docx
    e. Buat record di documents + document_versions
    f. Generate onlyoffice_key
 6. Frontend redirect ke editor page
@@ -314,31 +316,174 @@ User → POST /auth/login (email + password)
 - **Compare**: diff antara 2 versi via OnlyOffice comparison
 - **Restore**: admin bisa restore ke versi sebelumnya
 
-### 3.4 Document Numbering Format
+### 3.4 Document Numbering — Auto Generator & Dynamic Config
 
-**Tokens yang tersedia:**
+Penomoran dokumen **sepenuhnya otomatis dan dinamis**. Admin konfigurasi format penomoran per scope (company, office, type, category, department). Saat user buat dokumen baru, sistem otomatis generate nomor berdasarkan config yang paling spesifik.
+
+#### 3.4.1 Numbering Config Flow
+
 ```
-{PREFIX}      = prefix custom
-{TYPE}        = document_types.code (SOP, IK)
-{CAT}         = document_categories.code (QLT, SFT)
-{DEPT}        = departments.code (QMS, HRD)
-{SECTION}     = sections.code (PD, QC)
-{OFFICE}      = offices.code (KP-JKT)
-{COMPANY}     = companies.code (ASK)
-{SEQ:N}       = sequence zero-padded N digit
-{YEAR}        = tahun 4 digit (2026)
-{YEAR2}       = tahun 2 digit (26)
-{MONTH}       = bulan 2 digit (04)
-{ROMAN_MONTH} = bulan romawi (IV)
+Admin → Settings → Document Numbering
+       ↓
+┌──────────────────────────────────────────────────────────────────────────┐
+│ Document Numbering Configuration                   [+ New Config]       │
+├──────────────────────────────────────────────────────────────────────────┤
+│ ┌────┬──────────┬──────────┬────────┬──────┬────────────────────────────────┬─────┬─────┐
+│ │ #  │ Type     │ Category │ Office │ Dept │ Format                          │ Seq │ Act │
+│ ├────┼──────────┼──────────┼────────┼──────┼────────────────────────────────────┼─────┼─────┤
+│ │ 1  │ SOP      │ All      │ All    │ All  │ {TYPE}/{DEPT}/{SEQ:3}/{ROMAN_MONTH}/{YEAR} │ 15  │ Edit│
+│ │ 2  │ IK       │ All      │ All    │ All  │ {TYPE}-{DEPT}-{SEQ:4}           │ 8   │ Edit│
+│ │ 3  │ FRM      │ Quality  │ KP-JKT │ QMS  │ {TYPE}/{CAT}/{DEPT}/{SEQ:3}/{YEAR}│ 3   │ Edit│
+│ │ 4  │ OPL      │ All      │ All    │ All  │ {TYPE}-{OFFICE}-{SEQ:3}         │ 1   │ Edit│
+│ └────┴──────────┴──────────┴────────┴──────┴────────────────────────────────────┴─────┴─────┘
+│ Klik "Edit" untuk ubah format. "Seq" = nomor urut terakhir.                              │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Contoh format:**
+#### 3.4.2 Create/Edit Numbering Config
+
 ```
-{TYPE}/{DEPT}/{SEQ:3}/{ROMAN_MONTH}/{YEAR}  → SOP/QMS/001/IV/2026
-{TYPE}-{DEPT}-{SEQ:4}                       → IK-HRD-0001
-{COMPANY}/{TYPE}/{CAT}/{SEQ:3}/{YEAR}       → ASK/SOP/QLT/001/2026
-{OFFICE}-{TYPE}-{SEQ:3}                     → KP-JKT-SOP-001
+┌────────────────────────────────────────────────────────────────┐
+│ Numbering Configuration                                        │
+├────────────────────────────────────────────────────────────────┤
+│ ─── Scope ───                                                  │
+│ Document Type: [SOP ▼] *                                       │
+│ Category:      [All (default) ▼]    ← opsional, filter scope  │
+│ Office:        [All (default) ▼]    ← opsional                │
+│ Department:    [All (default) ▼]    ← opsional                │
+│                                                                │
+│ ─── Format Builder ───                                         │
+│ Prefix:        [SOP              ]  (opsional)                 │
+│ Separator:     [/ ▼] (pilih: / - . _)                         │
+│                                                                │
+│ Format:        [{TYPE}/{DEPT}/{SEQ:3}/{ROMAN_MONTH}/{YEAR}  ]  │
+│                                                                │
+│ Available Tokens: (klik untuk insert)                          │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐          │
+│ │ {PREFIX}  │ │ {TYPE}   │ │ {CAT}    │ │ {DEPT}   │          │
+│ └──────────┘ └──────────┘ └──────────┘ └──────────┘          │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐          │
+│ │ {SECTION} │ │ {OFFICE} │ │{COMPANY} │ │ {SEQ:N}  │          │
+│ └──────────┘ └──────────┘ └──────────┘ └──────────┘          │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────────┐        │
+│ │ {YEAR}   │ │ {YEAR2}  │ │ {MONTH}  │ │{ROMAN_MONTH}│        │
+│ └──────────┘ └──────────┘ └──────────┘ └────────────┘        │
+│                                                                │
+│ Sequence Digit: [3 ▼] (berapa digit zero-pad: 001, 0001)     │
+│                                                                │
+│ ─── Reset Rule ───                                             │
+│ Reset Sequence: [Yearly ▼] (Never / Monthly / Yearly)         │
+│ → sequence reset ke 1 setiap awal tahun/bulan                 │
+│                                                                │
+│ ─── Preview ───                                                │
+│ ┌──────────────────────────────────────────────────────────┐   │
+│ │ Contoh jika user dari QMS, bulan April 2026:             │   │
+│ │                                                          │   │
+│ │   ▸ Next number:  SOP/QMS/016/IV/2026                    │   │
+│ │   ▸ After that:   SOP/QMS/017/IV/2026                    │   │
+│ │                                                          │   │
+│ │ Jika user dari HRD:                                      │   │
+│ │   ▸ Next number:  SOP/HRD/004/IV/2026                    │   │
+│ │                                                          │   │
+│ │ Sequence saat ini: 15 (last generated)                   │   │
+│ └──────────────────────────────────────────────────────────┘   │
+│                                                                │
+│                              [Cancel]  [Save Configuration]    │
+└────────────────────────────────────────────────────────────────┘
 ```
+
+#### 3.4.3 Token Reference
+
+| Token          | Resolved From                     | Contoh    | Keterangan                        |
+| -------------- | --------------------------------- | --------- | --------------------------------- |
+| `{PREFIX}`     | numbering config `.prefix`        | SOP       | Custom prefix per config          |
+| `{TYPE}`       | `document_types.code`             | SOP, IK   | Otomatis dari tipe dokumen        |
+| `{CAT}`        | `document_categories.code`        | QLT, SFT  | Otomatis dari kategori            |
+| `{DEPT}`       | `departments.code`                | QMS, HRD  | Otomatis dari dept pembuat        |
+| `{SECTION}`    | `sections.code`                   | PD, QC    | Otomatis dari section pembuat     |
+| `{OFFICE}`     | `offices.code`                    | KP-JKT    | Otomatis dari kantor pembuat      |
+| `{COMPANY}`    | `companies.code`                  | ASK       | Otomatis dari company             |
+| `{SEQ:N}`      | Auto-increment, zero-padded N     | 001       | N = jumlah digit                  |
+| `{YEAR}`       | Tahun saat ini (4 digit)          | 2026      | -                                 |
+| `{YEAR2}`      | Tahun saat ini (2 digit)          | 26        | -                                 |
+| `{MONTH}`      | Bulan saat ini (2 digit)          | 04        | -                                 |
+| `{ROMAN_MONTH}`| Bulan saat ini (romawi)           | IV        | I, II, III, ..., XII              |
+
+#### 3.4.4 Auto-Generate Logic
+
+```
+User klik "Create Document" → pilih template (SOP, category: Quality)
+       ↓
+Backend: NumberingService.generate()
+       ↓
+1. Cari numbering config paling spesifik:
+   a. Match: company + office + type + category + dept  → PALING SPESIFIK ✅
+   b. Match: company + office + type + dept             → fallback
+   c. Match: company + type + category                  → fallback
+   d. Match: company + type                             → DEFAULT
+   e. Tidak ada config?                                 → ERROR
+       ↓
+2. Ambil current_sequence + 1
+       ↓
+3. Cek reset_period:
+   - 'yearly':  jika tahun sekarang ≠ last_reset_at.year → reset ke 1
+   - 'monthly': jika bulan sekarang ≠ last_reset_at.month → reset ke 1
+   - NULL:      tidak pernah reset
+       ↓
+4. Replace semua token:
+   {TYPE}        → ambil dari document_types WHERE id = template.document_type_id
+   {CAT}         → ambil dari document_categories WHERE id = selected_category_id
+   {DEPT}        → ambil dari departments WHERE id = current_user.department_id
+   {SECTION}     → ambil dari sections WHERE id = current_user.section_id
+   {OFFICE}      → ambil dari offices WHERE id = current_user.office_id
+   {SEQ:3}       → zero-pad(next_sequence, 3) → "016"
+   {ROMAN_MONTH} → convertToRoman(now().month) → "IV"
+   {YEAR}        → now().year → "2026"
+       ↓
+5. Result: "SOP/QMS/016/IV/2026"
+       ↓
+6. Generate folder_name (safe untuk filesystem):
+   - Replace karakter / \ : * ? " < > | . spasi → "-"
+   - Lowercase semua
+   - Remove double dash
+   - Contoh:
+     "SOP/QMS/016/IV/2026"    → "sop-qms-016-iv-2026"
+     "IK-HRD-0001"            → "ik-hrd-0001"
+     "ASK/SOP/QLT/001/2026"   → "ask-sop-qlt-001-2026"
+     "KP-JKT-SOP-001"         → "kp-jkt-sop-001"
+   - folder_name disimpan di documents.folder_name
+       ↓
+7. Update numbering config: current_sequence++, last_reset_at = now()
+       ↓
+8. DB transaction: SELECT FOR UPDATE → prevent race condition (2 user create bersamaan)
+```
+
+#### 3.4.5 Sequence Isolation
+
+Sequence di-track **per config row** (bukan global). Artinya:
+
+```
+Config 1: SOP + All    → sequence: 15 (SOP/QMS/015, SOP/HRD/015, dst)
+Config 2: IK  + All    → sequence: 8  (IK terpisah dari SOP)
+Config 3: FRM + Quality + QMS → sequence: 3 (FRM QMS punya nomor sendiri)
+```
+
+Jika admin ingin sequence **per departemen** (SOP/QMS/001, SOP/HRD/001 terpisah), buat config per dept:
+```
+Config A: SOP + dept QMS → sequence sendiri
+Config B: SOP + dept HRD → sequence sendiri
+```
+
+#### 3.4.6 Contoh Format Populer
+
+| Format                                          | Hasil                  | Keterangan                    |
+| ----------------------------------------------- | ---------------------- | ----------------------------- |
+| `{TYPE}/{DEPT}/{SEQ:3}/{ROMAN_MONTH}/{YEAR}`    | SOP/QMS/001/IV/2026    | Standar ISO (paling umum)     |
+| `{TYPE}-{DEPT}-{SEQ:4}`                         | IK-HRD-0001            | Simple tanpa tanggal          |
+| `{COMPANY}/{TYPE}/{CAT}/{SEQ:3}/{YEAR}`         | ASK/SOP/QLT/001/2026   | Multi-company                 |
+| `{OFFICE}-{TYPE}-{SEQ:3}`                       | KP-JKT-SOP-001         | Per kantor                    |
+| `{PREFIX}/{DEPT}/{SECTION}/{SEQ:3}/{YEAR}`       | DOC/QMS/PD/001/2026    | Sampai level section          |
+| `{TYPE}.{CAT}.{SEQ:4}`                          | SOP.QLT.0001           | Dot separator                 |
 
 ---
 
@@ -626,7 +771,7 @@ Backend:
    - Insert gambar signature + nama + jabatan + tanggal
 3. Convert .docx → PDF (via Go microservice / OnlyOffice Conversion API)
 4. Watermark: "CONTROLLED COPY" atau "MASTER COPY" sesuai config
-5. Simpan ke: /{company}/documents/{category}/{year}/{month}/{doc_number}/final.pdf
+5. Simpan ke: /{company}/documents/{category}/{year}/{month}/{folder_name}/final.pdf
 6. Update document status → 'final', finalized_at, finalized_by
 7. Update access_level → 'controlled_copy'
 8. Kirim notifikasi ke semua stakeholder
@@ -661,7 +806,7 @@ Backend resolve dari template_tags (linked_step) + workflow_actions (who approve
 │   │   ├── {category_code}/             # QLT, SFT, HR
 │   │   │   └── {year}/                  # 2026
 │   │   │       └── {month}/             # 04
-│   │   │           └── {doc_number}/    # SOP-QMS-001
+│   │   │           └── {folder_name}/   # sop-qms-001-iv-2026 (sanitized)
 │   │   │               ├── v1.docx
 │   │   │               ├── v2.docx
 │   │   │               ├── v3.docx
@@ -805,11 +950,15 @@ Backend resolve dari template_tags (linked_step) + workflow_actions (who approve
 
 ### 9.2 Real-time Push & Email
 
-Same as v1 (Laravel Broadcasting + Soketi, queue-based email).
+- Push notification via **gorilla/websocket** (native Go WebSocket server)
+- Email dikirim via background job (**asynq** + Redis)
+- Email template HTML, dikirim via SMTP (gomail)
 
 ---
 
 ## Dashboard
+
+Dashboard bersifat **role-aware** — widget yang tampil menyesuaikan role user. Admin/Company Admin melihat company-wide metrics, sedangkan Creator/Reviewer/Approver melihat task-focused view.
 
 ### Main Dashboard
 
@@ -818,38 +967,86 @@ Same as v1 (Laravel Broadcasting + Soketi, queue-based email).
 │ Dashboard                          Kantor: [KP-JKT ▼]  PT Askara     │
 ├────────────────────────────────────────────────────────────────────────┤
 │                                                                        │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
-│  │   150    │  │    8     │  │    5     │  │    2     │              │
-│  │ Total    │  │ Pending  │  │ My Tasks │  │ Overdue  │              │
-│  │ Documents│  │ Review   │  │          │  │          │              │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐│
+│  │   150    │  │    8     │  │    5     │  │    2     │  │    3     ││
+│  │ Total    │  │ Pending  │  │ My Tasks │  │ Overdue  │  │ Due for  ││
+│  │ Documents│  │ Review   │  │          │  │          │  │ Review   ││
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘│
+│                                                                        │
+│  ┌─── Quick Actions ───────────────────────────────────────────────┐   │
+│  │ [📄 New SOP] [📋 New IK] [📝 New Formulir] [📌 New OPL]        │   │
+│  │ [📊 New STD]                                                    │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
 │                                                                        │
 │  ┌─── My Pending Tasks ────────────────────────────────────────────┐   │
-│  │ 1. SOP/QMS/001 — Approve  (due: Apr 18) 🏷QLT ⚡High           │   │
+│  │ 1. SOP/QMS/001 — Approve  (due: Apr 18) 🏷QLT ⚡High  🔴       │   │
 │  │    "Verifikasi kesesuaian dengan standar departemen"             │   │
 │  │    Dari: AUDIT-2026-003    [Approve] [Reject] [Delegate]        │   │
 │  │                                                                  │   │
 │  │ 2. IK/HRD/002 — Review   (due: Apr 20) 🏷HR  ⚡Normal          │   │
 │  │    "Periksa format dan isi dokumen"                              │   │
 │  │    [Open]                                                        │   │
+│  │                                                                  │   │
+│  │ 3. FRM/QMS/005 — Sign    (due: Apr 22) 🏷QLT ⚡Normal          │   │
+│  │    "Tanda tangan approval final"                                │   │
+│  │    [Open]                                                        │   │
+│  │                                                   [View All →]   │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
 │                                                                        │
-│  ┌─── By Category ─────────┐  ┌─── By Priority ─────────────────┐    │
-│  │ 🔵 Quality:  45 (30%)   │  │ 🔴 Critical:  2                  │    │
-│  │ 🔴 Safety:   30 (20%)   │  │ 🟠 High:      5                  │    │
-│  │ 🟢 HR:       25 (17%)   │  │ ⚪ Normal:    130                │    │
-│  │ 🟡 Finance:  20 (13%)   │  │ 🔵 Low:       13                 │    │
-│  │ ⚫ Production:30 (20%) │  └────────────────────────────────────┘   │
-│  └──────────────────────────┘                                          │
+│  ┌─── My Recent Documents ──────────────────────────────────────────┐  │
+│  │ SOP/QMS/005 — Draft   — Prosedur Audit Internal      14 Apr      │  │
+│  │ IK/HRD/003  — Review  — Instruksi Onboarding         13 Apr      │  │
+│  │ FRM/QMS/001 — Final   — Form Audit Checklist          12 Apr      │  │
+│  │                                                   [View All →]   │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
 │                                                                        │
-│  ┌─── By Status (Chart) ──┐  ┌─── Recent Activity ──────────────┐   │
-│  │ ■ Final:    78 (52%)   │  │ Ahmad created SOP/QMS/005         │   │
-│  │ ◑ Approved: 45 (30%)  │  │ Dina approved IK/HRD/003          │   │
-│  │ ○ Draft:    12 (8%)   │  │ Budi delegated SOP/QMS/001 → Andi │   │
-│  │ ◐ Review:   8 (5%)    │  │ Andi rejected FRM/QMS/001         │   │
-│  │ ◔ Revision: 3 (2%)    │  │   → returned to Step 1: Review    │   │
-│  │ ◆ Other:    4 (3%)    │  │ Director signed STD/QMS/001       │   │
-│  └─────────────────────────┘  └──────────────────────────────────┘   │
+│  ┌─── Documents Due for Periodic Review ────────────────────────────┐ │
+│  │ ⚠ SOP/QMS/001 — Prosedur Pengendalian Dokumen                    │ │
+│  │   Effective: 15 Apr 2025 │ Review due: 15 Apr 2026 │ 🔴 1 hari   │ │
+│  │   Owner: Ahmad R. │ Dept: QMS                        [Review Now] │ │
+│  │                                                                    │ │
+│  │ ⚠ SOP/PROD/003 — Prosedur Safety Line 1                          │ │
+│  │   Effective: 20 Apr 2025 │ Review due: 20 Apr 2026 │ 🟡 6 hari   │ │
+│  │   Owner: Hadi K. │ Dept: PROD                         [Review Now]│ │
+│  │                                                                    │ │
+│  │ ℹ STD/QMS/002 — Standar Kalibrasi Alat                           │ │
+│  │   Effective: 30 Apr 2025 │ Review due: 30 Apr 2026 │ 🟢 16 hari  │ │
+│  │   Owner: Dina P. │ Dept: QMS                          [Schedule]  │ │
+│  │                                                    [View All →]   │ │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                                                                        │
+│  ┌─── Pending Distribution ─────────────────────────────────────────┐ │
+│  │ 1. SOP/QMS/004 — Finalized 10 Apr │ Belum distribusi │ [Distribute]│ │
+│  │ 2. IK/HRD/001  — Finalized 8 Apr  │ Belum distribusi │ [Distribute]│ │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                                                                        │
+│  ┌─── SLA & Performance ────────┐  ┌─── By Priority ─────────────┐   │
+│  │ Avg Approval Time:  2.3 hari │  │ 🔴 Critical:  2              │   │
+│  │ On-time Rate:       87%      │  │ 🟠 High:      5              │   │
+│  │ Overdue Rate:       13%      │  │ ⚪ Normal:    130            │   │
+│  │ Bottleneck Step:    Sign(4d) │  │ 🔵 Low:       13             │   │
+│  │ Fastest Dept:       HRD      │  └────────────────────────────┘    │
+│  │ Slowest Dept:       PROD     │                                     │
+│  └──────────────────────────────┘                                     │
+│                                                                        │
+│  ┌─── By Category ─────────┐  ┌─── By Status (Chart) ────────────┐   │
+│  │ 🔵 Quality:  45 (30%)   │  │ ■ Final:    78 (52%)              │   │
+│  │ 🔴 Safety:   30 (20%)   │  │ ◑ Approved: 45 (30%)             │   │
+│  │ 🟢 HR:       25 (17%)   │  │ ○ Draft:    12 (8%)              │   │
+│  │ 🟡 Finance:  20 (13%)   │  │ ◐ Review:   8 (5%)               │   │
+│  │ ⚫ Production:30 (20%)  │  │ ◔ Revision: 3 (2%)               │   │
+│  └──────────────────────────┘  │ ◆ Other:    4 (3%)               │   │
+│                                 └──────────────────────────────────┘   │
+│                                                                        │
+│  ┌─── Recent Activity ─────────────────────────────────────────────┐  │
+│  │ 14:30 Ahmad created SOP/QMS/005                                  │  │
+│  │ 13:15 Dina approved IK/HRD/003                                   │  │
+│  │ 11:00 Budi delegated SOP/QMS/001 → Andi ("Cuti sampai 20 Apr")  │  │
+│  │ 10:30 Andi rejected FRM/QMS/001 → returned to Step 1: Review     │  │
+│  │ 09:00 Director signed STD/QMS/001                                │  │
+│  │ 08:45 System: SOP/QMS/001 overdue — escalated to Dept Head      │  │
+│  │                                                    [View All →]  │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
 │                                                                        │
 │  ┌─── By Office ───────────────────────────────────────────────────┐  │
 │  │ KP-JKT  ████████████████████████ 95                              │  │
@@ -857,4 +1054,49 @@ Same as v1 (Laravel Broadcasting + Soketi, queue-based email).
 │  │ PB-CKR  ████████ 20                                              │  │
 │  └──────────────────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────────────┘
+```
+
+### Dashboard Widget Visibility per Role
+
+| Widget                        | Super Admin | Admin Company | Admin Office | Creator | Reviewer | Approver | Viewer |
+| ----------------------------- | :---------: | :-----------: | :----------: | :-----: | :------: | :------: | :----: |
+| Summary Cards                 | ✅ all      | ✅ company    | ✅ office    | ✅ own  | ✅ own   | ✅ own   | ✅ own |
+| Quick Actions                 | ✅          | ✅            | ✅           | ✅      | ❌       | ❌       | ❌     |
+| My Pending Tasks              | ✅          | ✅            | ✅           | ✅      | ✅       | ✅       | ❌     |
+| My Recent Documents           | ✅          | ✅            | ✅           | ✅      | ✅       | ✅       | ✅     |
+| Due for Periodic Review       | ✅          | ✅            | ✅           | ✅*     | ❌       | ❌       | ❌     |
+| Pending Distribution          | ✅          | ✅            | ✅           | ❌      | ❌       | ❌       | ❌     |
+| SLA & Performance             | ✅          | ✅            | ✅           | ❌      | ❌       | ❌       | ❌     |
+| By Category / Status / Office | ✅          | ✅            | ✅           | ❌      | ❌       | ❌       | ❌     |
+| Recent Activity               | ✅ all      | ✅ company    | ✅ office    | ✅ own  | ✅ own   | ✅ own   | ✅ own |
+
+> *Creator: hanya lihat dokumen milik sendiri yang due for review
+
+### Periodic Document Review
+
+Di lingkungan QMS/ISO, dokumen (terutama SOP, IK, Standar) **wajib di-review ulang** secara berkala (biasanya setiap 1 tahun). Fitur ini memastikan tidak ada dokumen yang terlewat.
+
+**Konfigurasi:**
+- `review_period_months`: diset per document_type (default 12 bulan)
+- `effective_date`: tanggal dokumen mulai berlaku (diisi saat finalize)
+- `next_review_date`: `effective_date + review_period_months`
+- Reminder otomatis: H-30, H-14, H-7, H-1 sebelum review due date
+
+**Flow:**
+```
+Dokumen finalized (effective_date = 15 Apr 2025)
+       ↓
+Sistem hitung: next_review_date = 15 Apr 2026
+       ↓
+H-30: notifikasi ke owner "Dokumen SOP/QMS/001 perlu review dalam 30 hari"
+H-14: notifikasi kedua
+H-7:  notifikasi + muncul di dashboard "Due for Review" (🟢 hijau)
+H-1:  notifikasi urgent (🟡 kuning)
+H+0:  overdue (🔴 merah) + notif ke admin
+       ↓
+Owner klik [Review Now]
+       ↓
+Opsi: (a) "Masih berlaku" → extend next_review_date +12 bulan
+      (b) "Perlu revisi"  → buat revision baru → masuk workflow
+      (c) "Obsolete"      → tandai dokumen obsolete
 ```

@@ -190,17 +190,18 @@ CREATE TABLE role_permissions (
     UNIQUE(role_id, permission_id)
 );
 
--- Session / Token
-CREATE TABLE personal_access_tokens (
+-- Session / Refresh Token (JWT-based auth)
+CREATE TABLE refresh_tokens (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id),
-    name VARCHAR(255) NOT NULL,
-    token VARCHAR(64) NOT NULL UNIQUE,
-    abilities TEXT,                              -- JSON array
+    token_hash VARCHAR(64) NOT NULL UNIQUE,     -- SHA256 hash of refresh token
+    device_name VARCHAR(255),                   -- "Chrome on Windows", "Mobile App"
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    is_revoked BOOLEAN DEFAULT FALSE,
     last_used_at TIMESTAMP,
-    expires_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- ============================================================
@@ -484,6 +485,7 @@ CREATE TABLE documents (
 
     -- Identifikasi
     document_number VARCHAR(100) NOT NULL,      -- "SOP/QMS/001/IV/2026"
+    folder_name VARCHAR(100) NOT NULL,           -- "sop-qms-001-iv-2026" (sanitized dari document_number, safe untuk filesystem)
     title VARCHAR(500) NOT NULL,
     description TEXT,
 
