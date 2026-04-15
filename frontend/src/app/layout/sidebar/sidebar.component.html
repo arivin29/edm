@@ -23,7 +23,7 @@
             <ul>
               @for (child of item.children; track child.key) {
                 <li nz-menu-item nzMatchRouter>
-                  <a [routerLink]="child.route">{{ child.label }}</a>
+                  <a [routerLink]="child.route" [queryParams]="child.queryParams || {}">{{ child.label }}</a>
                 </li>
               }
             </ul>

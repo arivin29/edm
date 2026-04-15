@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -168,6 +168,7 @@ export class DocumentListPage implements OnInit {
   private http = inject(HttpClient);
   private message = inject(NzMessageService);
   private modal = inject(NzModalService);
+  private route = inject(ActivatedRoute);
 
   documents = signal<Document[]>([]);
   documentTypes = signal<{id: string; name: string}[]>([]);
@@ -183,9 +184,19 @@ export class DocumentListPage implements OnInit {
   filterCategory: string | null = null;
 
   ngOnInit() {
-    this.loadDocuments();
     this.loadDocumentTypes();
     this.loadCategories();
+
+    // React to query param changes (e.g. ?type=xxx from sidebar)
+    this.route.queryParams.subscribe(params => {
+      if (params['type']) {
+        this.filterType = params['type'];
+      } else {
+        this.filterType = null;
+      }
+      this.pageIndex.set(1);
+      this.loadDocuments();
+    });
   }
 
   loadDocuments() {
