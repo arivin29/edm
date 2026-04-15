@@ -1,5 +1,6 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { NotificationService } from '../services/notification.service';
 
@@ -8,6 +9,7 @@ import { NotificationService } from '../services/notification.service';
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const notification = inject(NotificationService);
+  const router = inject(Router);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -26,8 +28,13 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             errorMessage = error.error?.message || 'Permintaan tidak valid.';
             break;
           case 401:
-            // Handled by auth interceptor
-            errorMessage = 'Sesi Anda telah berakhir. Silakan login kembali.';
+            // Clear auth data and redirect to login
+            if (!req.url.includes('/auth/login') && !req.url.includes('/auth/refresh')) {
+              localStorage.removeItem('dms_auth');
+              router.navigate(['/auth/login']);
+              errorMessage = 'Sesi Anda telah berakhir. Silakan login kembali.';
+              notification.error('Sesi Berakhir', errorMessage);
+            }
             break;
           case 403:
             errorMessage = 'Anda tidak memiliki izin untuk melakukan aksi ini.';
@@ -64,7 +71,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
-      // Don't show notification for 401 (handled by auth interceptor)
+      // Don't show duplicate notification for 401 (already shown above)
       if (error.status !== 401) {
         notification.error('Error', errorMessage);
       }
