@@ -25,7 +25,7 @@ func (r *attachmentRepository) ListByEntity(entityType string, entityID string) 
 	var items []models.FileStorage
 	if err := facades.Orm().Query().
 		Where("entity_type = ? AND entity_id = ? AND deleted_at IS NULL", entityType, entityID).
-		With("Uploader", "id, name, email").
+		With("Uploader").
 		Order("created_at desc").
 		Get(&items); err != nil {
 		return nil, err
