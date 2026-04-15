@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -18,6 +18,7 @@ import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzSliderModule } from 'ng-zorro-antd/slider';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -85,7 +86,7 @@ interface TemplateTag {
     NzInputModule, NzInputNumberModule, NzCardModule, NzDropDownModule,
     NzDrawerModule, NzModalModule, NzFormModule, NzSelectModule,
     NzUploadModule, NzCheckboxModule, NzSliderModule, NzDividerModule,
-    NzToolTipModule
+    NzToolTipModule, NzSpinModule
   ],
   template: `
     <div class="p-4">
@@ -101,50 +102,100 @@ interface TemplateTag {
         </button>
       </div>
 
-      <!-- Search -->
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-4 gap-3 mb-4">
+        <div class="bg-white rounded-lg border p-3">
+          <div class="text-xs text-gray-500">Total Template</div>
+          <div class="text-xl font-bold text-gray-800">{{ statsTotal() }}</div>
+        </div>
+        <div class="bg-white rounded-lg border p-3 border-l-2 border-l-green-500">
+          <div class="text-xs text-gray-500">Aktif</div>
+          <div class="text-xl font-bold text-green-600">{{ statsActive() }}</div>
+        </div>
+        <div class="bg-white rounded-lg border p-3 border-l-2 border-l-orange-500">
+          <div class="text-xs text-gray-500">Draft</div>
+          <div class="text-xl font-bold text-orange-600">{{ statsDraft() }}</div>
+        </div>
+        <div class="bg-white rounded-lg border p-3 border-l-2 border-l-gray-400">
+          <div class="text-xs text-gray-500">Arsip</div>
+          <div class="text-xl font-bold text-gray-500">{{ statsArchived() }}</div>
+        </div>
+      </div>
+
+      <!-- Search & Filter -->
       <nz-card nzSize="small" class="mb-3">
-        <nz-input-group nzSize="small" [nzPrefix]="prefixIcon" class="w-64">
-          <input nz-input nzSize="small" placeholder="Cari template..." [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
-        </nz-input-group>
+        <div class="flex items-center gap-3">
+          <nz-input-group nzSize="small" [nzPrefix]="prefixIcon" class="w-64">
+            <input nz-input nzSize="small" placeholder="Cari template..." [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
+          </nz-input-group>
+          <nz-select nzSize="small" [(ngModel)]="filterDocTypeId" nzPlaceHolder="Semua Tipe Dokumen"
+                     nzAllowClear class="w-48" (ngModelChange)="onSearch()">
+            @for (type of documentTypes(); track type.id) {
+              <nz-option [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+            }
+          </nz-select>
+        </div>
         <ng-template #prefixIcon><span nz-icon nzType="search"></span></ng-template>
       </nz-card>
 
       <!-- Table -->
       <nz-card nzSize="small">
-        <nz-table #tplTable [nzData]="templates()" [nzLoading]="loading()"
+        <nz-table #tplTable [nzData]="filteredTemplates()" [nzLoading]="loading()"
                   nzSize="small" [nzPageSize]="15">
           <thead>
             <tr>
-              <th>Nama Template</th>
+              <th nzWidth="90px">Kode</th>
+              <th>Nama</th>
               <th nzWidth="120px">Tipe Dokumen</th>
-              <th nzWidth="120px">Kategori</th>
-              <th nzWidth="80px">Tags</th>
-              <th nzWidth="70px">Status</th>
-              <th nzWidth="70px">Aksi</th>
+              <th nzWidth="50px" nzAlign="center">Versi</th>
+              <th nzWidth="180px">File</th>
+              <th nzWidth="70px" nzAlign="center">Status</th>
+              <th nzWidth="65px" nzAlign="center">Tags</th>
+              <th nzWidth="90px">Dibuat</th>
+              <th nzWidth="60px" nzAlign="center">Aksi</th>
             </tr>
           </thead>
           <tbody>
             @for (tpl of tplTable.data; track tpl.id) {
               <tr>
+                <td><code class="text-xs">{{ tpl.code || '-' }}</code></td>
                 <td>
-                  <div class="flex items-center gap-2">
-                    <span nz-icon nzType="file-text" class="text-blue-500"></span>
-                    <span>{{ tpl.name }}</span>
+                  <div class="font-medium text-gray-800">{{ tpl.name }}</div>
+                  @if (tpl.category?.name || tpl.category_name) {
+                    <div class="text-xs text-gray-400">{{ tpl.category?.name || tpl.category_name }}</div>
+                  }
+                </td>
+                <td>
+                  <span class="text-xs">{{ tpl.document_type?.name || tpl.type_name || '-' }}</span>
+                </td>
+                <td nzAlign="center">
+                  <nz-tag nzColor="blue" class="m-0">v{{ tpl.version || 1 }}</nz-tag>
+                </td>
+                <td>
+                  <div class="flex items-center gap-1.5">
+                    <span nz-icon nzType="file-word" class="text-blue-500 text-sm"></span>
+                    <div class="truncate">
+                      <div class="text-xs truncate max-w-[120px]" [title]="tpl.file_name">{{ tpl.file_name || '-' }}</div>
+                      @if (tpl.file_size) {
+                        <div class="text-[10px] text-gray-400">{{ formatFileSize(tpl.file_size) }}</div>
+                      }
+                    </div>
                   </div>
                 </td>
-                <td>{{ tpl.document_type?.name || tpl.type_name || '-' }}</td>
-                <td>{{ tpl.category?.name || tpl.category_name || '-' }}</td>
-                <td>
-                  <nz-tag>{{ tpl.tag_count || 0 }} tags</nz-tag>
-                </td>
-                <td>
-                  <nz-tag [nzColor]="tpl.is_active ? 'success' : 'default'">
-                    {{ tpl.is_active ? 'Aktif' : 'Nonaktif' }}
+                <td nzAlign="center">
+                  <nz-tag [nzColor]="getStatusColor(tpl.status)" class="m-0">
+                    {{ getStatusLabel(tpl.status) }}
                   </nz-tag>
                 </td>
+                <td nzAlign="center">
+                  <nz-tag class="m-0">{{ tpl.tag_count || 0 }}</nz-tag>
+                </td>
                 <td>
+                  <span class="text-xs text-gray-500">{{ formatDate(tpl.created_at) }}</span>
+                </td>
+                <td nzAlign="center">
                   <a nz-dropdown [nzDropdownMenu]="actionMenu" nzTrigger="click">
-                    <span nz-icon nzType="more" class="cursor-pointer"></span>
+                    <span nz-icon nzType="more" class="cursor-pointer text-gray-600"></span>
                   </a>
                   <nz-dropdown-menu #actionMenu="nzDropdownMenu">
                     <ul nz-menu nzSelectable>
@@ -166,7 +217,7 @@ interface TemplateTag {
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="text-center text-gray-500 py-8">
+                <td colspan="9" class="text-center text-gray-500 py-8">
                   Tidak ada template ditemukan
                 </td>
               </tr>
@@ -500,14 +551,15 @@ interface TemplateTag {
     </div>
   `,
   styles: [`
-    :host ::ng-deep .ant-table-small .ant-table-thead > tr > th { padding: 8px; font-size: 12px; }
+    :host ::ng-deep .ant-table-small .ant-table-thead > tr > th { padding: 8px; font-size: 11px; font-weight: 600; background: #fafafa; }
     :host ::ng-deep .ant-table-small .ant-table-tbody > tr > td { padding: 6px 8px; font-size: 12px; }
-    :host ::ng-deep .ant-tag { font-size: 11px; }
+    :host ::ng-deep .ant-table-small .ant-table-tbody > tr:nth-child(even) > td { background: #fafbfc; }
+    :host ::ng-deep .ant-tag { font-size: 10px; line-height: 18px; }
     :host ::ng-deep .ant-card-body { padding: 12px; }
     :host ::ng-deep .ant-form-item { margin-bottom: 12px; }
     :host ::ng-deep .ant-divider { margin: 12px 0 8px; }
     :host ::ng-deep .ant-divider-inner-text { font-size: 12px; font-weight: 600; }
-    code { background: #f5f5f5; padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+    code { background: #f0f2f5; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #595959; }
   `]
 })
 export class TemplateListPage implements OnInit {
@@ -523,6 +575,22 @@ export class TemplateListPage implements OnInit {
   loading = signal(false);
   saving = signal(false);
   searchText = '';
+  filterDocTypeId: string | null = null;
+
+  // Stats computed
+  statsTotal = computed(() => this.templates().length);
+  statsActive = computed(() => this.templates().filter(t => t.status === 'active').length);
+  statsDraft = computed(() => this.templates().filter(t => t.status === 'draft').length);
+  statsArchived = computed(() => this.templates().filter(t => t.status === 'archived').length);
+
+  // Filtered list for table
+  filteredTemplates = computed(() => {
+    let data = this.templates();
+    if (this.filterDocTypeId) {
+      data = data.filter(t => t.document_type_id === this.filterDocTypeId);
+    }
+    return data;
+  });
 
   // Template drawer
   drawerVisible = false;
@@ -664,6 +732,42 @@ export class TemplateListPage implements OnInit {
         });
       }
     });
+  }
+
+  // ── Helpers ──
+
+  formatFileSize(bytes: number): string {
+    if (!bytes) return '-';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '-';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return `${dd}/${mm}/${d.getFullYear()}`;
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'active': return 'green';
+      case 'draft': return 'orange';
+      case 'archived': return 'default';
+      default: return 'default';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'active': return 'Aktif';
+      case 'draft': return 'Draft';
+      case 'archived': return 'Arsip';
+      default: return status || '-';
+    }
   }
 
   // ── Tag Management ──
