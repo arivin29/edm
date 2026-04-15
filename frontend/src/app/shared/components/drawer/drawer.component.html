@@ -1,0 +1,50 @@
+@if (isOpen) {
+  <!-- Backdrop -->
+  <div
+    class="drawer-backdrop"
+    (click)="onBackdropClick()"
+    @fadeIn
+  ></div>
+
+  <!-- Drawer panel -->
+  <div
+    class="drawer-panel"
+    [style.width]="width"
+    @slideIn
+  >
+    <!-- Header -->
+    <div class="drawer-header">
+      <div class="drawer-title-section">
+        <h2 class="drawer-title">{{ title }}</h2>
+        @if (subtitle) {
+          <p class="drawer-subtitle">{{ subtitle }}</p>
+        }
+      </div>
+
+      @if (showClose) {
+        <button
+          class="drawer-close"
+          (click)="close()"
+          type="button"
+          aria-label="Tutup"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      }
+    </div>
+
+    <!-- Body -->
+    <div class="drawer-body">
+      <ng-content></ng-content>
+    </div>
+
+    <!-- Footer -->
+    @if (showFooter) {
+      <div class="drawer-footer">
+        <ng-content select="[drawerFooter]"></ng-content>
+      </div>
+    }
+  </div>
+}

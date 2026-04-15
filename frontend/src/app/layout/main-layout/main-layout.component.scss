@@ -1,0 +1,33 @@
+.layout {
+  @apply min-h-screen bg-gray-50;
+}
+
+.main-content {
+  @apply pt-14 transition-all duration-200 ease-in-out;
+  margin-left: var(--sidebar-width);
+  min-height: calc(100vh - 56px);
+}
+
+.sidebar-collapsed .main-content {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+.content-wrapper {
+  @apply p-4 md:p-6;
+}
+
+.sidebar-backdrop {
+  @apply fixed inset-0 bg-black/50 z-fixed lg:hidden;
+}
+
+// Responsive
+@media (max-width: 1023px) {
+  .main-content {
+    @apply ml-0;
+    margin-left: 0 !important;
+  }
+
+  .sidebar-collapsed .main-content {
+    margin-left: 0 !important;
+  }
+}

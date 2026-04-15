@@ -1,0 +1,396 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "DMS API - PT Askara Internal",
+    "description": "Document Management System API for PT Askara Internal. Manages documents, workflows, templates, and organizational structure.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "PT Askara Internal",
+      "email": "admin@askara.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Development server"
+    }
+  ],
+  "tags": [
+    {"name": "Auth", "description": "Authentication endpoints"},
+    {"name": "Companies", "description": "Company management"},
+    {"name": "Offices", "description": "Office management"},
+    {"name": "Departments", "description": "Department management"},
+    {"name": "Sections", "description": "Section management"},
+    {"name": "Positions", "description": "Position management"},
+    {"name": "Users", "description": "User management"},
+    {"name": "Roles", "description": "Role and permission management"},
+    {"name": "Document Types", "description": "Document type management"},
+    {"name": "Categories", "description": "Document category management"},
+    {"name": "Templates", "description": "Document template management"},
+    {"name": "Numbering", "description": "Document numbering configuration"},
+    {"name": "Documents", "description": "Document CRUD operations"},
+    {"name": "Versions", "description": "Document versioning"},
+    {"name": "Comments", "description": "Document comments"},
+    {"name": "Workflows", "description": "Workflow configuration"},
+    {"name": "Workflow Actions", "description": "Submit, approve, reject documents"},
+    {"name": "Distributions", "description": "Document distribution"},
+    {"name": "Notifications", "description": "User notifications"},
+    {"name": "Settings", "description": "System settings"},
+    {"name": "Audit", "description": "Audit logs"},
+    {"name": "OnlyOffice", "description": "OnlyOffice integration"}
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {"type": "string", "format": "email"},
+                  "password": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Login successful", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}}}
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout",
+        "security": [{"bearerAuth": []}],
+        "responses": {"200": {"description": "Logout successful"}}
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh token",
+        "security": [{"bearerAuth": []}],
+        "responses": {"200": {"description": "Token refreshed"}}
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current user",
+        "security": [{"bearerAuth": []}],
+        "responses": {"200": {"description": "Current user info"}}
+      }
+    },
+    "/auth/password": {
+      "put": {
+        "tags": ["Auth"],
+        "summary": "Change password",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"current_password": {"type": "string"}, "new_password": {"type": "string"}}}}}},
+        "responses": {"200": {"description": "Password changed"}}
+      }
+    },
+    "/companies": {
+      "get": {"tags": ["Companies"], "summary": "List companies", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/PageParam"}, {"$ref": "#/components/parameters/PerPageParam"}], "responses": {"200": {"description": "List of companies"}}},
+      "post": {"tags": ["Companies"], "summary": "Create company", "security": [{"bearerAuth": []}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CompanyInput"}}}}, "responses": {"201": {"description": "Company created"}}}
+    },
+    "/companies/{id}": {
+      "get": {"tags": ["Companies"], "summary": "Get company", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Company details"}}},
+      "put": {"tags": ["Companies"], "summary": "Update company", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Company updated"}}},
+      "delete": {"tags": ["Companies"], "summary": "Delete company", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Company deleted"}}}
+    },
+    "/offices": {
+      "get": {"tags": ["Offices"], "summary": "List offices", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of offices"}}},
+      "post": {"tags": ["Offices"], "summary": "Create office", "security": [{"bearerAuth": []}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/OfficeInput"}}}}, "responses": {"201": {"description": "Office created"}}}
+    },
+    "/offices/{id}": {
+      "get": {"tags": ["Offices"], "summary": "Get office", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Office details"}}},
+      "put": {"tags": ["Offices"], "summary": "Update office", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Office updated"}}},
+      "delete": {"tags": ["Offices"], "summary": "Delete office", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Office deleted"}}}
+    },
+    "/offices/{id}/departments": {
+      "get": {"tags": ["Offices"], "summary": "List departments in office", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Departments"}}}
+    },
+    "/departments": {
+      "get": {"tags": ["Departments"], "summary": "List departments", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of departments"}}},
+      "post": {"tags": ["Departments"], "summary": "Create department", "security": [{"bearerAuth": []}], "responses": {"201": {"description": "Department created"}}}
+    },
+    "/departments/{id}": {
+      "get": {"tags": ["Departments"], "summary": "Get department", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Department details"}}},
+      "put": {"tags": ["Departments"], "summary": "Update department", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Department updated"}}},
+      "delete": {"tags": ["Departments"], "summary": "Delete department", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Department deleted"}}}
+    },
+    "/departments/{id}/sections": {
+      "get": {"tags": ["Departments"], "summary": "List sections in department", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Sections"}}}
+    },
+    "/sections": {
+      "get": {"tags": ["Sections"], "summary": "List sections", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of sections"}}},
+      "post": {"tags": ["Sections"], "summary": "Create section", "security": [{"bearerAuth": []}], "responses": {"201": {"description": "Section created"}}}
+    },
+    "/sections/{id}": {
+      "get": {"tags": ["Sections"], "summary": "Get section", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Section details"}}},
+      "put": {"tags": ["Sections"], "summary": "Update section", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Section updated"}}},
+      "delete": {"tags": ["Sections"], "summary": "Delete section", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Section deleted"}}}
+    },
+    "/positions": {
+      "get": {"tags": ["Positions"], "summary": "List positions", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of positions"}}},
+      "post": {"tags": ["Positions"], "summary": "Create position", "security": [{"bearerAuth": []}], "responses": {"201": {"description": "Position created"}}}
+    },
+    "/positions/{id}": {
+      "get": {"tags": ["Positions"], "summary": "Get position", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Position details"}}},
+      "put": {"tags": ["Positions"], "summary": "Update position", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Position updated"}}},
+      "delete": {"tags": ["Positions"], "summary": "Delete position", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Position deleted"}}}
+    },
+    "/users": {
+      "get": {"tags": ["Users"], "summary": "List users", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/PageParam"}, {"$ref": "#/components/parameters/PerPageParam"}, {"name": "search", "in": "query", "schema": {"type": "string"}}], "responses": {"200": {"description": "List of users"}}},
+      "post": {"tags": ["Users"], "summary": "Create user", "security": [{"bearerAuth": []}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserInput"}}}}, "responses": {"201": {"description": "User created"}}}
+    },
+    "/users/{id}": {
+      "get": {"tags": ["Users"], "summary": "Get user", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "User details"}}},
+      "put": {"tags": ["Users"], "summary": "Update user", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "User updated"}}},
+      "delete": {"tags": ["Users"], "summary": "Delete user", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "User deleted"}}}
+    },
+    "/users/{id}/signature": {
+      "post": {"tags": ["Users"], "summary": "Upload signature", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"multipart/form-data": {"schema": {"type": "object", "properties": {"signature": {"type": "string", "format": "binary"}}}}}}, "responses": {"200": {"description": "Signature uploaded"}}},
+      "delete": {"tags": ["Users"], "summary": "Delete signature", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Signature deleted"}}}
+    },
+    "/users/{id}/avatar": {
+      "post": {"tags": ["Users"], "summary": "Upload avatar", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"multipart/form-data": {"schema": {"type": "object", "properties": {"avatar": {"type": "string", "format": "binary"}}}}}}, "responses": {"200": {"description": "Avatar uploaded"}}}
+    },
+    "/users/{id}/roles": {
+      "put": {"tags": ["Users"], "summary": "Assign roles", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"role_ids": {"type": "array", "items": {"type": "string", "format": "uuid"}}}}}}}, "responses": {"200": {"description": "Roles assigned"}}}
+    },
+    "/roles": {
+      "get": {"tags": ["Roles"], "summary": "List roles", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of roles"}}}
+    },
+    "/roles/{id}": {
+      "get": {"tags": ["Roles"], "summary": "Get role with permissions", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Role details"}}}
+    },
+    "/permissions": {
+      "get": {"tags": ["Roles"], "summary": "List permissions", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of permissions"}}}
+    },
+    "/document-types": {
+      "get": {"tags": ["Document Types"], "summary": "List document types", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of document types"}}},
+      "post": {"tags": ["Document Types"], "summary": "Create document type", "security": [{"bearerAuth": []}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DocumentTypeInput"}}}}, "responses": {"201": {"description": "Document type created"}}}
+    },
+    "/document-types/{id}": {
+      "get": {"tags": ["Document Types"], "summary": "Get document type", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Document type details"}}},
+      "put": {"tags": ["Document Types"], "summary": "Update document type", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Document type updated"}}}
+    },
+    "/categories": {
+      "get": {"tags": ["Categories"], "summary": "List categories", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of categories"}}},
+      "post": {"tags": ["Categories"], "summary": "Create category", "security": [{"bearerAuth": []}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CategoryInput"}}}}, "responses": {"201": {"description": "Category created"}}}
+    },
+    "/categories/{id}": {
+      "get": {"tags": ["Categories"], "summary": "Get category", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Category details"}}},
+      "put": {"tags": ["Categories"], "summary": "Update category", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Category updated"}}},
+      "delete": {"tags": ["Categories"], "summary": "Delete category", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Category deleted"}}}
+    },
+    "/templates": {
+      "get": {"tags": ["Templates"], "summary": "List templates", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/PageParam"}, {"$ref": "#/components/parameters/PerPageParam"}, {"name": "document_type_id", "in": "query", "schema": {"type": "string", "format": "uuid"}}, {"name": "search", "in": "query", "schema": {"type": "string"}}], "responses": {"200": {"description": "List of templates"}}},
+      "post": {"tags": ["Templates"], "summary": "Create template", "security": [{"bearerAuth": []}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/TemplateInput"}}}}, "responses": {"201": {"description": "Template created"}}}
+    },
+    "/templates/{id}": {
+      "get": {"tags": ["Templates"], "summary": "Get template", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Template details with tags"}}},
+      "put": {"tags": ["Templates"], "summary": "Update template", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Template updated"}}},
+      "delete": {"tags": ["Templates"], "summary": "Delete template", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Template deleted"}}}
+    },
+    "/templates/{id}/upload": {
+      "post": {"tags": ["Templates"], "summary": "Upload template DOCX", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"multipart/form-data": {"schema": {"type": "object", "properties": {"file": {"type": "string", "format": "binary"}}}}}}, "responses": {"200": {"description": "File uploaded"}}}
+    },
+    "/templates/{id}/download": {
+      "get": {"tags": ["Templates"], "summary": "Download template", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "DOCX file"}}}
+    },
+    "/templates/{id}/tags": {
+      "get": {"tags": ["Templates"], "summary": "List template tags", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "List of tags"}}},
+      "post": {"tags": ["Templates"], "summary": "Add tag", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"application/json": {"schema": {"$ref": "#/components/schemas/TemplateTagInput"}}}}, "responses": {"201": {"description": "Tag added"}}}
+    },
+    "/templates/{id}/tags/bulk": {
+      "post": {"tags": ["Templates"], "summary": "Bulk upsert tags", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"tags": {"type": "array", "items": {"$ref": "#/components/schemas/TemplateTagInput"}}}}}}}, "responses": {"200": {"description": "Tags upserted"}}}
+    },
+    "/templates/{id}/tags/{tagId}": {
+      "put": {"tags": ["Templates"], "summary": "Update tag", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "tagId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "responses": {"200": {"description": "Tag updated"}}},
+      "delete": {"tags": ["Templates"], "summary": "Delete tag", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "tagId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "responses": {"200": {"description": "Tag deleted"}}}
+    },
+    "/numbering": {
+      "get": {"tags": ["Numbering"], "summary": "List numbering configs", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of configs"}}},
+      "post": {"tags": ["Numbering"], "summary": "Create numbering config", "security": [{"bearerAuth": []}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/NumberingInput"}}}}, "responses": {"201": {"description": "Config created"}}}
+    },
+    "/numbering/preview": {
+      "get": {"tags": ["Numbering"], "summary": "Preview generated number", "security": [{"bearerAuth": []}], "parameters": [{"name": "document_type_id", "in": "query", "required": true, "schema": {"type": "string", "format": "uuid"}}], "responses": {"200": {"description": "Preview number"}}}
+    },
+    "/numbering/{id}": {
+      "get": {"tags": ["Numbering"], "summary": "Get numbering config", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Config details"}}},
+      "put": {"tags": ["Numbering"], "summary": "Update numbering config", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Config updated"}}},
+      "delete": {"tags": ["Numbering"], "summary": "Delete numbering config", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Config deleted"}}}
+    },
+    "/documents": {
+      "get": {"tags": ["Documents"], "summary": "List documents", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/PageParam"}, {"$ref": "#/components/parameters/PerPageParam"}, {"name": "status", "in": "query", "schema": {"type": "string", "enum": ["draft", "in_review", "approved", "final", "revision", "obsolete", "archived"]}}, {"name": "search", "in": "query", "schema": {"type": "string"}}], "responses": {"200": {"description": "List of documents"}}},
+      "post": {"tags": ["Documents"], "summary": "Create document from template", "security": [{"bearerAuth": []}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DocumentInput"}}}}, "responses": {"201": {"description": "Document created"}}}
+    },
+    "/documents/{id}": {
+      "get": {"tags": ["Documents"], "summary": "Get document", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Document details"}}},
+      "put": {"tags": ["Documents"], "summary": "Update document", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Document updated"}}},
+      "delete": {"tags": ["Documents"], "summary": "Delete document", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Document deleted"}}}
+    },
+    "/documents/{id}/download": {
+      "get": {"tags": ["Documents"], "summary": "Download document", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "DOCX file"}}}
+    },
+    "/documents/{id}/versions": {
+      "get": {"tags": ["Versions"], "summary": "List versions", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "List of versions"}}},
+      "post": {"tags": ["Versions"], "summary": "Create new version", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"multipart/form-data": {"schema": {"type": "object", "properties": {"file": {"type": "string", "format": "binary"}, "change_type": {"type": "string"}, "change_summary": {"type": "string"}}}}}}, "responses": {"201": {"description": "Version created"}}}
+    },
+    "/documents/{id}/versions/{ver}": {
+      "get": {"tags": ["Versions"], "summary": "Get specific version", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "ver", "in": "path", "required": true, "schema": {"type": "integer"}}], "responses": {"200": {"description": "Version details"}}}
+    },
+    "/documents/{id}/versions/{ver}/download": {
+      "get": {"tags": ["Versions"], "summary": "Download version", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "ver", "in": "path", "required": true, "schema": {"type": "integer"}}], "responses": {"200": {"description": "DOCX file"}}}
+    },
+    "/documents/{id}/versions/{ver}/restore": {
+      "post": {"tags": ["Versions"], "summary": "Restore version", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "ver", "in": "path", "required": true, "schema": {"type": "integer"}}], "responses": {"200": {"description": "Version restored"}}}
+    },
+    "/documents/{id}/comments": {
+      "get": {"tags": ["Comments"], "summary": "List comments", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "version", "in": "query", "schema": {"type": "integer"}}, {"name": "is_resolved", "in": "query", "schema": {"type": "boolean"}}], "responses": {"200": {"description": "List of comments"}}},
+      "post": {"tags": ["Comments"], "summary": "Add comment", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CommentInput"}}}}, "responses": {"201": {"description": "Comment added"}}}
+    },
+    "/documents/{id}/comments/{commentId}": {
+      "put": {"tags": ["Comments"], "summary": "Update comment", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "commentId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "responses": {"200": {"description": "Comment updated"}}},
+      "delete": {"tags": ["Comments"], "summary": "Delete comment", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "commentId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "responses": {"200": {"description": "Comment deleted"}}}
+    },
+    "/documents/{id}/comments/{commentId}/resolve": {
+      "post": {"tags": ["Comments"], "summary": "Resolve comment", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "commentId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "responses": {"200": {"description": "Comment resolved"}}}
+    },
+    "/documents/{id}/comments/{commentId}/unresolve": {
+      "post": {"tags": ["Comments"], "summary": "Unresolve comment", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "commentId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "responses": {"200": {"description": "Comment unresolved"}}}
+    },
+    "/documents/{id}/submit": {
+      "post": {"tags": ["Workflow Actions"], "summary": "Submit for review", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"comment": {"type": "string"}}}}}}, "responses": {"200": {"description": "Document submitted"}}}
+    },
+    "/documents/{id}/approve": {
+      "post": {"tags": ["Workflow Actions"], "summary": "Approve current step", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"comment": {"type": "string"}, "use_signature": {"type": "boolean"}}}}}}, "responses": {"200": {"description": "Step approved"}}}
+    },
+    "/documents/{id}/reject": {
+      "post": {"tags": ["Workflow Actions"], "summary": "Reject current step", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["comment"], "properties": {"comment": {"type": "string"}}}}}}, "responses": {"200": {"description": "Step rejected"}}}
+    },
+    "/documents/{id}/delegate": {
+      "post": {"tags": ["Workflow Actions"], "summary": "Delegate review", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["delegate_to", "reason"], "properties": {"delegate_to": {"type": "string", "format": "uuid"}, "reason": {"type": "string"}}}}}}, "responses": {"200": {"description": "Delegated"}}}
+    },
+    "/documents/{id}/workflow": {
+      "get": {"tags": ["Workflow Actions"], "summary": "Get workflow status", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Workflow status"}}}
+    },
+    "/documents/{id}/workflow/comment": {
+      "post": {"tags": ["Workflow Actions"], "summary": "Add workflow comment", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["comment"], "properties": {"comment": {"type": "string"}, "is_public": {"type": "boolean"}}}}}}, "responses": {"200": {"description": "Comment added"}}}
+    },
+    "/workflow/pending-tasks": {
+      "get": {"tags": ["Workflow Actions"], "summary": "Get pending tasks", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of pending tasks"}}}
+    },
+    "/documents/{id}/editor-config": {
+      "get": {"tags": ["OnlyOffice"], "summary": "Get OnlyOffice editor config", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Editor configuration"}}}
+    },
+    "/onlyoffice/callback": {
+      "post": {"tags": ["OnlyOffice"], "summary": "OnlyOffice callback", "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"key": {"type": "string"}, "status": {"type": "integer"}, "url": {"type": "string"}}}}}}, "responses": {"200": {"description": "Callback processed"}}}
+    },
+    "/documents/{id}/distributions": {
+      "get": {"tags": ["Distributions"], "summary": "List distributions", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "List of distributions"}}},
+      "post": {"tags": ["Distributions"], "summary": "Create distribution", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DistributionInput"}}}}, "responses": {"201": {"description": "Distribution created"}}}
+    },
+    "/documents/{id}/distributions/bulk": {
+      "post": {"tags": ["Distributions"], "summary": "Bulk distribute", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"recipient_ids": {"type": "array", "items": {"type": "string", "format": "uuid"}}, "distribution_type": {"type": "string"}, "notes": {"type": "string"}}}}}}, "responses": {"201": {"description": "Distributions created"}}}
+    },
+    "/distributions/{id}": {
+      "get": {"tags": ["Distributions"], "summary": "Get distribution", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Distribution details"}}},
+      "delete": {"tags": ["Distributions"], "summary": "Cancel distribution", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Distribution cancelled"}}}
+    },
+    "/distributions/{id}/distribute": {
+      "put": {"tags": ["Distributions"], "summary": "Mark as distributed", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Marked as distributed"}}}
+    },
+    "/distributions/{id}/acknowledge": {
+      "post": {"tags": ["Distributions"], "summary": "Acknowledge receipt", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"notes": {"type": "string"}}}}}}, "responses": {"200": {"description": "Acknowledged"}}}
+    },
+    "/distributions/inbox": {
+      "get": {"tags": ["Distributions"], "summary": "My distributions inbox", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/PageParam"}, {"$ref": "#/components/parameters/PerPageParam"}], "responses": {"200": {"description": "List of distributions"}}}
+    },
+    "/workflows": {
+      "get": {"tags": ["Workflows"], "summary": "List workflows", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of workflows"}}},
+      "post": {"tags": ["Workflows"], "summary": "Create workflow", "security": [{"bearerAuth": []}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/WorkflowInput"}}}}, "responses": {"201": {"description": "Workflow created"}}}
+    },
+    "/workflows/{id}": {
+      "get": {"tags": ["Workflows"], "summary": "Get workflow with steps", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Workflow details"}}},
+      "put": {"tags": ["Workflows"], "summary": "Update workflow", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Workflow updated"}}},
+      "delete": {"tags": ["Workflows"], "summary": "Delete workflow", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Workflow deleted"}}}
+    },
+    "/workflows/{id}/steps": {
+      "get": {"tags": ["Workflows"], "summary": "List workflow steps", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "List of steps"}}},
+      "post": {"tags": ["Workflows"], "summary": "Add step", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/WorkflowStepInput"}}}}, "responses": {"201": {"description": "Step added"}}}
+    },
+    "/workflows/{id}/steps/{stepId}": {
+      "put": {"tags": ["Workflows"], "summary": "Update step", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "stepId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "responses": {"200": {"description": "Step updated"}}},
+      "delete": {"tags": ["Workflows"], "summary": "Delete step", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}, {"name": "stepId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "responses": {"200": {"description": "Step deleted"}}}
+    },
+    "/workflows/{id}/steps/reorder": {
+      "put": {"tags": ["Workflows"], "summary": "Reorder steps", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"step_ids": {"type": "array", "items": {"type": "string", "format": "uuid"}}}}}}}, "responses": {"200": {"description": "Steps reordered"}}}
+    },
+    "/notifications": {
+      "get": {"tags": ["Notifications"], "summary": "List notifications", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/PageParam"}, {"$ref": "#/components/parameters/PerPageParam"}, {"name": "is_read", "in": "query", "schema": {"type": "boolean"}}], "responses": {"200": {"description": "List of notifications"}}}
+    },
+    "/notifications/unread-count": {
+      "get": {"tags": ["Notifications"], "summary": "Get unread count", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "Unread count"}}}
+    },
+    "/notifications/{id}/read": {
+      "post": {"tags": ["Notifications"], "summary": "Mark as read", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Marked as read"}}}
+    },
+    "/notifications/read-all": {
+      "post": {"tags": ["Notifications"], "summary": "Mark all as read", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "All marked as read"}}}
+    },
+    "/notifications/{id}": {
+      "delete": {"tags": ["Notifications"], "summary": "Delete notification", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Notification deleted"}}}
+    },
+    "/settings": {
+      "get": {"tags": ["Settings"], "summary": "List settings", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "List of settings"}}},
+      "put": {"tags": ["Settings"], "summary": "Upsert setting", "security": [{"bearerAuth": []}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SettingInput"}}}}, "responses": {"200": {"description": "Setting saved"}}}
+    },
+    "/settings/{key}": {
+      "get": {"tags": ["Settings"], "summary": "Get setting by key", "security": [{"bearerAuth": []}], "parameters": [{"name": "key", "in": "path", "required": true, "schema": {"type": "string"}}], "responses": {"200": {"description": "Setting value"}}}
+    },
+    "/settings/{id}": {
+      "delete": {"tags": ["Settings"], "summary": "Delete setting", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/IdParam"}], "responses": {"200": {"description": "Setting deleted"}}}
+    },
+    "/audit-logs": {
+      "get": {"tags": ["Audit"], "summary": "List audit logs", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/PageParam"}, {"$ref": "#/components/parameters/PerPageParam"}, {"name": "user_id", "in": "query", "schema": {"type": "string", "format": "uuid"}}, {"name": "action", "in": "query", "schema": {"type": "string"}}, {"name": "from", "in": "query", "schema": {"type": "string", "format": "date"}}, {"name": "to", "in": "query", "schema": {"type": "string", "format": "date"}}], "responses": {"200": {"description": "List of audit logs"}}}
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
+    },
+    "parameters": {
+      "IdParam": {"name": "id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
+      "PageParam": {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+      "PerPageParam": {"name": "per_page", "in": "query", "schema": {"type": "integer", "default": 20, "maximum": 100}}
+    },
+    "schemas": {
+      "TokenResponse": {"type": "object", "properties": {"data": {"type": "object", "properties": {"token": {"type": "string"}, "refresh_token": {"type": "string"}, "expires_at": {"type": "string", "format": "date-time"}}}}},
+      "CompanyInput": {"type": "object", "required": ["name", "code"], "properties": {"name": {"type": "string"}, "code": {"type": "string"}, "address": {"type": "string"}, "phone": {"type": "string"}, "email": {"type": "string", "format": "email"}}},
+      "OfficeInput": {"type": "object", "required": ["name", "code", "type"], "properties": {"company_id": {"type": "string", "format": "uuid"}, "name": {"type": "string"}, "code": {"type": "string"}, "type": {"type": "string", "enum": ["headquarters", "branch", "representative"]}}},
+      "UserInput": {"type": "object", "required": ["email", "name", "password"], "properties": {"email": {"type": "string", "format": "email"}, "name": {"type": "string"}, "password": {"type": "string"}, "employee_id": {"type": "string"}, "office_id": {"type": "string", "format": "uuid"}, "department_id": {"type": "string", "format": "uuid"}}},
+      "DocumentTypeInput": {"type": "object", "required": ["name", "code"], "properties": {"name": {"type": "string"}, "code": {"type": "string"}, "description": {"type": "string"}, "prefix": {"type": "string"}}},
+      "CategoryInput": {"type": "object", "required": ["name", "code"], "properties": {"name": {"type": "string"}, "code": {"type": "string"}, "description": {"type": "string"}, "parent_id": {"type": "string", "format": "uuid"}}},
+      "TemplateInput": {"type": "object", "required": ["document_type_id", "name", "code"], "properties": {"document_type_id": {"type": "string", "format": "uuid"}, "category_id": {"type": "string", "format": "uuid"}, "name": {"type": "string"}, "code": {"type": "string"}, "description": {"type": "string"}}},
+      "TemplateTagInput": {"type": "object", "required": ["tag_name", "tag_type"], "properties": {"tag_name": {"type": "string"}, "tag_type": {"type": "string", "enum": ["system", "user_input", "calculated"]}, "default_value": {"type": "string"}, "is_required": {"type": "boolean"}}},
+      "NumberingInput": {"type": "object", "required": ["document_type_id", "format_pattern"], "properties": {"document_type_id": {"type": "string", "format": "uuid"}, "format_pattern": {"type": "string"}, "reset_period": {"type": "string", "enum": ["yearly", "monthly", "never"]}}},
+      "DocumentInput": {"type": "object", "required": ["template_id", "title"], "properties": {"template_id": {"type": "string", "format": "uuid"}, "title": {"type": "string"}, "description": {"type": "string"}, "priority": {"type": "string", "enum": ["low", "normal", "high", "urgent"]}, "confidentiality": {"type": "string", "enum": ["public", "internal", "confidential", "secret"]}}},
+      "CommentInput": {"type": "object", "required": ["content"], "properties": {"content": {"type": "string"}, "comment_type": {"type": "string", "enum": ["general", "review", "annotation"]}, "parent_id": {"type": "string", "format": "uuid"}, "version_number": {"type": "integer"}, "page_number": {"type": "integer"}, "is_internal": {"type": "boolean"}}},
+      "WorkflowInput": {"type": "object", "required": ["document_type_id", "name"], "properties": {"document_type_id": {"type": "string", "format": "uuid"}, "category_id": {"type": "string", "format": "uuid"}, "name": {"type": "string"}, "description": {"type": "string"}, "is_active": {"type": "boolean"}}},
+      "WorkflowStepInput": {"type": "object", "required": ["step_order", "name", "step_type", "assignee_type"], "properties": {"step_order": {"type": "integer"}, "name": {"type": "string"}, "step_type": {"type": "string", "enum": ["review", "approve", "sign"]}, "assignee_type": {"type": "string", "enum": ["user", "role", "position", "department_head"]}, "can_edit": {"type": "boolean"}, "can_comment": {"type": "boolean"}, "can_delegate": {"type": "boolean"}}},
+      "DistributionInput": {"type": "object", "required": ["distribution_type", "recipient_type"], "properties": {"distribution_type": {"type": "string", "enum": ["controlled", "uncontrolled", "electronic"]}, "recipient_type": {"type": "string", "enum": ["user", "department", "external"]}, "recipient_id": {"type": "string", "format": "uuid"}, "recipient_name": {"type": "string"}, "notes": {"type": "string"}}},
+      "SettingInput": {"type": "object", "required": ["key", "value"], "properties": {"key": {"type": "string"}, "value": {"type": "string"}, "description": {"type": "string"}}}
+    }
+  }
+}

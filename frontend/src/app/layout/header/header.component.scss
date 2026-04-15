@@ -1,0 +1,70 @@
+.header {
+  @apply fixed top-0 right-0 bg-white border-b border-gray-200;
+  @apply flex items-center justify-between px-4;
+  left: var(--sidebar-width);
+  height: var(--header-height);
+  z-index: var(--z-sticky);
+  transition: left 0.2s ease;
+
+  &.collapsed {
+    left: var(--sidebar-collapsed-width);
+  }
+
+  @media (max-width: 1023px) {
+    left: 0;
+  }
+}
+
+.header-left {
+  @apply flex items-center gap-4;
+}
+
+.header-right {
+  @apply flex items-center gap-2;
+}
+
+.search-box {
+  @apply relative flex items-center;
+}
+
+.search-icon {
+  @apply absolute left-3 w-4 h-4 text-gray-400 pointer-events-none;
+}
+
+.search-input {
+  @apply w-64 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg;
+  @apply bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500;
+  @apply outline-none transition-colors;
+
+  &::placeholder {
+    @apply text-gray-400;
+  }
+}
+
+.notification-badge {
+  @apply absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1;
+  @apply text-xs font-semibold text-white bg-red-500 rounded-full;
+  @apply flex items-center justify-center;
+}
+
+.user-trigger {
+  @apply flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer;
+  @apply hover:bg-gray-100 transition-colors;
+}
+
+.avatar {
+  @apply w-8 h-8 flex items-center justify-center;
+  @apply text-sm font-semibold text-white bg-blue-500 rounded-full;
+}
+
+.user-info {
+  @apply flex flex-col text-left;
+}
+
+.user-name {
+  @apply text-sm font-medium text-gray-900;
+}
+
+.user-email {
+  @apply text-xs text-gray-500;
+}

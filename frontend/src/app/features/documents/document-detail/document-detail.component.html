@@ -1,0 +1,258 @@
+@if (loading()) {
+  <div class="loading-container">
+    <app-loading-spinner message="Memuat dokumen..." />
+  </div>
+} @else if (error()) {
+  <div class="error-container">
+    <h2>{{ error() }}</h2>
+    <button class="btn btn-outline" (click)="goBack()">Kembali ke Daftar</button>
+  </div>
+} @else if (document()) {
+  <div class="document-detail-page">
+    <!-- Header -->
+    <app-page-header
+      [title]="document().title"
+      [subtitle]="document().document_number"
+      [breadcrumbs]="breadcrumbs"
+    >
+      <app-status-badge [status]="document().status" />
+
+      @if (canSubmit) {
+        <button class="btn btn-primary" (click)="submitForReview()" [disabled]="isSubmitting()">
+          Submit Review
+        </button>
+      }
+
+      @if (canApprove) {
+        <button class="btn btn-success" (click)="openActionModal('approve')">
+          Setujui
+        </button>
+        <button class="btn btn-danger" (click)="openActionModal('reject')">
+          Tolak
+        </button>
+      }
+
+      <button class="btn btn-outline" (click)="downloadDocument()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" x2="12" y1="15" y2="3"/>
+        </svg>
+        Download
+      </button>
+    </app-page-header>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button
+        class="tab"
+        [class.active]="activeTab() === 'info'"
+        (click)="switchTab('info')"
+      >
+        Informasi
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab() === 'workflow'"
+        (click)="switchTab('workflow')"
+      >
+        Alur Persetujuan
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab() === 'versions'"
+        (click)="switchTab('versions')"
+      >
+        Riwayat Versi ({{ versions().length }})
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab() === 'comments'"
+        (click)="switchTab('comments')"
+      >
+        Komentar ({{ comments().length }})
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      @switch (activeTab()) {
+        @case ('info') {
+          <div class="info-grid">
+            <div class="info-card">
+              <h3>Detail Dokumen</h3>
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="label">Tipe Dokumen</span>
+                  <span class="value">{{ document().document_type?.name || '-' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Kategori</span>
+                  <span class="value">{{ document().category?.name || '-' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Versi</span>
+                  <span class="value">v{{ document().current_version }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Tanggal Efektif</span>
+                  <span class="value">{{ document().effective_date | dateFormat }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Tanggal Kedaluwarsa</span>
+                  <span class="value">{{ document().expiry_date | dateFormat }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <h3>Pembuat</h3>
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="label">Nama</span>
+                  <span class="value">{{ document().created_by_user?.name || '-' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Departemen</span>
+                  <span class="value">{{ document().department?.name || '-' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Dibuat</span>
+                  <span class="value">{{ document().created_at | dateFormat:'datetime' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Diperbarui</span>
+                  <span class="value">{{ document().updated_at | dateFormat:'datetime' }}</span>
+                </div>
+              </div>
+            </div>
+
+            @if (document().description) {
+              <div class="info-card full-width">
+                <h3>Deskripsi</h3>
+                <p class="description">{{ document().description }}</p>
+              </div>
+            }
+          </div>
+        }
+
+        @case ('workflow') {
+          <div class="workflow-section">
+            @if (workflowSteps().length === 0) {
+              <div class="empty-state">
+                <p>Belum ada alur persetujuan untuk dokumen ini.</p>
+              </div>
+            } @else {
+              <div class="workflow-timeline">
+                @for (step of workflowSteps(); track step.id) {
+                  <div class="workflow-step" [ngClass]="getStepStatusClass(step.status)">
+                    <div class="step-indicator">
+                      <div class="step-dot"></div>
+                      @if (!$last) {
+                        <div class="step-line"></div>
+                      }
+                    </div>
+                    <div class="step-content">
+                      <div class="step-header">
+                        <span class="step-name">{{ step.name }}</span>
+                        <app-status-badge [status]="step.status" />
+                      </div>
+                      <div class="step-meta">
+                        <span>Approver: {{ step.approver?.name || 'Belum ditentukan' }}</span>
+                        @if (step.approved_at) {
+                          <span>{{ step.approved_at | dateFormat:'datetime' }}</span>
+                        }
+                      </div>
+                      @if (step.comment) {
+                        <p class="step-comment">"{{ step.comment }}"</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @case ('versions') {
+          <div class="versions-section">
+            @if (versions().length === 0) {
+              <div class="empty-state">
+                <p>Belum ada riwayat versi.</p>
+              </div>
+            } @else {
+              <table class="versions-table">
+                <thead>
+                  <tr>
+                    <th>Versi</th>
+                    <th>Diubah Oleh</th>
+                    <th>Tanggal</th>
+                    <th>Catatan</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (version of versions(); track version.id) {
+                    <tr [class.current]="version.version === document().current_version">
+                      <td>
+                        <span class="version-number">v{{ version.version }}</span>
+                        @if (version.version === document().current_version) {
+                          <span class="current-badge">Saat Ini</span>
+                        }
+                      </td>
+                      <td>{{ version.created_by_user?.name || '-' }}</td>
+                      <td>{{ version.created_at | dateFormat:'datetime' }}</td>
+                      <td>{{ version.change_summary || '-' }}</td>
+                      <td>
+                        <button class="btn-link">Download</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        }
+
+        @case ('comments') {
+          <div class="comments-section">
+            @if (comments().length === 0) {
+              <div class="empty-state">
+                <p>Belum ada komentar.</p>
+              </div>
+            } @else {
+              <div class="comments-list">
+                @for (comment of comments(); track comment.id) {
+                  <div class="comment-item">
+                    <div class="comment-avatar">
+                      {{ (comment.user?.name || '?')[0] }}
+                    </div>
+                    <div class="comment-body">
+                      <div class="comment-header">
+                        <span class="comment-author">{{ comment.user?.name }}</span>
+                        <span class="comment-date">{{ comment.created_at | dateFormat:'relative' }}</span>
+                      </div>
+                      <p class="comment-text">{{ comment.content }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+}
+
+<!-- Action Modal -->
+<app-confirm-modal
+  [isOpen]="actionModalOpen()"
+  [title]="actionType() === 'approve' ? 'Setujui Dokumen' : 'Tolak Dokumen'"
+  [message]="actionType() === 'approve' ? 'Apakah Anda yakin ingin menyetujui dokumen ini?' : 'Apakah Anda yakin ingin menolak dokumen ini?'"
+  [confirmText]="actionType() === 'approve' ? 'Setujui' : 'Tolak'"
+  [type]="actionType() === 'approve' ? 'info' : 'danger'"
+  [loading]="isSubmitting()"
+  (confirmed)="confirmAction()"
+  (cancelled)="closeActionModal()"
+/>

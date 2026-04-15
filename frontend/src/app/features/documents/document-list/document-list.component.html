@@ -1,0 +1,87 @@
+<div class="document-list-page">
+  <!-- Header -->
+  <app-page-header
+    title="Dokumen"
+    subtitle="Kelola semua dokumen organisasi"
+    [breadcrumbs]="breadcrumbs"
+  >
+    @if (canCreate()) {
+      <button class="btn btn-primary" (click)="openCreateForm()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Buat Dokumen
+      </button>
+    }
+  </app-page-header>
+
+  <!-- Data Table -->
+  <app-data-table
+    [columns]="columns"
+    [data]="documents()"
+    [loading]="loading()"
+    [totalItems]="totalItems()"
+    [pageSize]="pageSize()"
+    [actions]="actions"
+    searchPlaceholder="Cari dokumen..."
+    emptyMessage="Belum ada dokumen"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    (sortChange)="onSortChange($event)"
+    (searchChange)="onSearchChange($event)"
+    (rowClick)="onRowClick($event)"
+    (actionClick)="onActionClick($event)"
+  >
+    <ng-container toolbarRight>
+      <!-- Additional filters can go here -->
+    </ng-container>
+  </app-data-table>
+</div>
+
+<!-- Create/Edit Drawer -->
+<app-drawer
+  [isOpen]="formDrawerOpen()"
+  [title]="formMode() === 'create' ? 'Buat Dokumen Baru' : 'Edit Dokumen'"
+  width="560px"
+  (closed)="closeFormDrawer()"
+>
+  <app-document-form
+    [mode]="formMode()"
+    [document]="selectedDocument()"
+    (saved)="onFormSaved()"
+    (cancelled)="closeFormDrawer()"
+  />
+</app-drawer>
+
+<!-- Quick View Drawer -->
+<app-drawer
+  [isOpen]="quickViewOpen()"
+  [title]="selectedDocument()?.title || 'Detail Dokumen'"
+  [subtitle]="selectedDocument()?.document_number || ''"
+  width="480px"
+  [showFooter]="true"
+  (closed)="closeQuickView()"
+>
+  @if (selectedDocument()) {
+    <app-document-quick-view [document]="selectedDocument()!" />
+  }
+
+  <ng-container drawerFooter>
+    <button class="btn btn-outline" (click)="closeQuickView()">Tutup</button>
+    <button class="btn btn-primary" (click)="goToDetail()">
+      Lihat Detail Lengkap
+    </button>
+  </ng-container>
+</app-drawer>
+
+<!-- Delete Confirmation -->
+<app-confirm-modal
+  [isOpen]="deleteModalOpen()"
+  title="Hapus Dokumen"
+  [message]="'Apakah Anda yakin ingin menghapus dokumen \'' + (selectedDocument()?.title || '') + '\'? Tindakan ini tidak dapat dibatalkan.'"
+  confirmText="Hapus"
+  type="danger"
+  [loading]="isSubmitting()"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+/>

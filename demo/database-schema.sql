@@ -1135,9 +1135,24 @@ INSERT INTO permissions (name, module, description) VALUES
 ('office.create',       'office', 'Membuat kantor baru'),
 ('office.edit',         'office', 'Mengedit kantor'),
 ('office.view',         'office', 'Melihat data kantor'),
+-- Department
+('department.create',   'department', 'Membuat departemen baru'),
+('department.edit',     'department', 'Mengedit departemen'),
+('department.view',     'department', 'Melihat data departemen'),
+-- Section
+('section.create',      'section', 'Membuat section baru'),
+('section.edit',        'section', 'Mengedit section'),
+('section.view',        'section', 'Melihat data section'),
+-- Position
+('position.create',     'position', 'Membuat jabatan baru'),
+('position.edit',       'position', 'Mengedit jabatan'),
+('position.view',       'position', 'Melihat data jabatan'),
 -- Audit
 ('audit.view',          'audit', 'Melihat audit log'),
 ('audit.export',        'audit', 'Export audit log'),
+-- Settings
+('setting.view',        'setting', 'Melihat system settings'),
+('setting.edit',        'setting', 'Mengubah system settings'),
 -- Notification
 ('notification.manage', 'notification', 'Manage notification settings');
 

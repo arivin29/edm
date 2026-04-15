@@ -1,0 +1,293 @@
+<div class="data-table-container">
+  <!-- Toolbar -->
+  <div class="table-toolbar">
+    <!-- Search -->
+    @if (showSearch) {
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          type="text"
+          [placeholder]="searchPlaceholder"
+          [value]="searchQuery()"
+          (input)="onSearchInput($event)"
+          class="search-input"
+        />
+        @if (searchQuery()) {
+          <button class="clear-search" (click)="clearSearch()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Bulk actions -->
+    @if (selectable && selectedIds().size > 0) {
+      <div class="bulk-actions">
+        <span class="selection-count">{{ selectedIds().size }} dipilih</span>
+        <button class="btn btn-sm btn-outline" (click)="clearSelection()">Batal Pilih</button>
+        <ng-content select="[bulkActions]"></ng-content>
+      </div>
+    }
+
+    <!-- Right side slot -->
+    <div class="toolbar-right">
+      <ng-content select="[toolbarRight]"></ng-content>
+    </div>
+  </div>
+
+  <!-- Table wrapper -->
+  <div class="table-wrapper" [class.sticky-header]="stickyHeader">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <!-- Checkbox column -->
+          @if (selectable) {
+            <th class="col-checkbox">
+              <input
+                type="checkbox"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                (change)="toggleSelectAll()"
+                class="checkbox"
+              />
+            </th>
+          }
+
+          <!-- Data columns -->
+          @for (column of visibleColumns(); track column.key) {
+            <th
+              [class.sortable]="column.sortable"
+              [class.sorted]="currentSort()?.column === column.key"
+              [style.width]="column.width"
+              [style.text-align]="column.align || 'left'"
+              [class.sticky-left]="column.sticky === 'left'"
+              [class.sticky-right]="column.sticky === 'right'"
+              (click)="onSort(column)"
+            >
+              <div class="th-content">
+                <span>{{ column.label }}</span>
+                @if (column.sortable) {
+                  <span class="sort-icon" [class.active]="currentSort()?.column === column.key">
+                    @if (currentSort()?.column === column.key) {
+                      @if (currentSort()?.direction === 'asc') {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="m18 15-6-6-6 6"/>
+                        </svg>
+                      } @else {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                      }
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4">
+                        <path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>
+                      </svg>
+                    }
+                  </span>
+                }
+              </div>
+            </th>
+          }
+
+          <!-- Actions column -->
+          @if (actions.length > 0) {
+            <th class="col-actions sticky-right">Aksi</th>
+          }
+        </tr>
+      </thead>
+
+      <tbody>
+        <!-- Loading state -->
+        @if (loading) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr class="skeleton-row">
+              @if (selectable) {
+                <td><div class="skeleton skeleton-checkbox"></div></td>
+              }
+              @for (column of visibleColumns(); track column.key) {
+                <td><div class="skeleton skeleton-text"></div></td>
+              }
+              @if (actions.length > 0) {
+                <td><div class="skeleton skeleton-button"></div></td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty state -->
+        @else if (data.length === 0) {
+          <tr>
+            <td [attr.colspan]="visibleColumns().length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)">
+              <div class="empty-state">
+                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 7h-9M14 17H5M17 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0ZM3 7a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/>
+                  <path d="M5 7h-.01M19 17h.01"/>
+                </svg>
+                <p>{{ emptyMessage }}</p>
+              </div>
+            </td>
+          </tr>
+        }
+
+        <!-- Data rows -->
+        @else {
+          @for (row of data; track trackByRow($index, row)) {
+            <tr
+              [class.selected]="isSelected(row)"
+              (click)="onRowClick(row)"
+            >
+              <!-- Checkbox -->
+              @if (selectable) {
+                <td class="col-checkbox" (click)="$event.stopPropagation()">
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected(row)"
+                    (change)="toggleSelect(row)"
+                    class="checkbox"
+                  />
+                </td>
+              }
+
+              <!-- Data cells -->
+              @for (column of visibleColumns(); track column.key) {
+                <td
+                  [style.text-align]="column.align || 'left'"
+                  [class.sticky-left]="column.sticky === 'left'"
+                  [class.sticky-right]="column.sticky === 'right'"
+                >
+                  @switch (column.type) {
+                    @case ('badge') {
+                      <span class="badge" [ngClass]="getBadgeClass(row, column)">
+                        {{ getBadgeLabel(row, column) }}
+                      </span>
+                    }
+                    @case ('date') {
+                      {{ row[column.key] | date:'dd/MM/yyyy' }}
+                    }
+                    @case ('datetime') {
+                      {{ row[column.key] | date:'dd/MM/yyyy HH:mm' }}
+                    }
+                    @case ('avatar') {
+                      <div class="avatar-cell">
+                        <div class="avatar">
+                          @if (row[column.key]) {
+                            <img [src]="row[column.key]" alt="" />
+                          } @else {
+                            <span>{{ (row.name || row.title || '?')[0] }}</span>
+                          }
+                        </div>
+                      </div>
+                    }
+                    @default {
+                      {{ getCellValue(row, column) }}
+                    }
+                  }
+                </td>
+              }
+
+              <!-- Actions -->
+              @if (actions.length > 0) {
+                <td class="col-actions sticky-right" (click)="$event.stopPropagation()">
+                  <div class="actions-wrapper">
+                    <button
+                      class="actions-trigger"
+                      (click)="toggleActions(row[rowIdKey], $event)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="6" r="1.5"/>
+                        <circle cx="12" cy="12" r="1.5"/>
+                        <circle cx="12" cy="18" r="1.5"/>
+                      </svg>
+                    </button>
+
+                    @if (actionsOpenId() === row[rowIdKey]) {
+                      <div class="actions-dropdown">
+                        @for (action of actions; track action.key) {
+                          @if (isActionVisible(action, row)) {
+                            <button
+                              class="action-item"
+                              [class.disabled]="isActionDisabled(action, row)"
+                              [ngClass]="action.class"
+                              [disabled]="isActionDisabled(action, row)"
+                              (click)="onAction(action, row, $event)"
+                            >
+                              {{ action.label }}
+                            </button>
+                          }
+                        }
+                      </div>
+                    }
+                  </div>
+                </td>
+              }
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  @if (showPagination && !loading && data.length > 0) {
+    <div class="table-pagination">
+      <div class="pagination-info">
+        <span>{{ paginationInfo() }}</span>
+      </div>
+
+      <div class="pagination-size">
+        <label>Baris per halaman:</label>
+        <select [value]="pageSize" (change)="onPageSizeChange($event)">
+          @for (size of pageSizeOptions; track size) {
+            <option [value]="size">{{ size }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="pagination-nav">
+        <button
+          class="page-btn"
+          [disabled]="currentPage() === 1"
+          (click)="goToPage(currentPage() - 1)"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+        </button>
+
+        @for (page of pageNumbers(); track $index) {
+          @if (page === '...') {
+            <span class="page-ellipsis">...</span>
+          } @else {
+            <button
+              class="page-btn"
+              [class.active]="currentPage() === page"
+              (click)="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+          }
+        }
+
+        <button
+          class="page-btn"
+          [disabled]="currentPage() === totalPages()"
+          (click)="goToPage(currentPage() + 1)"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Click outside to close actions -->
+@if (actionsOpenId()) {
+  <div class="actions-backdrop" (click)="closeActions()"></div>
+}

@@ -1,0 +1,29 @@
+<div class="page-header">
+  <!-- Breadcrumbs -->
+  @if (breadcrumbs.length > 0) {
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      @for (item of breadcrumbs; track $index; let last = $last) {
+        @if (item.link && !last) {
+          <a [routerLink]="item.link" class="breadcrumb-link">{{ item.label }}</a>
+          <span class="breadcrumb-separator">/</span>
+        } @else {
+          <span class="breadcrumb-current">{{ item.label }}</span>
+        }
+      }
+    </nav>
+  }
+
+  <!-- Title row -->
+  <div class="header-row">
+    <div class="header-title">
+      <h1>{{ title }}</h1>
+      @if (subtitle) {
+        <p>{{ subtitle }}</p>
+      }
+    </div>
+
+    <div class="header-actions">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>
