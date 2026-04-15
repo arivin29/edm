@@ -1,0 +1,645 @@
+// ============================================
+// Forms & Input Controls - Enterprise Compact
+// Covers: input, select, datepicker, textarea,
+//         checkbox, radio, switch, form layout
+// ============================================
+
+// ── Design Tokens ───────────────────────────────────────────
+$form-height-sm: 26px;
+$form-height-md: 30px;
+$form-height-lg: 36px;
+$form-font-size: 13px;
+$form-font-size-sm: 12px;
+$form-label-size: 12px;
+$form-radius: 4px;
+$form-border: #d4d4d8;
+$form-border-hover: #a1a1aa;
+$form-border-focus: #0284c7;
+$form-placeholder: #a1a1aa;
+$form-text: #1f2937;
+$form-label-color: #374151;
+$form-bg: #ffffff;
+$form-bg-disabled: #f4f4f5;
+$form-focus-ring: rgba(2, 132, 199, 0.15);
+
+// ── Custom Form Classes ─────────────────────────────────────
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 4px 10px;
+  font-size: $form-font-size;
+  color: $form-text;
+  background: $form-bg;
+  border: 1px solid $form-border;
+  border-radius: $form-radius;
+  min-height: $form-height-md;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+
+  &:hover {
+    border-color: $form-border-hover;
+  }
+
+  &:focus {
+    border-color: $form-border-focus;
+    box-shadow: 0 0 0 2px $form-focus-ring;
+  }
+
+  &:disabled,
+  &[readonly] {
+    background: $form-bg-disabled;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  &::placeholder {
+    color: $form-placeholder;
+    font-size: $form-font-size-sm;
+  }
+}
+
+.form-textarea {
+  min-height: 72px;
+  padding: 6px 10px;
+  resize: vertical;
+}
+
+.form-label {
+  display: block;
+  font-size: $form-label-size;
+  font-weight: 500;
+  color: $form-label-color;
+  margin-bottom: 2px;
+  line-height: 1.4;
+}
+
+.form-error {
+  font-size: 11px;
+  color: #dc2626;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.form-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+// ── Form Group (label + input + error) ──────────────────────
+
+.form-group {
+  margin-bottom: 12px;
+
+  &.has-error {
+    .form-input,
+    .form-select,
+    .form-textarea {
+      border-color: #dc2626;
+
+      &:focus {
+        box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15);
+      }
+    }
+
+    .form-label {
+      color: #dc2626;
+    }
+  }
+
+  &.required .form-label::after {
+    content: ' *';
+    color: #dc2626;
+  }
+}
+
+// ── ng-zorro Input Overrides ────────────────────────────────
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-picker {
+  border-radius: $form-radius !important;
+  font-size: $form-font-size !important;
+  min-height: $form-height-md !important;
+  border-color: $form-border !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+
+  &:hover {
+    border-color: $form-border-hover !important;
+  }
+}
+
+// Input
+.ant-input {
+  padding: 4px 10px !important;
+  color: $form-text !important;
+
+  &::placeholder {
+    color: $form-placeholder !important;
+    font-size: $form-font-size-sm !important;
+  }
+
+  &:focus,
+  &-focused {
+    border-color: $form-border-focus !important;
+    box-shadow: 0 0 0 2px $form-focus-ring !important;
+  }
+
+  &[disabled] {
+    background: $form-bg-disabled !important;
+  }
+}
+
+// Input with prefix/suffix (search box, password, etc.)
+.ant-input-affix-wrapper {
+  padding: 0 10px !important;
+
+  .ant-input {
+    min-height: auto !important;
+    padding: 4px 0 !important;
+  }
+
+  .ant-input-prefix {
+    margin-inline-end: 6px !important;
+    color: $form-placeholder !important;
+    font-size: 14px !important;
+  }
+
+  .ant-input-suffix {
+    margin-inline-start: 6px !important;
+    color: $form-placeholder !important;
+  }
+
+  &:focus,
+  &-focused,
+  &:focus-within {
+    border-color: $form-border-focus !important;
+    box-shadow: 0 0 0 2px $form-focus-ring !important;
+  }
+}
+
+// Input group (addon)
+.ant-input-group-addon {
+  font-size: $form-font-size-sm !important;
+  padding: 0 8px !important;
+  min-width: auto !important;
+  border-color: $form-border !important;
+  background: #fafafa !important;
+}
+
+// Textarea
+.ant-input-textarea {
+  .ant-input {
+    min-height: 72px !important;
+    padding: 6px 10px !important;
+  }
+
+  .ant-input-textarea-suffix {
+    .ant-input-data-count {
+      font-size: 11px !important;
+      color: $form-placeholder !important;
+    }
+  }
+}
+
+// Number input
+.ant-input-number {
+  border-radius: $form-radius !important;
+  border-color: $form-border !important;
+  font-size: $form-font-size !important;
+  min-height: $form-height-md !important;
+  width: 100%;
+
+  .ant-input-number-input {
+    height: calc(#{$form-height-md} - 2px) !important;
+    padding: 0 10px !important;
+    font-size: $form-font-size !important;
+  }
+
+  .ant-input-number-handler-wrap {
+    width: 24px !important;
+    border-radius: 0 $form-radius $form-radius 0 !important;
+  }
+
+  &:hover {
+    border-color: $form-border-hover !important;
+  }
+
+  &:focus,
+  &-focused {
+    border-color: $form-border-focus !important;
+    box-shadow: 0 0 0 2px $form-focus-ring !important;
+  }
+}
+
+// ── ng-zorro Select Overrides ───────────────────────────────
+
+.ant-select {
+  font-size: $form-font-size !important;
+
+  .ant-select-selector {
+    height: $form-height-md !important;
+    padding: 0 10px !important;
+    border-color: $form-border !important;
+
+    .ant-select-selection-item {
+      line-height: calc(#{$form-height-md} - 2px) !important;
+      font-size: $form-font-size !important;
+      color: $form-text !important;
+    }
+
+    .ant-select-selection-placeholder {
+      line-height: calc(#{$form-height-md} - 2px) !important;
+      color: $form-placeholder !important;
+      font-size: $form-font-size-sm !important;
+    }
+
+    .ant-select-selection-search-input {
+      height: calc(#{$form-height-md} - 2px) !important;
+    }
+  }
+
+  // Small variant
+  &.ant-select-sm .ant-select-selector {
+    height: $form-height-sm !important;
+
+    .ant-select-selection-item,
+    .ant-select-selection-placeholder {
+      line-height: calc(#{$form-height-sm} - 2px) !important;
+    }
+  }
+
+  // Large variant
+  &.ant-select-lg .ant-select-selector {
+    height: $form-height-lg !important;
+
+    .ant-select-selection-item,
+    .ant-select-selection-placeholder {
+      line-height: calc(#{$form-height-lg} - 2px) !important;
+      font-size: 14px !important;
+    }
+  }
+
+  // Multiple select (tags mode)
+  &.ant-select-multiple {
+    .ant-select-selector {
+      height: auto !important;
+      min-height: $form-height-md !important;
+      padding: 1px 4px !important;
+    }
+
+    .ant-select-selection-item {
+      height: 22px !important;
+      line-height: 20px !important;
+      margin-top: 2px !important;
+      margin-bottom: 2px !important;
+      font-size: $form-font-size-sm !important;
+      border-radius: 3px !important;
+      padding-inline: 6px !important;
+      background: #f0f9ff !important;
+      border-color: #bae6fd !important;
+      color: #0369a1 !important;
+    }
+
+    .ant-select-selection-item-remove {
+      font-size: 10px !important;
+      color: #0369a1 !important;
+
+      &:hover {
+        color: #075985 !important;
+      }
+    }
+  }
+
+  // Focus state
+  &.ant-select-focused .ant-select-selector,
+  &.ant-select-open .ant-select-selector {
+    border-color: $form-border-focus !important;
+    box-shadow: 0 0 0 2px $form-focus-ring !important;
+  }
+
+  // Disabled state
+  &.ant-select-disabled .ant-select-selector {
+    background: $form-bg-disabled !important;
+    cursor: not-allowed !important;
+  }
+
+  // Clear icon
+  .ant-select-clear {
+    font-size: 12px !important;
+    background: $form-bg !important;
+  }
+
+  // Arrow
+  .ant-select-arrow {
+    font-size: 11px !important;
+    color: $form-placeholder !important;
+  }
+}
+
+// Select dropdown panel
+.ant-select-dropdown {
+  border-radius: $form-radius !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  padding: 3px !important;
+
+  .ant-select-item {
+    font-size: $form-font-size-sm !important;
+    padding: 5px 10px !important;
+    min-height: 28px !important;
+    border-radius: 3px !important;
+    color: $form-text !important;
+    transition: background 0.1s ease !important;
+  }
+
+  .ant-select-item-option-active {
+    background: #f8fafc !important;
+  }
+
+  .ant-select-item-option-selected {
+    background: #f0f9ff !important;
+    font-weight: 500 !important;
+    color: #0284c7 !important;
+  }
+
+  .ant-select-item-option-disabled {
+    color: $form-placeholder !important;
+    opacity: 0.6 !important;
+  }
+
+  // Empty state in dropdown
+  .ant-select-item-empty {
+    font-size: $form-font-size-sm !important;
+    color: $form-placeholder !important;
+    padding: 8px 10px !important;
+  }
+}
+
+// ── ng-zorro DatePicker / TimePicker ────────────────────────
+
+.ant-picker {
+  padding: 4px 10px !important;
+  color: $form-text !important;
+
+  .ant-picker-input > input {
+    font-size: $form-font-size !important;
+    color: $form-text !important;
+
+    &::placeholder {
+      color: $form-placeholder !important;
+      font-size: $form-font-size-sm !important;
+    }
+  }
+
+  .ant-picker-suffix {
+    color: $form-placeholder !important;
+    font-size: 14px !important;
+  }
+
+  .ant-picker-clear {
+    font-size: 12px !important;
+    background: $form-bg !important;
+  }
+
+  &:hover {
+    border-color: $form-border-hover !important;
+  }
+
+  &.ant-picker-focused,
+  &:focus {
+    border-color: $form-border-focus !important;
+    box-shadow: 0 0 0 2px $form-focus-ring !important;
+  }
+
+  &.ant-picker-disabled {
+    background: $form-bg-disabled !important;
+  }
+}
+
+// Range picker
+.ant-picker-range {
+  .ant-picker-active-bar {
+    background: $form-border-focus !important;
+  }
+}
+
+// ── ng-zorro Form Layout Overrides ──────────────────────────
+
+.ant-form-item {
+  margin-bottom: 12px !important;
+
+  .ant-form-item-label {
+    padding-bottom: 2px !important;
+
+    > label {
+      font-size: $form-label-size !important;
+      font-weight: 500 !important;
+      color: $form-label-color !important;
+      height: auto !important;
+
+      &.ant-form-item-required::before {
+        font-size: 12px !important;
+        margin-inline-end: 2px !important;
+      }
+    }
+  }
+
+  .ant-form-item-control-input {
+    min-height: $form-height-md !important;
+  }
+
+  .ant-form-item-explain {
+    font-size: 11px !important;
+    min-height: 18px !important;
+    padding-top: 1px !important;
+  }
+
+  .ant-form-item-extra {
+    font-size: 11px !important;
+    color: $form-placeholder !important;
+    min-height: auto !important;
+    margin-top: 2px !important;
+  }
+
+  // Compact variant
+  &.form-item-compact {
+    margin-bottom: 8px !important;
+  }
+
+  // Inline form items
+  &.form-item-inline {
+    .ant-form-item-label {
+      padding-bottom: 0 !important;
+      padding-right: 8px !important;
+    }
+  }
+}
+
+// Horizontal form
+.ant-form-horizontal {
+  .ant-form-item-label {
+    > label {
+      justify-content: flex-end !important;
+    }
+  }
+}
+
+// Error state
+.ant-form-item-has-error {
+  .ant-input,
+  .ant-input-affix-wrapper,
+  .ant-select-selector,
+  .ant-picker,
+  .ant-input-number {
+    border-color: #dc2626 !important;
+
+    &:focus,
+    &:focus-within {
+      box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
+    }
+  }
+}
+
+// ── Checkbox & Radio ────────────────────────────────────────
+
+.ant-checkbox-wrapper {
+  font-size: $form-font-size !important;
+  align-items: center !important;
+
+  .ant-checkbox {
+    top: 0 !important;
+  }
+
+  .ant-checkbox-inner {
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 3px !important;
+    border-color: $form-border !important;
+
+    &::after {
+      width: 5px !important;
+      height: 8px !important;
+    }
+  }
+
+  .ant-checkbox-checked .ant-checkbox-inner {
+    background: $form-border-focus !important;
+    border-color: $form-border-focus !important;
+  }
+}
+
+.ant-checkbox-group {
+  gap: 8px;
+}
+
+.ant-radio-wrapper {
+  font-size: $form-font-size !important;
+  align-items: center !important;
+
+  .ant-radio {
+    top: 0 !important;
+  }
+
+  .ant-radio-inner {
+    width: 16px !important;
+    height: 16px !important;
+    border-color: $form-border !important;
+
+    &::after {
+      width: 8px !important;
+      height: 8px !important;
+      margin-block-start: -4px !important;
+      margin-inline-start: -4px !important;
+    }
+  }
+
+  .ant-radio-checked .ant-radio-inner {
+    border-color: $form-border-focus !important;
+  }
+}
+
+// ── Switch ──────────────────────────────────────────────────
+
+.ant-switch {
+  min-width: 36px !important;
+  height: 18px !important;
+  line-height: 18px !important;
+  background: $form-border !important;
+
+  .ant-switch-handle {
+    width: 14px !important;
+    height: 14px !important;
+    top: 2px !important;
+  }
+
+  &.ant-switch-checked {
+    background: $form-border-focus !important;
+
+    .ant-switch-handle {
+      inset-inline-start: calc(100% - 16px) !important;
+    }
+  }
+}
+
+// ── Upload ──────────────────────────────────────────────────
+
+.ant-upload {
+  &.ant-upload-drag {
+    border-radius: $form-radius !important;
+    border-color: $form-border !important;
+    padding: 12px !important;
+
+    .ant-upload-drag-icon {
+      margin-bottom: 4px !important;
+
+      .anticon {
+        font-size: 28px !important;
+        color: $form-placeholder !important;
+      }
+    }
+
+    .ant-upload-text {
+      font-size: $form-font-size !important;
+      color: $form-text !important;
+    }
+
+    .ant-upload-hint {
+      font-size: $form-font-size-sm !important;
+      color: $form-placeholder !important;
+    }
+
+    &:hover {
+      border-color: $form-border-focus !important;
+    }
+  }
+}
+
+// ── Filter Bar (page-level search + filter row) ─────────────
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+
+  .ant-input-affix-wrapper,
+  .ant-select,
+  .ant-picker {
+    flex-shrink: 0;
+  }
+
+  // Search input in filter bar
+  .ant-input-affix-wrapper {
+    max-width: 220px;
+  }
+
+  // Selects in filter bar
+  .ant-select {
+    min-width: 120px;
+  }
+}

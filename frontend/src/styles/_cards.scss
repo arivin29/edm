@@ -1,0 +1,160 @@
+// ============================================
+// Cards - Enterprise Compact
+// Covers: custom .card classes + ng-zorro ant-card overrides
+// ============================================
+
+// ── Design Tokens ───────────────────────────────────────────
+$card-radius: 4px;
+$card-border: #e5e7eb;
+$card-border-light: #f3f4f6;
+$card-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+$card-shadow-hover: 0 2px 8px 0 rgba(0, 0, 0, 0.06);
+$card-title-color: #374151;
+$card-title-size: 13px;
+$card-body-padding: 12px;
+
+// ── Custom Card Classes ─────────────────────────────────────
+
+.card {
+  background: #ffffff;
+  border-radius: $card-radius;
+  box-shadow: $card-shadow;
+  border: 1px solid $card-border;
+}
+
+.card-header {
+  padding: 8px $card-body-padding;
+  border-bottom: 1px solid $card-border-light;
+  font-weight: 600;
+  font-size: $card-title-size;
+  color: $card-title-color;
+}
+
+.card-body {
+  padding: $card-body-padding;
+}
+
+.card-footer {
+  padding: 8px $card-body-padding;
+  border-top: 1px solid $card-border-light;
+  background: #fafafa;
+}
+
+// Hover variant
+.card-hover {
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    box-shadow: $card-shadow-hover;
+    border-color: #d4d4d8;
+  }
+}
+
+// Flat variant (no shadow)
+.card-flat {
+  box-shadow: none;
+}
+
+// Compact variant
+.card-compact {
+  .card-header {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .card-body {
+    padding: 10px;
+  }
+
+  .card-footer {
+    padding: 6px 10px;
+  }
+}
+
+// ── ng-zorro Card Overrides ─────────────────────────────────
+
+.ant-card {
+  border-radius: $card-radius !important;
+  border-color: $card-border !important;
+  box-shadow: $card-shadow !important;
+
+  .ant-card-head {
+    min-height: 36px !important;
+    padding: 0 $card-body-padding !important;
+    font-size: $card-title-size !important;
+    border-bottom-color: $card-border-light !important;
+
+    .ant-card-head-title {
+      padding: 8px 0 !important;
+      font-weight: 600 !important;
+      font-size: $card-title-size !important;
+      color: $card-title-color !important;
+    }
+
+    .ant-card-extra {
+      padding: 8px 0 !important;
+      font-size: 12px !important;
+    }
+  }
+
+  .ant-card-body {
+    padding: $card-body-padding !important;
+  }
+
+  .ant-card-actions {
+    border-top-color: $card-border-light !important;
+    background: #fafafa !important;
+
+    > li {
+      font-size: 12px !important;
+
+      > span {
+        font-size: 12px !important;
+
+        .anticon {
+          font-size: 14px !important;
+        }
+      }
+    }
+  }
+
+  // Small variant
+  &.ant-card-small {
+    .ant-card-head {
+      min-height: 32px !important;
+      padding: 0 10px !important;
+      font-size: 12px !important;
+
+      .ant-card-head-title {
+        padding: 6px 0 !important;
+      }
+
+      .ant-card-extra {
+        padding: 6px 0 !important;
+      }
+    }
+
+    .ant-card-body {
+      padding: 10px !important;
+    }
+  }
+
+  // Bordered variant
+  &.ant-card-bordered {
+    border-color: $card-border !important;
+  }
+
+  // Hoverable
+  &.ant-card-hoverable {
+    transition: box-shadow 0.15s ease !important;
+
+    &:hover {
+      box-shadow: $card-shadow-hover !important;
+    }
+  }
+
+  // Loading state
+  .ant-card-loading-content {
+    padding: $card-body-padding !important;
+  }
+}

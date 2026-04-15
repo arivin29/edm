@@ -1,0 +1,48 @@
+/* ============================================
+   ng-zorro-antd Enterprise Compact Overrides
+   Only global token overrides remain here.
+   Component-specific overrides are in:
+     - styles/_buttons.scss
+     - styles/_forms.scss
+     - styles/_tables.scss
+     - styles/_cards.scss
+     - styles/_badges.scss (tag, badge, avatar)
+     - styles/_modals.scss (modal, drawer, popover)
+     - styles/_data-display.scss (statistic, tabs, timeline, empty, spin, message, tooltip)
+     - styles/_navigation.scss (menu, dropdown, breadcrumb)
+   ============================================ */
+
+/* ============================================
+   Global Token Overrides
+   ============================================ */
+:root {
+  // Sizing
+  --ant-font-size: 13px;
+  --ant-font-size-sm: 12px;
+  --ant-font-size-lg: 14px;
+  --ant-line-height: 1.5;
+  --ant-border-radius: 4px;
+  --ant-border-radius-sm: 3px;
+  --ant-border-radius-lg: 6px;
+
+  // Colors - more professional blue
+  --ant-color-primary: #0284c7;
+  --ant-color-primary-hover: #0369a1;
+  --ant-color-primary-active: #075985;
+  --ant-color-primary-bg: #f0f9ff;
+  --ant-color-primary-border: #bae6fd;
+
+  // Neutral
+  --ant-color-text: #1f2937;
+  --ant-color-text-secondary: #6b7280;
+  --ant-color-text-tertiary: #9ca3af;
+  --ant-color-border: #e5e7eb;
+  --ant-color-border-secondary: #f3f4f6;
+  --ant-color-bg-container: #ffffff;
+  --ant-color-bg-layout: #f8fafc;
+
+  // Control
+  --ant-control-height: 30px;
+  --ant-control-height-sm: 26px;
+  --ant-control-height-lg: 36px;
+}

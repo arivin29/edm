@@ -5,38 +5,53 @@
       <span nz-icon nzType="menu-unfold" nzTheme="outline"></span>
     </button>
 
-    <!-- Search -->
-    <nz-input-group [nzPrefix]="prefixIcon" class="search-box hidden md:block">
-      <input type="text" nz-input placeholder="Cari dokumen..." />
-    </nz-input-group>
-    <ng-template #prefixIcon>
+    <!-- Search trigger (Cmd+K style) -->
+    <button class="search-trigger hidden md:flex" nz-tooltip nzTooltipTitle="Cari dokumen (⌘K)" (click)="openSearch()">
       <span nz-icon nzType="search" nzTheme="outline"></span>
-    </ng-template>
+      <span class="search-label">Cari dokumen...</span>
+      <kbd class="search-kbd">⌘K</kbd>
+    </button>
   </div>
 
   <div class="header-right">
+    <!-- Quick create -->
+    <button class="header-action-btn" nz-tooltip nzTooltipTitle="Buat Dokumen Baru" routerLink="/documents/create">
+      <span nz-icon nzType="plus" nzTheme="outline"></span>
+    </button>
+
+    <span class="header-divider"></span>
+
     <!-- Notifications -->
     <app-notification-bell></app-notification-bell>
 
+    <span class="header-divider"></span>
+
     <!-- User Menu -->
     <a nz-dropdown [nzDropdownMenu]="userMenu" nzTrigger="click" class="user-trigger">
-      <nz-avatar [nzText]="userInitial" nzSize="small" class="bg-blue-500"></nz-avatar>
-      <span class="user-name hidden md:inline">{{ userName() }}</span>
-      <span nz-icon nzType="down" nzTheme="outline" class="text-xs"></span>
+      <nz-avatar [nzText]="userInitial" nzSize="small" class="user-avatar"></nz-avatar>
+      <div class="user-info hidden md:flex">
+        <span class="user-name">{{ userName() }}</span>
+        <span class="user-role">{{ userRoleLabel() }}</span>
+      </div>
+      <span nz-icon nzType="down" nzTheme="outline" class="trigger-arrow"></span>
     </a>
     <nz-dropdown-menu #userMenu="nzDropdownMenu">
-      <ul nz-menu>
-        <li nz-menu-item>
-          <a routerLink="/profile">
-            <span nz-icon nzType="user" nzTheme="outline"></span>
-            Profil Saya
-          </a>
+      <ul nz-menu class="user-dropdown">
+        <li class="dropdown-user-header">
+          <nz-avatar [nzText]="userInitial" [nzSize]="40" class="user-avatar"></nz-avatar>
+          <div>
+            <div class="dropdown-user-name">{{ userName() }}</div>
+            <div class="dropdown-user-email">{{ userEmail() }}</div>
+          </div>
         </li>
-        <li nz-menu-item>
-          <a routerLink="/profile/change-password">
-            <span nz-icon nzType="safety" nzTheme="outline"></span>
-            Ubah Password
-          </a>
+        <li nz-menu-divider></li>
+        <li nz-menu-item routerLink="/profile">
+          <span nz-icon nzType="user" nzTheme="outline"></span>
+          Profil Saya
+        </li>
+        <li nz-menu-item routerLink="/profile/change-password">
+          <span nz-icon nzType="safety" nzTheme="outline"></span>
+          Ubah Password
         </li>
         <li nz-menu-divider></li>
         <li nz-menu-item nzDanger (click)="logout()">

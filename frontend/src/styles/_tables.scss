@@ -1,0 +1,204 @@
+// ============================================
+// Tables - Enterprise Compact
+// Covers: custom .table classes + ng-zorro ant-table overrides
+// ============================================
+
+// ── Design Tokens ───────────────────────────────────────────
+$tbl-font-size: 12px;
+$tbl-header-size: 11px;
+$tbl-header-bg: #f9fafb;
+$tbl-header-color: #6b7280;
+$tbl-text-color: #374151;
+$tbl-border: #e5e7eb;
+$tbl-border-light: #f3f4f6;
+$tbl-hover-bg: #f8fafc;
+$tbl-selected-bg: #f0f9ff;
+$tbl-padding-x: 8px;
+$tbl-padding-y: 6px;
+$tbl-radius: 4px;
+$tbl-primary: #0284c7;
+
+// ── Custom Table Classes ────────────────────────────────────
+
+.table {
+  width: 100%;
+  font-size: $tbl-font-size;
+  text-align: left;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: $tbl-padding-y 12px;
+  font-size: $tbl-header-size;
+  font-weight: 600;
+  color: $tbl-header-color;
+  background: $tbl-header-bg;
+  border-bottom: 2px solid $tbl-border;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.table td {
+  padding: $tbl-padding-y 12px;
+  border-bottom: 1px solid $tbl-border-light;
+  color: $tbl-text-color;
+}
+
+.table-hover tbody tr:hover {
+  background: $tbl-hover-bg;
+}
+
+.table-dense th,
+.table-dense td {
+  padding: 4px 8px;
+}
+
+.table-striped tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+// ── ng-zorro Table Overrides ────────────────────────────────
+
+.ant-table {
+  font-size: $tbl-font-size !important;
+
+  // Header
+  .ant-table-thead > tr > th,
+  .ant-table-thead > tr > td {
+    padding: $tbl-padding-y $tbl-padding-x !important;
+    font-size: $tbl-header-size !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    color: $tbl-header-color !important;
+    background: $tbl-header-bg !important;
+    border-bottom: 1px solid $tbl-border !important;
+  }
+
+  // Body
+  .ant-table-tbody > tr > td {
+    padding: $tbl-padding-y $tbl-padding-x !important;
+    border-bottom: 1px solid $tbl-border-light !important;
+    color: $tbl-text-color !important;
+    font-size: $tbl-font-size !important;
+  }
+
+  // Hover
+  .ant-table-tbody > tr:hover > td {
+    background: $tbl-hover-bg !important;
+  }
+
+  // Selected row
+  .ant-table-tbody > tr.ant-table-row-selected > td {
+    background: $tbl-selected-bg !important;
+  }
+
+  // Small variant
+  &.ant-table-small {
+    .ant-table-thead > tr > th {
+      padding: 4px 6px !important;
+    }
+
+    .ant-table-tbody > tr > td {
+      padding: 4px 6px !important;
+    }
+  }
+
+  // Expandable row
+  .ant-table-expand-icon-col {
+    width: 32px !important;
+  }
+
+  .ant-table-row-expand-icon {
+    width: 20px !important;
+    height: 20px !important;
+    line-height: 18px !important;
+    border-radius: 3px !important;
+  }
+
+  // Fixed column shadow
+  .ant-table-cell-fix-left,
+  .ant-table-cell-fix-right {
+    background: inherit !important;
+  }
+
+  // Empty table
+  .ant-table-placeholder {
+    .ant-empty {
+      margin: 16px 0 !important;
+    }
+  }
+
+  // Sorter
+  .ant-table-column-sorter {
+    font-size: 10px !important;
+  }
+
+  // Filter
+  .ant-table-filter-trigger {
+    font-size: 12px !important;
+    padding: 2px 4px !important;
+  }
+}
+
+// ── Pagination (table footer) ───────────────────────────────
+
+.ant-table-wrapper {
+  .ant-table-pagination {
+    margin: 8px 0 !important;
+
+    .ant-pagination-item,
+    .ant-pagination-prev,
+    .ant-pagination-next {
+      min-width: 28px !important;
+      height: 28px !important;
+      line-height: 26px !important;
+      font-size: 12px !important;
+      border-radius: $tbl-radius !important;
+    }
+
+    .ant-pagination-item-active {
+      border-color: $tbl-primary !important;
+
+      a {
+        color: $tbl-primary !important;
+      }
+    }
+
+    .ant-pagination-options {
+      .ant-select-selector {
+        height: 28px !important;
+        font-size: 12px !important;
+      }
+    }
+
+    .ant-pagination-total-text {
+      font-size: 12px !important;
+      color: $tbl-header-color !important;
+    }
+  }
+}
+
+// Standalone pagination (outside table)
+.ant-pagination {
+  font-size: 12px !important;
+
+  .ant-pagination-item,
+  .ant-pagination-prev,
+  .ant-pagination-next {
+    min-width: 28px !important;
+    height: 28px !important;
+    line-height: 26px !important;
+    font-size: 12px !important;
+    border-radius: $tbl-radius !important;
+  }
+
+  .ant-pagination-item-active {
+    border-color: $tbl-primary !important;
+
+    a {
+      color: $tbl-primary !important;
+    }
+  }
+}

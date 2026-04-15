@@ -1,0 +1,530 @@
+/* ============================================
+   Buttons - Enterprise Design System
+   Unified button styles for both custom .btn
+   and ng-zorro .ant-btn components.
+   ============================================ */
+
+/* ============================================
+   1. Design Tokens
+   ============================================ */
+$btn-height-xs: 22px;
+$btn-height-sm: 26px;
+$btn-height-md: 30px;
+$btn-height-lg: 36px;
+
+$btn-font-xs: 11px;
+$btn-font-sm: 12px;
+$btn-font-md: 12px;
+$btn-font-lg: 13px;
+
+$btn-radius: 4px;
+$btn-transition: all 0.15s ease;
+
+// Color palette
+$btn-primary: #0284c7;
+$btn-primary-hover: #0369a1;
+$btn-primary-active: #075985;
+
+$btn-success: #16a34a;
+$btn-success-hover: #15803d;
+
+$btn-danger: #dc2626;
+$btn-danger-hover: #b91c1c;
+
+$btn-warning: #d97706;
+$btn-warning-hover: #b45309;
+
+/* ============================================
+   2. Custom .btn System
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: $btn-height-md;
+  padding: 0 12px;
+  font-size: $btn-font-md;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: $btn-radius;
+  cursor: pointer;
+  transition: $btn-transition;
+  outline: none;
+  text-decoration: none;
+  position: relative;
+  user-select: none;
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba($btn-primary, 0.35);
+  }
+
+  &:disabled,
+  &.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  // Icon inside button
+  .anticon,
+  [nz-icon],
+  svg {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+}
+
+// ---- Variants ----
+
+.btn-primary {
+  background: $btn-primary;
+  border-color: $btn-primary;
+  color: #fff;
+
+  &:hover {
+    background: $btn-primary-hover;
+    border-color: $btn-primary-hover;
+  }
+
+  &:active {
+    background: $btn-primary-active;
+    border-color: $btn-primary-active;
+  }
+}
+
+.btn-secondary {
+  background: #fff;
+  border-color: #d4d4d8;
+  color: #374151;
+
+  &:hover {
+    background: #f9fafb;
+    border-color: #a1a1aa;
+    color: #1f2937;
+  }
+
+  &:active {
+    background: #f3f4f6;
+  }
+}
+
+.btn-success {
+  background: $btn-success;
+  border-color: $btn-success;
+  color: #fff;
+
+  &:hover {
+    background: $btn-success-hover;
+    border-color: $btn-success-hover;
+  }
+}
+
+.btn-danger {
+  background: $btn-danger;
+  border-color: $btn-danger;
+  color: #fff;
+
+  &:hover {
+    background: $btn-danger-hover;
+    border-color: $btn-danger-hover;
+  }
+}
+
+.btn-warning {
+  background: $btn-warning;
+  border-color: $btn-warning;
+  color: #fff;
+
+  &:hover {
+    background: $btn-warning-hover;
+    border-color: $btn-warning-hover;
+  }
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: #6b7280;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+
+  &:active {
+    background: #e5e7eb;
+  }
+}
+
+.btn-outline {
+  background: transparent;
+  border-color: #d4d4d8;
+  color: #374151;
+
+  &:hover {
+    background: #f9fafb;
+    border-color: #a1a1aa;
+  }
+}
+
+.btn-outline-primary {
+  background: transparent;
+  border-color: $btn-primary;
+  color: $btn-primary;
+
+  &:hover {
+    background: #f0f9ff;
+    border-color: $btn-primary-hover;
+    color: $btn-primary-hover;
+  }
+}
+
+.btn-outline-danger {
+  background: transparent;
+  border-color: #fca5a5;
+  color: $btn-danger;
+
+  &:hover {
+    background: #fef2f2;
+    border-color: $btn-danger;
+  }
+}
+
+.btn-link {
+  background: transparent;
+  border-color: transparent;
+  color: $btn-primary;
+  padding: 0;
+  height: auto;
+
+  &:hover {
+    color: $btn-primary-hover;
+    text-decoration: underline;
+  }
+}
+
+.btn-text {
+  background: transparent;
+  border-color: transparent;
+  color: #6b7280;
+  padding: 0 6px;
+  height: auto;
+
+  &:hover {
+    color: #1f2937;
+  }
+}
+
+// ---- Sizes ----
+
+.btn-xs {
+  height: $btn-height-xs;
+  padding: 0 6px;
+  font-size: $btn-font-xs;
+  gap: 3px;
+
+  .anticon, [nz-icon], svg {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.btn-sm {
+  height: $btn-height-sm;
+  padding: 0 8px;
+  font-size: $btn-font-sm;
+  gap: 4px;
+
+  .anticon, [nz-icon], svg {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.btn-lg {
+  height: $btn-height-lg;
+  padding: 0 16px;
+  font-size: $btn-font-lg;
+  gap: 6px;
+
+  .anticon, [nz-icon], svg {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// ---- Icon-only Button ----
+
+.btn-icon {
+  width: $btn-height-md;
+  height: $btn-height-md;
+  padding: 0;
+  justify-content: center;
+
+  &.btn-xs {
+    width: $btn-height-xs;
+    height: $btn-height-xs;
+  }
+
+  &.btn-sm {
+    width: $btn-height-sm;
+    height: $btn-height-sm;
+  }
+
+  &.btn-lg {
+    width: $btn-height-lg;
+    height: $btn-height-lg;
+  }
+}
+
+// ---- Button Group ----
+
+.btn-group {
+  display: inline-flex;
+  align-items: center;
+
+  .btn {
+    border-radius: 0;
+
+    &:first-child {
+      border-radius: $btn-radius 0 0 $btn-radius;
+    }
+
+    &:last-child {
+      border-radius: 0 $btn-radius $btn-radius 0;
+    }
+
+    &:not(:first-child) {
+      margin-left: -1px;
+    }
+  }
+}
+
+// ---- Loading State ----
+
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: btn-spin 0.6s linear infinite;
+  }
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   3. ng-zorro Button Overrides
+   Keeps .ant-btn consistent with design system
+   ============================================ */
+.ant-btn {
+  border-radius: $btn-radius !important;
+  font-size: $btn-font-md !important;
+  font-weight: 500 !important;
+  height: $btn-height-md !important;
+  padding: 0 12px !important;
+  box-shadow: none !important;
+  transition: $btn-transition !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  line-height: 1 !important;
+
+  // Sizes
+  &.ant-btn-sm {
+    height: $btn-height-sm !important;
+    padding: 0 8px !important;
+    font-size: $btn-font-sm !important;
+  }
+
+  &.ant-btn-lg {
+    height: $btn-height-lg !important;
+    padding: 0 16px !important;
+    font-size: $btn-font-lg !important;
+  }
+
+  // Primary
+  &.ant-btn-primary {
+    background: $btn-primary !important;
+    border-color: $btn-primary !important;
+    color: #fff !important;
+
+    &:hover,
+    &:focus {
+      background: $btn-primary-hover !important;
+      border-color: $btn-primary-hover !important;
+    }
+
+    &:active {
+      background: $btn-primary-active !important;
+      border-color: $btn-primary-active !important;
+    }
+
+    &[disabled] {
+      background: #bae6fd !important;
+      border-color: #bae6fd !important;
+      color: #fff !important;
+    }
+  }
+
+  // Default
+  &.ant-btn-default {
+    background: #fff !important;
+    border-color: #d4d4d8 !important;
+    color: #374151 !important;
+
+    &:hover,
+    &:focus {
+      background: #f9fafb !important;
+      color: $btn-primary !important;
+      border-color: $btn-primary !important;
+    }
+
+    &:active {
+      background: #f0f9ff !important;
+    }
+  }
+
+  // Dashed
+  &.ant-btn-dashed {
+    border-style: dashed !important;
+    border-color: #d4d4d8 !important;
+    color: #6b7280 !important;
+
+    &:hover,
+    &:focus {
+      color: $btn-primary !important;
+      border-color: $btn-primary !important;
+    }
+  }
+
+  // Text (no border, no bg)
+  &.ant-btn-text {
+    border-color: transparent !important;
+    background: transparent !important;
+    color: #6b7280 !important;
+    padding: 0 6px !important;
+
+    &:hover {
+      background: #f3f4f6 !important;
+      color: #1f2937 !important;
+    }
+  }
+
+  // Link
+  &.ant-btn-link {
+    border-color: transparent !important;
+    background: transparent !important;
+    color: $btn-primary !important;
+    padding: 0 !important;
+    height: auto !important;
+    box-shadow: none !important;
+
+    &:hover {
+      color: $btn-primary-hover !important;
+    }
+  }
+
+  // Danger
+  &.ant-btn-dangerous {
+    &.ant-btn-primary {
+      background: $btn-danger !important;
+      border-color: $btn-danger !important;
+
+      &:hover,
+      &:focus {
+        background: $btn-danger-hover !important;
+        border-color: $btn-danger-hover !important;
+      }
+    }
+
+    &.ant-btn-default {
+      color: $btn-danger !important;
+      border-color: #fca5a5 !important;
+
+      &:hover,
+      &:focus {
+        color: $btn-danger-hover !important;
+        border-color: $btn-danger !important;
+        background: #fef2f2 !important;
+      }
+    }
+
+    &.ant-btn-text {
+      color: $btn-danger !important;
+
+      &:hover {
+        background: #fef2f2 !important;
+        color: $btn-danger-hover !important;
+      }
+    }
+
+    &.ant-btn-link {
+      color: $btn-danger !important;
+
+      &:hover {
+        color: $btn-danger-hover !important;
+      }
+    }
+  }
+
+  // Icon-only
+  &.ant-btn-icon-only {
+    width: $btn-height-md !important;
+    padding: 0 !important;
+
+    &.ant-btn-sm {
+      width: $btn-height-sm !important;
+      height: $btn-height-sm !important;
+    }
+
+    &.ant-btn-lg {
+      width: $btn-height-lg !important;
+      height: $btn-height-lg !important;
+    }
+  }
+
+  // Loading spinner
+  .ant-btn-loading-icon {
+    font-size: 14px !important;
+  }
+
+  // Icon spacing
+  > .anticon + span,
+  > span + .anticon {
+    margin-inline-start: 0 !important;
+  }
+}
+
+// Button group (ng-zorro)
+.ant-btn-group {
+  .ant-btn {
+    border-radius: 0 !important;
+
+    &:first-child {
+      border-radius: $btn-radius 0 0 $btn-radius !important;
+    }
+
+    &:last-child {
+      border-radius: 0 $btn-radius $btn-radius 0 !important;
+    }
+  }
+}

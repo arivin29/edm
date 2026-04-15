@@ -1,0 +1,131 @@
+// ============================================
+// Modals, Drawers & Overlays - Enterprise Compact
+// ============================================
+
+// ── Design Tokens ───────────────────────────────────────────
+$modal-radius: 6px;
+$modal-header-padding: 12px 16px;
+$modal-body-padding: 16px;
+$modal-footer-padding: 8px 16px;
+$modal-border: #f3f4f6;
+$modal-title-size: 14px;
+
+// ── Custom Backdrop ─────────────────────────────────────────
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: var(--z-modal-backdrop);
+}
+
+// ── ng-zorro Modal Overrides ────────────────────────────────
+
+.ant-modal {
+  .ant-modal-content {
+    border-radius: $modal-radius !important;
+    overflow: hidden;
+  }
+
+  .ant-modal-header {
+    padding: $modal-header-padding !important;
+    border-bottom: 1px solid $modal-border !important;
+    margin-bottom: 0 !important;
+
+    .ant-modal-title {
+      font-size: $modal-title-size !important;
+      font-weight: 600 !important;
+      color: #1f2937 !important;
+    }
+  }
+
+  .ant-modal-body {
+    padding: $modal-body-padding !important;
+  }
+
+  .ant-modal-footer {
+    padding: $modal-footer-padding !important;
+    border-top: 1px solid $modal-border !important;
+    margin-top: 0 !important;
+
+    .ant-btn + .ant-btn {
+      margin-inline-start: 8px !important;
+    }
+  }
+
+  .ant-modal-close {
+    top: 10px !important;
+    right: 12px !important;
+
+    .ant-modal-close-x {
+      font-size: 14px !important;
+      width: 28px !important;
+      height: 28px !important;
+      line-height: 28px !important;
+    }
+  }
+
+  // Confirm modal
+  .ant-modal-confirm-body {
+    .ant-modal-confirm-title {
+      font-size: 14px !important;
+      font-weight: 600 !important;
+    }
+
+    .ant-modal-confirm-content {
+      font-size: 13px !important;
+      margin-top: 4px !important;
+    }
+  }
+}
+
+// ── ng-zorro Drawer Overrides ───────────────────────────────
+
+.ant-drawer {
+  .ant-drawer-header {
+    padding: $modal-header-padding !important;
+    border-bottom: 1px solid $modal-border !important;
+
+    .ant-drawer-title {
+      font-size: $modal-title-size !important;
+      font-weight: 600 !important;
+      color: #1f2937 !important;
+    }
+
+    .ant-drawer-close {
+      font-size: 14px !important;
+      padding: 0 !important;
+      width: 28px !important;
+      height: 28px !important;
+    }
+  }
+
+  .ant-drawer-body {
+    padding: $modal-body-padding !important;
+  }
+
+  .ant-drawer-footer {
+    padding: $modal-footer-padding !important;
+    border-top: 1px solid $modal-border !important;
+  }
+}
+
+// ── ng-zorro Popconfirm / Popover ───────────────────────────
+
+.ant-popover {
+  .ant-popover-inner {
+    border-radius: 4px !important;
+    padding: 8px 12px !important;
+  }
+
+  .ant-popover-message {
+    font-size: 13px !important;
+  }
+
+  .ant-popover-buttons {
+    .ant-btn {
+      height: 26px !important;
+      font-size: 12px !important;
+    }
+  }
+}

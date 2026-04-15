@@ -1,0 +1,184 @@
+// ============================================
+// Navigation - Enterprise Compact
+// Covers: menu, dropdown, breadcrumb
+// ============================================
+
+// ── Menu (Sidebar) ──────────────────────────────────────────
+
+.ant-menu {
+  font-size: 13px !important;
+
+  .ant-menu-item {
+    height: 34px !important;
+    line-height: 34px !important;
+    margin: 1px 0 !important;
+    padding-left: 16px !important;
+    border-radius: 0 !important;
+
+    .anticon {
+      font-size: 15px !important;
+    }
+  }
+
+  .ant-menu-submenu-title {
+    height: 34px !important;
+    line-height: 34px !important;
+    margin: 1px 0 !important;
+    padding-left: 16px !important;
+
+    .anticon {
+      font-size: 15px !important;
+    }
+
+    .ant-menu-submenu-arrow {
+      font-size: 10px !important;
+    }
+  }
+
+  // Active / selected
+  .ant-menu-item-selected {
+    font-weight: 500 !important;
+  }
+
+  // Collapsed
+  &.ant-menu-inline-collapsed {
+    .ant-menu-item,
+    .ant-menu-submenu-title {
+      padding: 0 !important;
+      text-align: center;
+    }
+  }
+
+  // Sub-menu items
+  .ant-menu-sub {
+    .ant-menu-item {
+      height: 32px !important;
+      line-height: 32px !important;
+      font-size: 12px !important;
+    }
+  }
+
+  // Menu divider
+  .ant-menu-item-divider {
+    margin: 4px 12px !important;
+    border-color: #f3f4f6 !important;
+  }
+}
+
+// ── Dropdown Menu ───────────────────────────────────────────
+
+.ant-dropdown-menu {
+  border-radius: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  padding: 3px !important;
+  min-width: 140px !important;
+
+  .ant-dropdown-menu-item {
+    font-size: 12px !important;
+    padding: 5px 10px !important;
+    border-radius: 3px !important;
+    transition: background 0.1s ease !important;
+
+    .anticon {
+      font-size: 13px !important;
+      margin-right: 6px !important;
+    }
+
+    &:hover {
+      background: #f8fafc !important;
+    }
+
+    &.ant-dropdown-menu-item-danger {
+      &:hover {
+        background: #fef2f2 !important;
+      }
+    }
+  }
+
+  .ant-dropdown-menu-item-divider {
+    margin: 3px 0 !important;
+    border-color: #f3f4f6 !important;
+  }
+
+  // Submenu
+  .ant-dropdown-menu-submenu-title {
+    font-size: 12px !important;
+    padding: 5px 10px !important;
+  }
+}
+
+// Custom dropdown classes
+.dropdown-menu {
+  position: absolute;
+  z-index: var(--z-dropdown, 1050);
+  margin-top: 4px;
+  width: 192px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 3px;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 5px 10px;
+  font-size: 12px;
+  text-align: left;
+  color: #374151;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  border: none;
+  background: none;
+
+  &:hover {
+    background: #f8fafc;
+  }
+}
+
+.dropdown-item-danger {
+  color: #dc2626;
+
+  &:hover {
+    background: #fef2f2;
+  }
+}
+
+.dropdown-divider {
+  margin: 3px 0;
+  border-top: 1px solid #f3f4f6;
+}
+
+// ── Breadcrumb ──────────────────────────────────────────────
+
+.ant-breadcrumb {
+  font-size: 12px !important;
+
+  .ant-breadcrumb-link {
+    color: #6b7280 !important;
+
+    a {
+      color: #6b7280 !important;
+      transition: color 0.15s ease !important;
+
+      &:hover {
+        color: #0284c7 !important;
+      }
+    }
+  }
+
+  .ant-breadcrumb-separator {
+    color: #d4d4d8 !important;
+    margin: 0 6px !important;
+  }
+
+  // Last item (current page)
+  > span:last-child {
+    .ant-breadcrumb-link {
+      color: #374151 !important;
+      font-weight: 500 !important;
+    }
+  }
+}

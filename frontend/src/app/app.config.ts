@@ -71,7 +71,13 @@ import {
   FileImageOutline,
   FileZipOutline,
   FileOutline,
-  PaperClipOutline
+  PaperClipOutline,
+  MinusCircleOutline,
+  PlusCircleOutline,
+  DesktopOutline,
+  LoginOutline,
+  MinusSquareOutline,
+  PlusSquareOutline
 } from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
@@ -147,7 +153,13 @@ const icons = [
   FileImageOutline,
   FileZipOutline,
   FileOutline,
-  PaperClipOutline
+  PaperClipOutline,
+  MinusCircleOutline,
+  PlusCircleOutline,
+  DesktopOutline,
+  LoginOutline,
+  MinusSquareOutline,
+  PlusSquareOutline
 ];
 
 export const appConfig: ApplicationConfig = {

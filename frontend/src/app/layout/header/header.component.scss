@@ -1,3 +1,4 @@
+// ── Header ──────────────────────────────────────────────────
 .header {
   @apply fixed top-0 right-0 bg-white border-b border-gray-200;
   @apply flex items-center justify-between px-4;
@@ -16,80 +17,169 @@
 }
 
 .header-left {
-  @apply flex items-center gap-4;
+  @apply flex items-center gap-3;
 }
 
 .header-right {
-  @apply flex items-center gap-4;
+  @apply flex items-center gap-2;
 }
 
+// ── Mobile Toggle ───────────────────────────────────────────
 .mobile-toggle {
-  @apply p-2 rounded-lg text-gray-500 hover:bg-gray-100;
+  @apply p-1.5 rounded-md text-gray-500 hover:bg-gray-100;
   @apply cursor-pointer bg-transparent border-0;
+  font-size: 16px;
 }
 
-.search-box {
-  @apply w-64;
+// ── Search Trigger (⌘K style) ───────────────────────────────
+.search-trigger {
+  @apply items-center gap-2 px-3 rounded-md border border-gray-200;
+  @apply bg-gray-50 text-gray-400 cursor-pointer;
+  height: 32px;
+  min-width: 220px;
+  font-size: 13px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    @apply border-gray-300 bg-white text-gray-500;
+  }
+
+  .anticon {
+    font-size: 13px;
+  }
 }
 
-.header-icon {
-  @apply p-2 rounded-lg text-gray-500 hover:bg-gray-100 cursor-pointer;
+.search-label {
+  @apply flex-1 text-left;
+  font-size: 13px;
 }
 
+.search-kbd {
+  @apply inline-flex items-center justify-center px-1.5 rounded text-gray-400;
+  @apply bg-white border border-gray-200;
+  font-size: 11px;
+  font-family: inherit;
+  height: 20px;
+  min-width: 28px;
+  line-height: 1;
+}
+
+// ── Header Action Buttons ───────────────────────────────────
+.header-action-btn {
+  @apply flex items-center justify-center rounded-md text-gray-500;
+  @apply bg-transparent border-0 cursor-pointer;
+  width: 32px;
+  height: 32px;
+  font-size: 15px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    @apply bg-gray-100 text-gray-700;
+  }
+}
+
+// ── Divider ─────────────────────────────────────────────────
+.header-divider {
+  @apply block bg-gray-200;
+  width: 1px;
+  height: 20px;
+  margin: 0 2px;
+}
+
+// ── User Trigger ────────────────────────────────────────────
 .user-trigger {
-  @apply flex items-center gap-2 px-2 py-1 rounded-lg;
-  @apply hover:bg-gray-100 cursor-pointer;
+  @apply flex items-center gap-2 px-2 py-1 rounded-md;
+  @apply cursor-pointer no-underline;
+  transition: background 0.15s ease;
+
+  &:hover {
+    @apply bg-gray-50;
+  }
+}
+
+.user-avatar {
+  @apply flex-shrink-0;
+  background: linear-gradient(135deg, #0284c7, #0ea5e9) !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  position: relative;
+
+  &::after {
+    content: '';
+    @apply absolute rounded-full border-2 border-white bg-green-500;
+    width: 8px;
+    height: 8px;
+    bottom: -1px;
+    right: -1px;
+  }
+}
+
+.user-info {
+  @apply flex flex-col;
+  line-height: 1.2;
 }
 
 .user-name {
-  @apply text-sm text-gray-700;
+  @apply text-gray-800 font-medium;
+  font-size: 13px;
 }
 
-// Notification dropdown
-.notification-dropdown {
-  @apply w-80 bg-white rounded-lg shadow-lg;
+.user-role {
+  @apply text-gray-400;
+  font-size: 11px;
 }
 
-.notif-header {
-  @apply flex items-center justify-between px-4 py-3 border-b border-gray-100;
+.trigger-arrow {
+  @apply text-gray-400;
+  font-size: 10px !important;
+  margin-left: 2px;
+}
 
-  span {
-    @apply font-medium text-gray-900;
+// ── User Dropdown ───────────────────────────────────────────
+.user-dropdown {
+  min-width: 200px;
+
+  .dropdown-user-header {
+    @apply flex items-center gap-3 px-4 py-3;
+
+    .user-avatar {
+      flex-shrink: 0;
+    }
+
+    .dropdown-user-name {
+      @apply text-gray-900 font-medium;
+      font-size: 13px;
+    }
+
+    .dropdown-user-email {
+      @apply text-gray-400;
+      font-size: 12px;
+    }
   }
 
-  a {
-    @apply text-sm text-blue-600 hover:text-blue-700;
+  // Menu items
+  .ant-dropdown-menu-item {
+    @apply flex items-center gap-2;
+    font-size: 13px;
+    padding: 6px 16px;
+
+    .anticon {
+      font-size: 14px;
+      color: inherit;
+    }
   }
 }
 
-.notif-list {
-  @apply max-h-64 overflow-y-auto;
-}
+// ── Notification bell overrides ─────────────────────────────
+::ng-deep app-notification-bell {
+  .header-icon,
+  .ant-badge {
+    @apply flex items-center justify-center;
 
-.notif-item {
-  @apply flex gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer;
-
-  &.unread {
-    @apply bg-blue-50 border-l-2 border-blue-500;
-  }
-}
-
-.notif-content {
-  @apply flex-1;
-
-  p {
-    @apply text-sm text-gray-700 m-0;
-  }
-
-  .time {
-    @apply text-xs text-gray-500;
-  }
-}
-
-.notif-footer {
-  @apply px-4 py-2 border-t border-gray-100 text-center;
-
-  a {
-    @apply text-sm text-blue-600 hover:text-blue-700;
+    .anticon {
+      font-size: 16px;
+      color: #6b7280;
+    }
   }
 }

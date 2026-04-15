@@ -3,6 +3,16 @@
    Tailwind is imported via tailwind.css
    ============================================ */
 
+// Component partials
+@use 'styles/buttons';
+@use 'styles/forms';
+@use 'styles/tables';
+@use 'styles/cards';
+@use 'styles/badges';
+@use 'styles/modals';
+@use 'styles/data-display';
+@use 'styles/navigation';
+
 /* ============================================
    Base Styles
    ============================================ */
@@ -16,206 +26,6 @@ html {
 body {
   @apply font-sans text-gray-900 bg-gray-50;
   line-height: 1.5;
-}
-
-/* ============================================
-   Compact Form Controls
-   ============================================ */
-
-.form-input,
-.form-select,
-.form-textarea {
-  @apply w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
-  @apply disabled:bg-gray-100 disabled:cursor-not-allowed;
-  min-height: 32px;
-}
-
-.form-input::placeholder {
-  @apply text-gray-400;
-}
-
-.form-label {
-  @apply block text-sm font-medium text-gray-700 mb-1;
-}
-
-.form-error {
-  @apply text-xs text-danger-600 mt-1;
-}
-
-.form-hint {
-  @apply text-xs text-gray-500 mt-1;
-}
-
-/* ============================================
-   Buttons
-   ============================================ */
-
-.btn {
-  @apply inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md;
-  @apply transition-colors duration-150 cursor-pointer;
-  @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
-  min-height: 32px;
-}
-
-.btn-primary {
-  @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
-}
-
-.btn-secondary {
-  @apply bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-500;
-}
-
-.btn-success {
-  @apply bg-success-600 text-white hover:bg-success-700 focus:ring-success-500;
-}
-
-.btn-danger {
-  @apply bg-danger-600 text-white hover:bg-danger-700 focus:ring-danger-500;
-}
-
-.btn-warning {
-  @apply bg-warning-600 text-white hover:bg-warning-700 focus:ring-warning-500;
-}
-
-.btn-ghost {
-  @apply bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-gray-500;
-}
-
-.btn-link {
-  @apply bg-transparent text-primary-600 hover:text-primary-700 hover:underline p-0 min-h-0;
-}
-
-.btn-sm {
-  @apply px-2 py-1 text-xs;
-  min-height: 28px;
-}
-
-.btn-lg {
-  @apply px-4 py-2 text-base;
-  min-height: 40px;
-}
-
-.btn-icon {
-  @apply p-1.5;
-  min-height: auto;
-  min-width: auto;
-}
-
-/* ============================================
-   Cards
-   ============================================ */
-
-.card {
-  @apply bg-white rounded-lg shadow-sm border border-gray-200;
-}
-
-.card-header {
-  @apply px-4 py-3 border-b border-gray-200 font-medium;
-}
-
-.card-body {
-  @apply p-4;
-}
-
-.card-footer {
-  @apply px-4 py-3 border-t border-gray-200 bg-gray-50;
-}
-
-/* ============================================
-   Tables (Compact)
-   ============================================ */
-
-.table {
-  @apply w-full text-sm text-left;
-}
-
-.table th {
-  @apply px-3 py-2 font-semibold text-gray-700 bg-gray-50 border-b-2 border-gray-200;
-  @apply whitespace-nowrap;
-}
-
-.table td {
-  @apply px-3 py-2 border-b border-gray-100;
-}
-
-.table-hover tbody tr:hover {
-  @apply bg-gray-50;
-}
-
-.table-dense th,
-.table-dense td {
-  @apply px-2 py-1.5;
-}
-
-/* ============================================
-   Badges
-   ============================================ */
-
-.badge {
-  @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full;
-}
-
-.badge-gray {
-  @apply bg-gray-100 text-gray-700;
-}
-
-.badge-primary {
-  @apply bg-primary-100 text-primary-700;
-}
-
-.badge-success {
-  @apply bg-success-100 text-success-700;
-}
-
-.badge-warning {
-  @apply bg-warning-100 text-warning-700;
-}
-
-.badge-danger {
-  @apply bg-danger-100 text-danger-700;
-}
-
-.badge-dot {
-  @apply w-1.5 h-1.5 rounded-full;
-}
-
-.badge-dot-gray { @apply bg-gray-500; }
-.badge-dot-primary { @apply bg-primary-500; }
-.badge-dot-success { @apply bg-success-500; }
-.badge-dot-warning { @apply bg-warning-500; }
-.badge-dot-danger { @apply bg-danger-500; }
-
-/* ============================================
-   Dropdown
-   ============================================ */
-
-.dropdown-menu {
-  @apply absolute z-dropdown mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg;
-  @apply py-1;
-}
-
-.dropdown-item {
-  @apply block w-full px-3 py-2 text-sm text-left text-gray-700;
-  @apply hover:bg-gray-50 cursor-pointer;
-}
-
-.dropdown-item-danger {
-  @apply text-danger-600 hover:bg-danger-50;
-}
-
-.dropdown-divider {
-  @apply my-1 border-t border-gray-200;
-}
-
-/* ============================================
-   Modal / Drawer Backdrop
-   ============================================ */
-
-.backdrop {
-  @apply fixed inset-0 bg-black/50;
-  z-index: var(--z-modal-backdrop);
 }
 
 /* ============================================

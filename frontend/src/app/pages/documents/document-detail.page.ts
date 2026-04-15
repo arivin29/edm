@@ -124,28 +124,43 @@ interface Attachment {
     NzUploadModule, NzListModule
   ],
   template: `
-    <div class="p-4">
-      @if (loading()) {
-        <div class="text-center py-12">
-          <nz-spin nzSimple></nz-spin>
-        </div>
-      } @else if (document()) {
-        <!-- Header -->
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <div class="flex items-center gap-2 mb-1">
-              <a routerLink="/documents" class="text-gray-500 hover:text-gray-700">
-                <span nz-icon nzType="arrow-left"></span>
-              </a>
-              <h1 class="text-lg font-semibold m-0">{{ document()!.title }}</h1>
-              <nz-tag [nzColor]="getStatusColor(document()!.status)">{{ getStatusLabel(document()!.status) }}</nz-tag>
-              <nz-tag [nzColor]="getPriorityColor(document()!.priority)">{{ getPriorityLabel(document()!.priority) }}</nz-tag>
-              <nz-tag>{{ getConfidentialityLabel(document()!.confidentiality) }}</nz-tag>
+    @if (loading()) {
+      <div class="text-center py-16">
+        <nz-spin nzSimple></nz-spin>
+      </div>
+    } @else if (document()) {
+      <!-- Page Header -->
+      <div class="detail-header">
+        <div class="detail-header-top">
+          <a routerLink="/documents" class="back-link" nz-tooltip nzTooltipTitle="Kembali ke daftar">
+            <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
+          </a>
+          <div class="detail-header-info">
+            <div class="detail-title-row">
+              <h1 class="detail-title">{{ document()!.title }}</h1>
+              <div class="detail-tags">
+                <span class="status-badge" [attr.data-status]="document()!.status">
+                  {{ getStatusLabel(document()!.status) }}
+                </span>
+                <span class="priority-badge" [attr.data-priority]="document()!.priority">
+                  {{ getPriorityLabel(document()!.priority) }}
+                </span>
+                <span class="conf-badge">
+                  <span nz-icon nzType="lock" nzTheme="outline" class="text-[10px]"></span>
+                  {{ getConfidentialityLabel(document()!.confidentiality) }}
+                </span>
+              </div>
             </div>
-            <p class="text-gray-500 text-xs m-0">{{ document()!.document_number || 'Belum ada nomor' }}</p>
+            <div class="detail-subtitle">
+              <span class="doc-number">{{ document()!.document_number || 'Belum ada nomor' }}</span>
+              <span class="dot-sep"></span>
+              <span>{{ document()!.document_type?.name }}</span>
+              <span class="dot-sep"></span>
+              <span>v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
+            </div>
           </div>
-          <div class="flex gap-2">
-            <button nz-button nzSize="small" (click)="downloadDocument()">
+          <div class="detail-actions">
+            <button nz-button nzSize="small" (click)="downloadDocument()" nz-tooltip nzTooltipTitle="Download dokumen">
               <span nz-icon nzType="download"></span> Download
             </button>
             <button nz-button nzSize="small" [routerLink]="['/documents', document()!.id, 'edit']">
@@ -157,7 +172,7 @@ interface Attachment {
               </button>
             }
             @if (document()!.status === 'in_review') {
-              <button nz-button nzType="primary" nzSize="small" (click)="approveDocument()" class="bg-green-600">
+              <button nz-button nzSize="small" class="btn-approve" (click)="approveDocument()">
                 <span nz-icon nzType="check-circle"></span> Setujui
               </button>
               <button nz-button nzDanger nzSize="small" (click)="openRejectModal()">
@@ -166,361 +181,797 @@ interface Attachment {
             }
           </div>
         </div>
+      </div>
 
-        <!-- Content -->
-        <div class="grid grid-cols-3 gap-3">
-          <!-- Main Info -->
-          <div class="col-span-2">
-            <nz-card nzSize="small" nzTitle="Informasi Dokumen">
-              <nz-descriptions nzSize="small" [nzColumn]="2">
-                <nz-descriptions-item nzTitle="Tipe">{{ document()!.document_type?.name || '-' }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Kategori">{{ document()!.category?.name || '-' }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Pembuat">{{ document()!.creator?.name || '-' }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Versi">v{{ document()!.major_version }}.{{ document()!.minor_version }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Department">{{ document()!.department?.name || '-' }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Section">{{ document()!.section?.name || '-' }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Perusahaan">{{ document()!.company?.name || '-' }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Kantor">{{ document()!.office?.name || '-' }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Template">{{ document()!.template?.name || '-' }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Revisi">{{ document()!.revision_count }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Dibuat">{{ document()!.created_at | date:'dd MMM yyyy HH:mm' }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Diperbarui">{{ document()!.updated_at | date:'dd MMM yyyy HH:mm' }}</nz-descriptions-item>
-                @if (document()!.submitted_at) {
-                  <nz-descriptions-item nzTitle="Disubmit">{{ document()!.submitted_at | date:'dd MMM yyyy HH:mm' }}</nz-descriptions-item>
-                }
-                @if (document()!.approved_at) {
-                  <nz-descriptions-item nzTitle="Disetujui">{{ document()!.approved_at | date:'dd MMM yyyy HH:mm' }}</nz-descriptions-item>
-                }
-              </nz-descriptions>
-              @if (document()!.description) {
-                <div class="mt-3 pt-3 border-t">
-                  <div class="text-xs text-gray-500 mb-1">Deskripsi</div>
-                  <div class="text-sm">{{ document()!.description }}</div>
+      <!-- Content Grid -->
+      <div class="detail-content">
+        <!-- Main Column -->
+        <div class="detail-main">
+          <!-- Info Card -->
+          <div class="info-card">
+            <div class="info-card-header">
+              <span nz-icon nzType="file-text" nzTheme="outline"></span>
+              <span>Informasi Dokumen</span>
+            </div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Tipe</span>
+                <span class="info-value">{{ document()!.document_type?.name || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Kategori</span>
+                <span class="info-value">{{ document()!.category?.name || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Pembuat</span>
+                <span class="info-value">{{ document()!.creator?.name || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Versi</span>
+                <span class="info-value">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Department</span>
+                <span class="info-value">{{ document()!.department?.name || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Section</span>
+                <span class="info-value">{{ document()!.section?.name || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Perusahaan</span>
+                <span class="info-value">{{ document()!.company?.name || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Kantor</span>
+                <span class="info-value">{{ document()!.office?.name || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Template</span>
+                <span class="info-value">{{ document()!.template?.name || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Revisi</span>
+                <span class="info-value">{{ document()!.revision_count }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Dibuat</span>
+                <span class="info-value">{{ document()!.created_at | date:'dd MMM yyyy HH:mm' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Diperbarui</span>
+                <span class="info-value">{{ document()!.updated_at | date:'dd MMM yyyy HH:mm' }}</span>
+              </div>
+              @if (document()!.submitted_at) {
+                <div class="info-item">
+                  <span class="info-label">Disubmit</span>
+                  <span class="info-value">{{ document()!.submitted_at | date:'dd MMM yyyy HH:mm' }}</span>
                 </div>
               }
-            </nz-card>
+              @if (document()!.approved_at) {
+                <div class="info-item">
+                  <span class="info-label">Disetujui</span>
+                  <span class="info-value">{{ document()!.approved_at | date:'dd MMM yyyy HH:mm' }}</span>
+                </div>
+              }
+            </div>
+            @if (document()!.description) {
+              <div class="info-description">
+                <span class="info-label">Deskripsi</span>
+                <p class="info-desc-text">{{ document()!.description }}</p>
+              </div>
+            }
+          </div>
 
-            <!-- Tabs -->
-            <nz-card nzSize="small" class="mt-3">
-              <nz-tabset nzSize="small" [(nzSelectedIndex)]="activeTab" (nzSelectedIndexChange)="onTabChange($event)">
-                <!-- Versions Tab -->
-                <nz-tab nzTitle="Versi">
-                  @if (versionsLoading()) {
-                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
-                  } @else {
-                    <nz-table #versionTable [nzData]="versions()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
-                      <thead>
+          <!-- Tabs Card -->
+          <div class="tabs-card">
+            <nz-tabset nzSize="small" [(nzSelectedIndex)]="activeTab" (nzSelectedIndexChange)="onTabChange($event)">
+              <!-- Versions Tab -->
+              <nz-tab nzTitle="Versi">
+                @if (versionsLoading()) {
+                  <div class="text-center py-6"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                } @else {
+                  <nz-table #versionTable [nzData]="versions()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
+                    <thead>
+                      <tr>
+                        <th>Versi</th>
+                        <th>File</th>
+                        <th>Ukuran</th>
+                        <th>Catatan</th>
+                        <th>Pembuat</th>
+                        <th>Tanggal</th>
+                        <th nzWidth="50px"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (v of versionTable.data; track v.id) {
                         <tr>
-                          <th>Versi</th>
-                          <th>File</th>
-                          <th>Ukuran</th>
-                          <th>Catatan</th>
-                          <th>Pembuat</th>
-                          <th>Tanggal</th>
-                          <th></th>
+                          <td>
+                            <span class="font-medium">v{{ v.major_version }}.{{ v.minor_version }}</span>
+                            @if (v.is_current) {
+                              <nz-tag nzColor="blue" class="ml-1">Aktif</nz-tag>
+                            }
+                          </td>
+                          <td class="text-xs text-zinc-600">{{ v.file_name || '-' }}</td>
+                          <td class="text-xs text-zinc-500">{{ formatFileSize(v.file_size) }}</td>
+                          <td class="text-xs text-zinc-600">{{ v.change_summary || 'Tidak ada catatan' }}</td>
+                          <td class="text-xs">{{ v.creator?.name || '-' }}</td>
+                          <td class="text-xs text-zinc-500">{{ v.created_at | date:'dd/MM/yy HH:mm' }}</td>
+                          <td>
+                            <button nz-button nzSize="small" nzType="link" nz-tooltip nzTooltipTitle="Download" (click)="downloadVersion(v.version_number)">
+                              <span nz-icon nzType="download"></span>
+                            </button>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        @for (v of versionTable.data; track v.id) {
-                          <tr>
-                            <td>
-                              <span class="font-medium">v{{ v.major_version }}.{{ v.minor_version }}</span>
-                              @if (v.is_current) {
-                                <nz-tag nzColor="blue" class="ml-1">Aktif</nz-tag>
-                              }
-                            </td>
-                            <td class="text-xs">{{ v.file_name || '-' }}</td>
-                            <td class="text-xs">{{ formatFileSize(v.file_size) }}</td>
-                            <td class="text-xs">{{ v.change_summary || 'Tidak ada catatan' }}</td>
-                            <td class="text-xs">{{ v.creator?.name || '-' }}</td>
-                            <td class="text-xs">{{ v.created_at | date:'dd/MM/yy HH:mm' }}</td>
-                            <td>
-                              <button nz-button nzSize="small" nzType="link" nz-tooltip nzTooltipTitle="Download" (click)="downloadVersion(v.version_number)">
-                                <span nz-icon nzType="download"></span>
-                              </button>
-                            </td>
-                          </tr>
-                        } @empty {
-                          <tr><td colspan="7"><nz-empty nzNotFoundContent="Belum ada riwayat versi"></nz-empty></td></tr>
-                        }
-                      </tbody>
-                    </nz-table>
-                  }
-                </nz-tab>
-
-                <!-- Comments Tab -->
-                <nz-tab nzTitle="Komentar">
-                  @if (commentsLoading()) {
-                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
-                  } @else {
-                    <div class="space-y-3">
-                      @for (c of comments(); track c.id) {
-                        <div class="border rounded p-3" [class.bg-gray-50]="c.is_resolved" [class.opacity-60]="c.is_resolved">
-                          <div class="flex justify-between items-start mb-1">
-                            <div class="flex items-center gap-2">
-                              <nz-avatar nzIcon="user" nzSize="small"></nz-avatar>
-                              <span class="font-medium text-sm">{{ c.user?.name || 'Anonim' }}</span>
-                              <span class="text-xs text-gray-400">{{ formatDate(c.created_at) }}</span>
-                              @if (c.is_resolved) {
-                                <nz-tag nzColor="green" class="text-xs">Terselesaikan</nz-tag>
-                              }
-                            </div>
-                            <div class="flex gap-1">
-                              @if (c.is_resolved) {
-                                <button nz-button nzSize="small" nzType="link" nz-tooltip nzTooltipTitle="Buka kembali" (click)="unresolveComment(c.id)">
-                                  <span nz-icon nzType="undo"></span>
-                                </button>
-                              } @else {
-                                <button nz-button nzSize="small" nzType="link" nz-tooltip nzTooltipTitle="Selesaikan" (click)="resolveComment(c.id)">
-                                  <span nz-icon nzType="check"></span>
-                                </button>
-                              }
-                              <button nz-button nzSize="small" nzType="link" nzDanger nz-tooltip nzTooltipTitle="Hapus" (click)="deleteComment(c.id)">
-                                <span nz-icon nzType="delete"></span>
-                              </button>
-                            </div>
-                          </div>
-                          <p class="text-sm m-0 ml-8">{{ c.content }}</p>
-
-                          <!-- Replies -->
-                          @if (c.replies && c.replies.length > 0) {
-                            <div class="ml-8 mt-2 border-l-2 border-gray-200 pl-3">
-                              @for (r of c.replies; track r.id) {
-                                <div class="mb-2">
-                                  <div class="flex items-center gap-2">
-                                    <span class="font-medium text-xs">{{ r.user?.name || 'Anonim' }}</span>
-                                    <span class="text-xs text-gray-400">{{ formatDate(r.created_at) }}</span>
-                                  </div>
-                                  <p class="text-xs m-0">{{ r.content }}</p>
-                                </div>
-                              }
-                            </div>
-                          }
-
-                          <!-- Reply input -->
-                          @if (replyingTo() === c.id) {
-                            <div class="ml-8 mt-2">
-                              <textarea nz-input [(ngModel)]="replyContent" placeholder="Tulis balasan..." [nzAutosize]="{ minRows: 1, maxRows: 3 }" class="text-xs"></textarea>
-                              <div class="flex gap-1 mt-1">
-                                <button nz-button nzSize="small" nzType="primary" [disabled]="!replyContent.trim()" (click)="addReply(c.id)">Balas</button>
-                                <button nz-button nzSize="small" (click)="replyingTo.set(null)">Batal</button>
-                              </div>
-                            </div>
-                          } @else {
-                            <button nz-button nzSize="small" nzType="link" class="ml-6 mt-1 text-xs" (click)="replyingTo.set(c.id)">Balas</button>
-                          }
-                        </div>
                       } @empty {
-                        <nz-empty nzNotFoundContent="Belum ada komentar"></nz-empty>
+                        <tr><td colspan="7"><nz-empty nzNotFoundContent="Belum ada riwayat versi"></nz-empty></td></tr>
                       }
+                    </tbody>
+                  </nz-table>
+                }
+              </nz-tab>
 
-                      <!-- Add comment -->
-                      <div class="flex gap-2 mt-3 pt-3 border-t">
-                        <nz-avatar nzIcon="user" nzSize="small"></nz-avatar>
-                        <div class="flex-1">
-                          <textarea nz-input [(ngModel)]="newComment" placeholder="Tulis komentar..."
-                                    [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
-                          <button nz-button nzType="primary" nzSize="small" class="mt-2"
-                                  [disabled]="!newComment.trim()" (click)="addComment()">
-                            Kirim
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  }
-                </nz-tab>
-
-                <!-- Workflow Tab -->
-                <nz-tab nzTitle="Workflow">
-                  @if (workflowLoading()) {
-                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
-                  } @else if (workflow()) {
-                    <nz-timeline>
-                      @for (step of workflow()!.steps; track step.id) {
-                        <nz-timeline-item [nzColor]="getStepColor(step.status)">
-                          <div class="flex justify-between items-start">
+              <!-- Comments Tab -->
+              <nz-tab nzTitle="Komentar">
+                @if (commentsLoading()) {
+                  <div class="text-center py-6"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                } @else {
+                  <div class="comment-list">
+                    @for (c of comments(); track c.id) {
+                      <div class="comment-item" [class.resolved]="c.is_resolved">
+                        <div class="comment-header">
+                          <div class="comment-author">
+                            <nz-avatar nzIcon="user" [nzSize]="28" class="comment-avatar"></nz-avatar>
                             <div>
-                              <div class="font-medium text-sm">{{ step.name }}</div>
-                              <div class="text-xs text-gray-500">{{ step.actor?.name || '-' }}</div>
-                              @if (step.action_type) {
-                                <nz-tag [nzColor]="step.action_type === 'approve' ? 'green' : step.action_type === 'reject' ? 'red' : 'blue'" class="text-xs mt-1">
-                                  {{ getActionLabel(step.action_type) }}
-                                </nz-tag>
-                              }
-                              @if (step.comment) {
-                                <div class="text-xs text-gray-500 mt-1 italic">"{{ step.comment }}"</div>
-                              }
+                              <span class="comment-name">{{ c.user?.name || 'Anonim' }}</span>
+                              <span class="comment-time">{{ formatDate(c.created_at) }}</span>
                             </div>
-                            @if (step.completed_at) {
-                              <span class="text-xs text-gray-400">{{ step.completed_at | date:'dd/MM/yy HH:mm' }}</span>
+                            @if (c.is_resolved) {
+                              <span class="resolved-badge">
+                                <span nz-icon nzType="check-circle" nzTheme="fill"></span> Terselesaikan
+                              </span>
                             }
                           </div>
-                        </nz-timeline-item>
-                      } @empty {
-                        <nz-empty nzNotFoundContent="Belum ada langkah workflow"></nz-empty>
-                      }
-                    </nz-timeline>
-                  } @else {
-                    <nz-empty nzNotFoundContent="Workflow belum dimulai"></nz-empty>
-                  }
-                </nz-tab>
+                          <div class="comment-actions">
+                            @if (c.is_resolved) {
+                              <button nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Buka kembali" (click)="unresolveComment(c.id)">
+                                <span nz-icon nzType="undo"></span>
+                              </button>
+                            } @else {
+                              <button nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Selesaikan" (click)="resolveComment(c.id)">
+                                <span nz-icon nzType="check"></span>
+                              </button>
+                            }
+                            <button nz-button nzSize="small" nzType="text" nzDanger nz-tooltip nzTooltipTitle="Hapus" (click)="deleteComment(c.id)">
+                              <span nz-icon nzType="delete"></span>
+                            </button>
+                          </div>
+                        </div>
+                        <p class="comment-content">{{ c.content }}</p>
 
-                <!-- Distribution Tab -->
-                <nz-tab nzTitle="Distribusi">
-                  @if (distributionsLoading()) {
-                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
-                  } @else {
-                    <nz-table #distTable [nzData]="distributions()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
+                        @if (c.replies && c.replies.length > 0) {
+                          <div class="reply-list">
+                            @for (r of c.replies; track r.id) {
+                              <div class="reply-item">
+                                <span class="reply-name">{{ r.user?.name || 'Anonim' }}</span>
+                                <span class="reply-time">{{ formatDate(r.created_at) }}</span>
+                                <p class="reply-content">{{ r.content }}</p>
+                              </div>
+                            }
+                          </div>
+                        }
+
+                        @if (replyingTo() === c.id) {
+                          <div class="reply-input">
+                            <textarea nz-input [(ngModel)]="replyContent" placeholder="Tulis balasan..." [nzAutosize]="{ minRows: 1, maxRows: 3 }"></textarea>
+                            <div class="reply-input-actions">
+                              <button nz-button nzSize="small" nzType="primary" [disabled]="!replyContent.trim()" (click)="addReply(c.id)">Balas</button>
+                              <button nz-button nzSize="small" (click)="replyingTo.set(null)">Batal</button>
+                            </div>
+                          </div>
+                        } @else {
+                          <button class="reply-trigger" (click)="replyingTo.set(c.id)">
+                            <span nz-icon nzType="message" nzTheme="outline"></span> Balas
+                          </button>
+                        }
+                      </div>
+                    } @empty {
+                      <nz-empty nzNotFoundContent="Belum ada komentar"></nz-empty>
+                    }
+
+                    <!-- Add comment -->
+                    <div class="new-comment">
+                      <nz-avatar nzIcon="user" [nzSize]="28" class="comment-avatar"></nz-avatar>
+                      <div class="new-comment-input">
+                        <textarea nz-input [(ngModel)]="newComment" placeholder="Tulis komentar..."
+                                  [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
+                        <button nz-button nzType="primary" nzSize="small" class="mt-2"
+                                [disabled]="!newComment.trim()" (click)="addComment()">
+                          <span nz-icon nzType="send"></span> Kirim
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </nz-tab>
+
+              <!-- Workflow Tab -->
+              <nz-tab nzTitle="Workflow">
+                @if (workflowLoading()) {
+                  <div class="text-center py-6"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                } @else if (workflow()) {
+                  <div class="workflow-steps">
+                    @for (step of workflow()!.steps; track step.id) {
+                      <div class="wf-step" [attr.data-status]="step.status">
+                        <div class="wf-step-indicator">
+                          <div class="wf-dot"></div>
+                          <div class="wf-line"></div>
+                        </div>
+                        <div class="wf-step-content">
+                          <div class="wf-step-header">
+                            <span class="wf-step-name">{{ step.name }}</span>
+                            @if (step.completed_at) {
+                              <span class="wf-step-time">{{ step.completed_at | date:'dd/MM/yy HH:mm' }}</span>
+                            }
+                          </div>
+                          <div class="wf-step-actor">{{ step.actor?.name || 'Belum ditentukan' }}</div>
+                          @if (step.action_type) {
+                            <span class="wf-action-badge" [attr.data-action]="step.action_type">
+                              {{ getActionLabel(step.action_type) }}
+                            </span>
+                          }
+                          @if (step.comment) {
+                            <div class="wf-step-comment">"{{ step.comment }}"</div>
+                          }
+                        </div>
+                      </div>
+                    } @empty {
+                      <nz-empty nzNotFoundContent="Belum ada langkah workflow"></nz-empty>
+                    }
+                  </div>
+                } @else {
+                  <nz-empty nzNotFoundContent="Workflow belum dimulai"></nz-empty>
+                }
+              </nz-tab>
+
+              <!-- Distribution Tab -->
+              <nz-tab nzTitle="Distribusi">
+                @if (distributionsLoading()) {
+                  <div class="text-center py-6"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                } @else {
+                  <nz-table #distTable [nzData]="distributions()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
+                    <thead>
+                      <tr>
+                        <th>Penerima</th>
+                        <th>Department</th>
+                        <th>Didistribusikan</th>
+                        <th>Diterima</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (d of distTable.data; track d.id) {
+                        <tr>
+                          <td class="text-xs">{{ d.user?.name || '-' }}</td>
+                          <td class="text-xs">{{ d.department?.name || '-' }}</td>
+                          <td class="text-xs text-zinc-500">{{ d.distributed_at | date:'dd/MM/yy HH:mm' }}</td>
+                          <td class="text-xs text-zinc-500">{{ d.received_at ? (d.received_at | date:'dd/MM/yy HH:mm') : '-' }}</td>
+                          <td>
+                            <nz-tag [nzColor]="d.status === 'received' ? 'green' : d.status === 'sent' ? 'blue' : 'default'">
+                              {{ getDistributionLabel(d.status) }}
+                            </nz-tag>
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr><td colspan="5"><nz-empty nzNotFoundContent="Belum ada distribusi"></nz-empty></td></tr>
+                      }
+                    </tbody>
+                  </nz-table>
+                }
+              </nz-tab>
+
+              <!-- Lampiran Tab -->
+              <nz-tab nzTitle="Lampiran">
+                <div class="py-3">
+                  <div class="mb-3">
+                    <nz-upload
+                      nzType="drag"
+                      [nzAction]="getAttachmentUploadUrl()"
+                      [nzHeaders]="getAuthHeaders()"
+                      nzName="file"
+                      [nzMultiple]="true"
+                      [nzShowUploadList]="false"
+                      (nzChange)="onAttachmentUpload($event)"
+                      [nzAccept]="'.pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.png,.jpg,.jpeg,.gif,.zip,.rar,.csv,.txt'"
+                    >
+                      <p class="ant-upload-drag-icon">
+                        <span nz-icon nzType="cloud-upload" style="font-size: 28px; color: #0284c7;"></span>
+                      </p>
+                      <p class="text-xs text-zinc-600">Klik atau seret file ke area ini</p>
+                      <p class="text-[11px] text-zinc-400">PDF, Word, Excel, Gambar, ZIP (maks 50MB)</p>
+                    </nz-upload>
+                  </div>
+                  @if (attachments().length > 0) {
+                    <nz-table #attachTable [nzData]="attachments()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
                       <thead>
                         <tr>
-                          <th>Penerima</th>
-                          <th>Department</th>
-                          <th>Didistribusikan</th>
-                          <th>Diterima</th>
-                          <th>Status</th>
+                          <th>File</th>
+                          <th nzWidth="90px">Ukuran</th>
+                          <th nzWidth="110px">Diupload oleh</th>
+                          <th nzWidth="120px">Tanggal</th>
+                          <th nzWidth="70px">Aksi</th>
                         </tr>
                       </thead>
                       <tbody>
-                        @for (d of distTable.data; track d.id) {
+                        @for (att of attachTable.data; track att.id) {
                           <tr>
-                            <td class="text-sm">{{ d.user?.name || '-' }}</td>
-                            <td class="text-sm">{{ d.department?.name || '-' }}</td>
-                            <td class="text-xs">{{ d.distributed_at | date:'dd/MM/yy HH:mm' }}</td>
-                            <td class="text-xs">{{ d.received_at ? (d.received_at | date:'dd/MM/yy HH:mm') : '-' }}</td>
                             <td>
-                              <nz-tag [nzColor]="d.status === 'received' ? 'green' : d.status === 'sent' ? 'blue' : 'default'">
-                                {{ getDistributionLabel(d.status) }}
-                              </nz-tag>
+                              <div class="flex items-center gap-2">
+                                <span nz-icon [nzType]="getFileIcon(att.mime_type)" class="text-base text-sky-600"></span>
+                                <span class="text-xs">{{ att.original_name }}</span>
+                              </div>
+                            </td>
+                            <td class="text-xs text-zinc-500">{{ formatFileSize(att.file_size) }}</td>
+                            <td class="text-xs">{{ att.uploader?.name || '-' }}</td>
+                            <td class="text-xs text-zinc-500">{{ att.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+                            <td>
+                              <button nz-button nzType="link" nzSize="small" (click)="downloadAttachment(att)" nz-tooltip nzTooltipTitle="Download">
+                                <span nz-icon nzType="download"></span>
+                              </button>
+                              <button nz-button nzType="link" nzSize="small" nzDanger (click)="deleteAttachment(att)" nz-tooltip nzTooltipTitle="Hapus">
+                                <span nz-icon nzType="delete"></span>
+                              </button>
                             </td>
                           </tr>
-                        } @empty {
-                          <tr><td colspan="5"><nz-empty nzNotFoundContent="Belum ada distribusi"></nz-empty></td></tr>
                         }
                       </tbody>
                     </nz-table>
+                  } @else {
+                    <nz-empty nzNotFoundContent="Belum ada lampiran"></nz-empty>
                   }
-                </nz-tab>
-
-                <!-- Lampiran Tab -->
-                <nz-tab nzTitle="Lampiran">
-                  <div class="py-3">
-                    <!-- Upload Area -->
-                    <div class="mb-3">
-                      <nz-upload
-                        nzType="drag"
-                        [nzAction]="getAttachmentUploadUrl()"
-                        [nzHeaders]="getAuthHeaders()"
-                        nzName="file"
-                        [nzMultiple]="true"
-                        [nzShowUploadList]="false"
-                        (nzChange)="onAttachmentUpload($event)"
-                        [nzAccept]="'.pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.png,.jpg,.jpeg,.gif,.zip,.rar,.csv,.txt'"
-                      >
-                        <p class="ant-upload-drag-icon">
-                          <span nz-icon nzType="inbox" style="font-size: 32px; color: #999;"></span>
-                        </p>
-                        <p class="text-sm text-gray-500">Klik atau seret file ke area ini</p>
-                        <p class="text-xs text-gray-400">PDF, Word, Excel, Gambar, ZIP (maks 50MB)</p>
-                      </nz-upload>
-                    </div>
-
-                    <!-- Attachment List -->
-                    @if (attachments().length > 0) {
-                      <nz-table #attachTable [nzData]="attachments()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
-                        <thead>
-                          <tr>
-                            <th>File</th>
-                            <th nzWidth="100px">Ukuran</th>
-                            <th nzWidth="120px">Diupload oleh</th>
-                            <th nzWidth="120px">Tanggal</th>
-                            <th nzWidth="80px">Aksi</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (att of attachTable.data; track att.id) {
-                            <tr>
-                              <td>
-                                <div class="flex items-center gap-2">
-                                  <span nz-icon [nzType]="getFileIcon(att.mime_type)" class="text-base"></span>
-                                  <span class="text-xs">{{ att.original_name }}</span>
-                                </div>
-                              </td>
-                              <td class="text-xs text-gray-500">{{ formatFileSize(att.file_size) }}</td>
-                              <td class="text-xs">{{ att.uploader?.name || '-' }}</td>
-                              <td class="text-xs text-gray-500">{{ att.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
-                              <td>
-                                <button nz-button nzType="link" nzSize="small" (click)="downloadAttachment(att)" nz-tooltip nzTooltipTitle="Download">
-                                  <span nz-icon nzType="download"></span>
-                                </button>
-                                <button nz-button nzType="link" nzSize="small" nzDanger (click)="deleteAttachment(att)" nz-tooltip nzTooltipTitle="Hapus">
-                                  <span nz-icon nzType="delete"></span>
-                                </button>
-                              </td>
-                            </tr>
-                          }
-                        </tbody>
-                      </nz-table>
-                    } @else {
-                      <nz-empty nzNotFoundContent="Belum ada lampiran"></nz-empty>
-                    }
-                  </div>
-                </nz-tab>
-              </nz-tabset>
-            </nz-card>
+                </div>
+              </nz-tab>
+            </nz-tabset>
           </div>
+        </div>
 
-          <!-- Sidebar -->
-          <div>
-            <nz-card nzSize="small" nzTitle="Status Workflow">
-              @if (workflow()) {
-                <nz-timeline>
-                  @for (step of workflow()!.steps; track step.id) {
-                    <nz-timeline-item [nzColor]="getStepColor(step.status)">
-                      <div class="font-medium text-sm">{{ step.name }}</div>
-                      <div class="text-xs text-gray-500">{{ step.actor?.name || '-' }}</div>
+        <!-- Sidebar -->
+        <div class="detail-sidebar">
+          <!-- Workflow Status -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-header">
+              <span nz-icon nzType="node-index" nzTheme="outline"></span>
+              <span>Status Workflow</span>
+            </div>
+            @if (workflow()) {
+              <div class="sidebar-wf-steps">
+                @for (step of workflow()!.steps; track step.id) {
+                  <div class="sidebar-wf-step" [attr.data-status]="step.status">
+                    <div class="sidebar-wf-dot"></div>
+                    <div class="sidebar-wf-info">
+                      <span class="sidebar-wf-name">{{ step.name }}</span>
+                      <span class="sidebar-wf-actor">{{ step.actor?.name || '-' }}</span>
                       @if (step.completed_at) {
-                        <div class="text-xs text-gray-400">{{ step.completed_at | date:'dd/MM/yy HH:mm' }}</div>
+                        <span class="sidebar-wf-time">{{ step.completed_at | date:'dd/MM/yy HH:mm' }}</span>
                       }
-                    </nz-timeline-item>
-                  }
-                </nz-timeline>
-              } @else {
-                <div class="text-gray-500 text-sm">Workflow belum dimulai</div>
-              }
-            </nz-card>
-
-            <!-- Quick Actions -->
-            <nz-card nzSize="small" nzTitle="Aksi" class="mt-3">
-              <div class="space-y-2">
-                <button nz-button nzBlock nzSize="small" (click)="downloadDocument()">
-                  <span nz-icon nzType="download"></span> Download
-                </button>
-                <button nz-button nzBlock nzSize="small">
-                  <span nz-icon nzType="printer"></span> Print
-                </button>
-                <button nz-button nzBlock nzSize="small">
-                  <span nz-icon nzType="share-alt"></span> Share
-                </button>
+                    </div>
+                  </div>
+                }
               </div>
-            </nz-card>
+            } @else {
+              <div class="text-zinc-400 text-xs py-3">Workflow belum dimulai</div>
+            }
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-header">
+              <span nz-icon nzType="thunderbolt" nzTheme="outline"></span>
+              <span>Aksi</span>
+            </div>
+            <div class="sidebar-actions">
+              <button class="sidebar-action-btn" (click)="downloadDocument()">
+                <span nz-icon nzType="download" nzTheme="outline"></span>
+                <span>Download</span>
+              </button>
+              <button class="sidebar-action-btn">
+                <span nz-icon nzType="printer" nzTheme="outline"></span>
+                <span>Print</span>
+              </button>
+              <button class="sidebar-action-btn">
+                <span nz-icon nzType="share-alt" nzTheme="outline"></span>
+                <span>Share</span>
+              </button>
+            </div>
           </div>
         </div>
-      } @else {
-        <div class="text-center py-12 text-gray-500">
-          Dokumen tidak ditemukan
-        </div>
-      }
-    </div>
+      </div>
+    } @else {
+      <div class="text-center py-16 text-zinc-400">
+        Dokumen tidak ditemukan
+      </div>
+    }
   `,
   styles: [`
-    :host ::ng-deep .ant-descriptions-item-label { font-size: 12px; color: #888; }
-    :host ::ng-deep .ant-descriptions-item-content { font-size: 13px; }
-    :host ::ng-deep .ant-card-head { padding: 0 12px; min-height: 36px; }
-    :host ::ng-deep .ant-card-head-title { padding: 8px 0; font-size: 13px; }
-    :host ::ng-deep .ant-card-body { padding: 12px; }
-    :host ::ng-deep .ant-tabs-tab { font-size: 12px; padding: 8px 0; }
-    :host ::ng-deep .ant-comment-content-author-name { font-size: 12px; }
-    :host ::ng-deep .ant-comment-content-author-time { font-size: 11px; }
+    :host { display: block; }
+
+    /* ── Page Header ── */
+    .detail-header {
+      margin-bottom: 16px;
+    }
+    .detail-header-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .back-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      color: #71717a;
+      background: #fff;
+      border: 1px solid #e4e4e7;
+      transition: all .15s;
+      flex-shrink: 0;
+      margin-top: 2px;
+      &:hover { color: #0284c7; border-color: #0284c7; background: #f0f9ff; }
+    }
+    .detail-header-info { flex: 1; min-width: 0; }
+    .detail-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .detail-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #18181b;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .detail-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .detail-subtitle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      font-size: 12px;
+      color: #71717a;
+    }
+    .doc-number {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      color: #52525b;
+      background: #f4f4f5;
+      border-radius: 3px;
+      padding: 1px 6px;
+    }
+    .dot-sep {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #a1a1aa;
+      flex-shrink: 0;
+    }
+    .detail-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .btn-approve {
+      background: #16a34a !important;
+      border-color: #16a34a !important;
+      color: #fff !important;
+      &:hover { background: #15803d !important; border-color: #15803d !important; }
+    }
+
+    /* ── Status / Priority / Conf Badges ── */
+    .status-badge, .priority-badge, .conf-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 10px;
+      line-height: 1.4;
+    }
+    .status-badge {
+      &[data-status="draft"]      { background: #f4f4f5; color: #52525b; }
+      &[data-status="in_review"]  { background: #dbeafe; color: #1d4ed8; }
+      &[data-status="revision"]   { background: #fef3c7; color: #92400e; }
+      &[data-status="approved"]   { background: #dcfce7; color: #166534; }
+      &[data-status="final"]      { background: #e0f2fe; color: #0369a1; }
+      &[data-status="obsolete"]   { background: #fecaca; color: #991b1b; }
+      &[data-status="archived"]   { background: #e4e4e7; color: #3f3f46; }
+    }
+    .priority-badge {
+      &[data-priority="low"]      { background: #f4f4f5; color: #71717a; }
+      &[data-priority="normal"]   { background: #f4f4f5; color: #71717a; }
+      &[data-priority="medium"]   { background: #dbeafe; color: #1d4ed8; }
+      &[data-priority="high"]     { background: #fed7aa; color: #9a3412; }
+      &[data-priority="urgent"]   { background: #fecaca; color: #991b1b; }
+      &[data-priority="critical"] { background: #fecaca; color: #991b1b; }
+    }
+    .conf-badge {
+      background: #f4f4f5;
+      color: #52525b;
+    }
+
+    /* ── Content Grid ── */
+    .detail-content {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 16px;
+      align-items: start;
+    }
+    .detail-main { min-width: 0; }
+
+    /* ── Info Card ── */
+    .info-card {
+      background: #fff;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-bottom: 1px solid #f4f4f5;
+      font-size: 12px;
+      font-weight: 600;
+      color: #27272a;
+      span[nz-icon] { font-size: 13px; color: #0284c7; }
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 6px 14px 4px;
+      gap: 0;
+    }
+    .info-item {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      padding: 3px 0;
+    }
+    .info-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #a1a1aa;
+      white-space: nowrap;
+      min-width: 70px;
+      &::after { content: ':'; }
+    }
+    .info-value {
+      font-size: 12px;
+      color: #27272a;
+    }
+    .info-description {
+      padding: 6px 14px 8px;
+      border-top: 1px solid #f4f4f5;
+    }
+    .info-desc-text {
+      font-size: 12px;
+      color: #3f3f46;
+      margin: 2px 0 0;
+      line-height: 1.5;
+    }
+
+    /* ── Tabs Card ── */
+    .tabs-card {
+      background: #fff;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      padding: 0 14px 14px;
+    }
+    :host ::ng-deep .tabs-card {
+      .ant-tabs-tab { font-size: 12px; padding: 10px 4px; }
+      .ant-tabs-nav { margin-bottom: 12px; }
+    }
+
+    /* ── Comment Styles ── */
+    .comment-list { display: flex; flex-direction: column; gap: 10px; }
+    .comment-item {
+      border: 1px solid #f4f4f5;
+      border-radius: 6px;
+      padding: 10px 12px;
+      transition: border-color .15s;
+      &:hover { border-color: #e4e4e7; }
+      &.resolved { opacity: 0.55; background: #fafafa; }
+    }
+    .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .comment-author { display: flex; align-items: center; gap: 8px; }
+    .comment-avatar { flex-shrink: 0; }
+    .comment-name { font-size: 12px; font-weight: 600; color: #27272a; }
+    .comment-time { font-size: 11px; color: #a1a1aa; }
+    .resolved-badge {
+      font-size: 10px;
+      color: #16a34a;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .comment-actions { display: flex; gap: 2px; }
+    .comment-content { font-size: 12px; color: #3f3f46; margin: 0 0 0 36px; line-height: 1.5; }
+    .reply-list {
+      margin: 8px 0 0 36px;
+      padding-left: 12px;
+      border-left: 2px solid #e4e4e7;
+    }
+    .reply-item { margin-bottom: 8px; }
+    .reply-name { font-size: 11px; font-weight: 600; color: #3f3f46; }
+    .reply-time { font-size: 10px; color: #a1a1aa; margin-left: 6px; }
+    .reply-content { font-size: 12px; color: #52525b; margin: 2px 0 0; }
+    .reply-input { margin: 8px 0 0 36px; }
+    .reply-input-actions { display: flex; gap: 6px; margin-top: 6px; }
+    .reply-trigger {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+      color: #71717a;
+      margin: 6px 0 0 36px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      &:hover { color: #0284c7; }
+    }
+    .new-comment {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #f4f4f5;
+    }
+    .new-comment-input { flex: 1; }
+
+    /* ── Custom Workflow Steps (in tab) ── */
+    .workflow-steps { padding: 4px 0; }
+    .wf-step {
+      display: flex;
+      gap: 12px;
+      position: relative;
+      &:last-child .wf-line { display: none; }
+    }
+    .wf-step-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      width: 20px;
+    }
+    .wf-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #d4d4d8;
+      border: 2px solid #e4e4e7;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .wf-line {
+      width: 2px;
+      flex: 1;
+      background: #e4e4e7;
+      margin: 2px 0;
+    }
+    .wf-step[data-status="completed"] .wf-dot  { background: #16a34a; border-color: #bbf7d0; }
+    .wf-step[data-status="in_progress"] .wf-dot { background: #0284c7; border-color: #bae6fd; box-shadow: 0 0 0 3px rgba(2,132,199,.15); }
+    .wf-step[data-status="rejected"] .wf-dot   { background: #dc2626; border-color: #fecaca; }
+    .wf-step-content { padding-bottom: 16px; flex: 1; min-width: 0; }
+    .wf-step-header { display: flex; justify-content: space-between; align-items: center; }
+    .wf-step-name { font-size: 12px; font-weight: 600; color: #27272a; }
+    .wf-step-time { font-size: 11px; color: #a1a1aa; }
+    .wf-step-actor { font-size: 11px; color: #71717a; margin-top: 2px; }
+    .wf-action-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 1px 6px;
+      border-radius: 3px;
+      margin-top: 4px;
+      &[data-action="approve"] { background: #dcfce7; color: #166534; }
+      &[data-action="reject"]  { background: #fecaca; color: #991b1b; }
+      &[data-action="submit"]  { background: #dbeafe; color: #1d4ed8; }
+      &[data-action="review"]  { background: #e0f2fe; color: #0369a1; }
+    }
+    .wf-step-comment {
+      font-size: 11px;
+      color: #71717a;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* ── Sidebar ── */
+    .detail-sidebar { position: sticky; top: 12px; }
+    .sidebar-card {
+      background: #fff;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .sidebar-card-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #f4f4f5;
+      font-size: 13px;
+      font-weight: 600;
+      color: #27272a;
+      span[nz-icon] { font-size: 14px; color: #0284c7; }
+    }
+
+    /* Sidebar Workflow */
+    .sidebar-wf-steps { padding: 10px 14px; }
+    .sidebar-wf-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 0;
+      position: relative;
+      &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 20px;
+        bottom: -6px;
+        width: 2px;
+        background: #e4e4e7;
+      }
+    }
+    .sidebar-wf-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #d4d4d8;
+      border: 2px solid #e4e4e7;
+      flex-shrink: 0;
+      margin-top: 2px;
+      position: relative;
+      z-index: 1;
+    }
+    .sidebar-wf-step[data-status="completed"] .sidebar-wf-dot { background: #16a34a; border-color: #bbf7d0; }
+    .sidebar-wf-step[data-status="in_progress"] .sidebar-wf-dot { background: #0284c7; border-color: #bae6fd; }
+    .sidebar-wf-step[data-status="rejected"] .sidebar-wf-dot { background: #dc2626; border-color: #fecaca; }
+    .sidebar-wf-info { display: flex; flex-direction: column; }
+    .sidebar-wf-name { font-size: 12px; font-weight: 500; color: #27272a; line-height: 1.3; }
+    .sidebar-wf-actor { font-size: 11px; color: #71717a; }
+    .sidebar-wf-time { font-size: 10px; color: #a1a1aa; }
+
+    /* Sidebar Actions */
+    .sidebar-actions { padding: 6px 8px; }
+    .sidebar-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 8px 10px;
+      border: none;
+      background: none;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #3f3f46;
+      cursor: pointer;
+      transition: all .15s;
+      span[nz-icon] { font-size: 14px; color: #71717a; }
+      &:hover {
+        background: #f4f4f5;
+        color: #0284c7;
+        span[nz-icon] { color: #0284c7; }
+      }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .detail-content { grid-template-columns: 1fr; }
+      .detail-sidebar { position: static; }
+    }
   `]
 })
 export class DocumentDetailPage implements OnInit {
