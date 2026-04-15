@@ -47,7 +47,7 @@ import { Subscription } from 'rxjs';
                     [class]="getIconColor(n.type)"></span>
               <div class="notif-content">
                 <p>{{ n.title }}</p>
-                <span class="msg" *ngIf="n.message">{{ n.message | slice:0:60 }}{{ (n.message?.length || 0) > 60 ? '...' : '' }}</span>
+                <span class="msg" *ngIf="n.message">{{ n.message | slice:0:60 }}{{ (n.message.length || 0) > 60 ? '...' : '' }}</span>
                 <span class="time">{{ timeAgo(n.created_at) }}</span>
               </div>
             </div>

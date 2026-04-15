@@ -73,7 +73,7 @@ interface Role {
                 <td class="font-medium">{{ role.name }}</td>
                 <td class="text-gray-500">{{ role.description || '-' }}</td>
                 <td>
-                  <nz-tag>{{ role.permissions?.length || 0 }} permissions</nz-tag>
+                  <nz-tag>{{ role.permissions.length || 0 }} permissions</nz-tag>
                 </td>
                 <td>{{ role.user_count || 0 }}</td>
                 <td>
