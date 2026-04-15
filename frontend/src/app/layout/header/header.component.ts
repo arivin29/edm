@@ -7,6 +7,7 @@ import { NzBadgeModule } from 'ng-zorro-antd/badge';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { AuthStateService } from '../../core/auth/auth-state.service';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-header',
@@ -18,7 +19,8 @@ import { AuthStateService } from '../../core/auth/auth-state.service';
     NzIconModule,
     NzBadgeModule,
     NzAvatarModule,
-    NzInputModule
+    NzInputModule,
+    NotificationBellComponent
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'

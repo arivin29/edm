@@ -16,38 +16,7 @@
 
   <div class="header-right">
     <!-- Notifications -->
-    <nz-badge [nzCount]="3" nzSize="small">
-      <a nz-dropdown [nzDropdownMenu]="notifMenu" nzTrigger="click" class="header-icon">
-        <span nz-icon nzType="bell" nzTheme="outline"></span>
-      </a>
-    </nz-badge>
-    <nz-dropdown-menu #notifMenu="nzDropdownMenu">
-      <div class="notification-dropdown">
-        <div class="notif-header">
-          <span>Notifikasi</span>
-          <a href="#">Tandai dibaca</a>
-        </div>
-        <div class="notif-list">
-          <div class="notif-item unread">
-            <span nz-icon nzType="file-text" nzTheme="outline" class="text-blue-500"></span>
-            <div class="notif-content">
-              <p>Dokumen <strong>SOP-001</strong> menunggu review</p>
-              <span class="time">5 menit lalu</span>
-            </div>
-          </div>
-          <div class="notif-item">
-            <span nz-icon nzType="check" nzTheme="outline" class="text-green-500"></span>
-            <div class="notif-content">
-              <p>Dokumen <strong>PKS-003</strong> telah disetujui</p>
-              <span class="time">1 jam lalu</span>
-            </div>
-          </div>
-        </div>
-        <div class="notif-footer">
-          <a href="#">Lihat semua</a>
-        </div>
-      </div>
-    </nz-dropdown-menu>
+    <app-notification-bell></app-notification-bell>
 
     <!-- User Menu -->
     <a nz-dropdown [nzDropdownMenu]="userMenu" nzTrigger="click" class="user-trigger">

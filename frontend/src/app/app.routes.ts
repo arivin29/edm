@@ -95,6 +95,13 @@ export const routes: Routes = [
           }
         ]
       },
+      // Master Data (Document Types & Categories)
+      {
+        path: 'master',
+        loadComponent: () =>
+          import('./pages/master/master-data.page').then(m => m.MasterDataPage),
+        title: 'Master Data - DMS'
+      },
       // Roles
       {
         path: 'roles',
@@ -106,6 +113,41 @@ export const routes: Routes = [
             title: 'Role - DMS'
           }
         ]
+      },
+      // Workflows
+      {
+        path: 'workflows',
+        loadComponent: () =>
+          import('./pages/workflows/workflow-list.page').then(m => m.WorkflowListPage),
+        title: 'Workflow - DMS'
+      },
+      // Document Numbering
+      {
+        path: 'numbering',
+        loadComponent: () =>
+          import('./pages/numbering/numbering-list.page').then(m => m.NumberingListPage),
+        title: 'Penomoran - DMS'
+      },
+      // System Settings
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./pages/settings/settings.page').then(m => m.SettingsPage),
+        title: 'Pengaturan - DMS'
+      },
+      // Audit Logs
+      {
+        path: 'audit-logs',
+        loadComponent: () =>
+          import('./pages/audit/audit-log.page').then(m => m.AuditLogPage),
+        title: 'Audit Log - DMS'
+      },
+      // Notifications
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./pages/notifications/notification-list.page').then(m => m.NotificationListPage),
+        title: 'Notifikasi - DMS'
       },
       {
         path: '',
