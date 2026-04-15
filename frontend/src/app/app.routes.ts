@@ -149,6 +149,13 @@ export const routes: Routes = [
           import('./pages/notifications/notification-list.page').then(m => m.NotificationListPage),
         title: 'Notifikasi - DMS'
       },
+      // Profile
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./pages/profile/profile.page').then(m => m.ProfilePage),
+        title: 'Profil - DMS'
+      },
       {
         path: '',
         redirectTo: 'dashboard',

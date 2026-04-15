@@ -10,20 +10,26 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
 interface Document {
-  id: number;
+  id: string;
   document_number: string;
   title: string;
-  type_name: string;
-  category_name: string;
   status: string;
-  creator_name: string;
+  priority: string;
+  confidentiality: string;
+  current_version: number;
   created_at: string;
   updated_at: string;
+  document_type?: { id: string; name: string; code: string };
+  category?: { id: string; name: string; code: string };
+  creator?: { id: string; name: string; email: string };
+  department?: { id: string; name: string };
 }
 
 @Component({
@@ -32,7 +38,8 @@ interface Document {
   imports: [
     CommonModule, RouterLink, FormsModule,
     NzTableModule, NzButtonModule, NzIconModule, NzTagModule,
-    NzInputModule, NzSelectModule, NzCardModule, NzDropDownModule
+    NzInputModule, NzSelectModule, NzCardModule, NzDropDownModule,
+    NzSpinModule, NzModalModule
   ],
   template: `
     <div class="p-4">
@@ -59,10 +66,12 @@ interface Document {
           <nz-select nzSize="small" [(ngModel)]="filterStatus" (ngModelChange)="onFilter()" 
                      nzPlaceHolder="Status" nzAllowClear class="w-32">
             <nz-option nzValue="draft" nzLabel="Draft"></nz-option>
-            <nz-option nzValue="in_review" nzLabel="In Review"></nz-option>
-            <nz-option nzValue="approved" nzLabel="Approved"></nz-option>
+            <nz-option nzValue="in_review" nzLabel="Dalam Review"></nz-option>
+            <nz-option nzValue="revision" nzLabel="Revisi"></nz-option>
+            <nz-option nzValue="approved" nzLabel="Disetujui"></nz-option>
             <nz-option nzValue="final" nzLabel="Final"></nz-option>
-            <nz-option nzValue="archived" nzLabel="Archived"></nz-option>
+            <nz-option nzValue="obsolete" nzLabel="Usang"></nz-option>
+            <nz-option nzValue="archived" nzLabel="Diarsipkan"></nz-option>
           </nz-select>
 
           <nz-select nzSize="small" [(ngModel)]="filterType" (ngModelChange)="onFilter()" 
@@ -71,13 +80,28 @@ interface Document {
               <nz-option [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
             }
           </nz-select>
+
+          <nz-select nzSize="small" [(ngModel)]="filterCategory" (ngModelChange)="onFilter()" 
+                     nzPlaceHolder="Kategori" nzAllowClear class="w-32">
+            @for (cat of categories(); track cat.id) {
+              <nz-option [nzValue]="cat.id" [nzLabel]="cat.name"></nz-option>
+            }
+          </nz-select>
         </div>
       </nz-card>
 
       <!-- Table -->
       <nz-card nzSize="small">
         <nz-table #docTable [nzData]="documents()" [nzLoading]="loading()" 
-                  nzSize="small" [nzPageSize]="15" [nzShowSizeChanger]="true">
+                  nzSize="small"
+                  [nzFrontPagination]="false"
+                  [nzTotal]="total()"
+                  [nzPageIndex]="pageIndex()"
+                  [nzPageSize]="pageSize()"
+                  [nzShowSizeChanger]="true"
+                  [nzPageSizeOptions]="[15, 30, 50]"
+                  (nzPageIndexChange)="onPageIndexChange($event)"
+                  (nzPageSizeChange)="onPageSizeChange($event)">
           <thead>
             <tr>
               <th nzWidth="140px">No. Dokumen</th>
@@ -85,6 +109,7 @@ interface Document {
               <th nzWidth="100px">Tipe</th>
               <th nzWidth="100px">Kategori</th>
               <th nzWidth="90px">Status</th>
+              <th nzWidth="80px">Prioritas</th>
               <th nzWidth="100px">Pembuat</th>
               <th nzWidth="90px">Tanggal</th>
               <th nzWidth="70px">Aksi</th>
@@ -95,10 +120,11 @@ interface Document {
               <tr>
                 <td><a [routerLink]="['/documents', doc.id]" class="text-blue-600">{{ doc.document_number || '-' }}</a></td>
                 <td>{{ doc.title }}</td>
-                <td>{{ doc.type_name }}</td>
-                <td>{{ doc.category_name }}</td>
+                <td>{{ doc.document_type?.name || '-' }}</td>
+                <td>{{ doc.category?.name || '-' }}</td>
                 <td><nz-tag [nzColor]="getStatusColor(doc.status)">{{ getStatusLabel(doc.status) }}</nz-tag></td>
-                <td>{{ doc.creator_name }}</td>
+                <td><nz-tag [nzColor]="getPriorityColor(doc.priority)">{{ getPriorityLabel(doc.priority) }}</nz-tag></td>
+                <td>{{ doc.creator?.name || '-' }}</td>
                 <td>{{ doc.created_at | date:'dd/MM/yy' }}</td>
                 <td>
                   <a nz-dropdown [nzDropdownMenu]="actionMenu" nzTrigger="click">
@@ -121,7 +147,7 @@ interface Document {
               </tr>
             } @empty {
               <tr>
-                <td colspan="8" class="text-center text-gray-500 py-8">
+                <td colspan="9" class="text-center text-gray-500 py-8">
                   Tidak ada dokumen ditemukan
                 </td>
               </tr>
@@ -141,30 +167,47 @@ interface Document {
 export class DocumentListPage implements OnInit {
   private http = inject(HttpClient);
   private message = inject(NzMessageService);
+  private modal = inject(NzModalService);
 
   documents = signal<Document[]>([]);
-  documentTypes = signal<{id: number; name: string}[]>([]);
+  documentTypes = signal<{id: string; name: string}[]>([]);
+  categories = signal<{id: string; name: string}[]>([]);
   loading = signal(false);
+  total = signal(0);
+  pageIndex = signal(1);
+  pageSize = signal(15);
 
   searchText = '';
   filterStatus = '';
-  filterType: number | null = null;
+  filterType: string | null = null;
+  filterCategory: string | null = null;
 
   ngOnInit() {
     this.loadDocuments();
     this.loadDocumentTypes();
+    this.loadCategories();
   }
 
   loadDocuments() {
     this.loading.set(true);
-    const params: any = {};
+    const params: any = {
+      page: this.pageIndex(),
+      per_page: this.pageSize(),
+      sort_by: 'created_at',
+      sort_dir: 'desc'
+    };
     if (this.searchText) params.search = this.searchText;
     if (this.filterStatus) params.status = this.filterStatus;
-    if (this.filterType) params.type_id = this.filterType;
+    if (this.filterType) params.document_type_id = this.filterType;
+    if (this.filterCategory) params.category_id = this.filterCategory;
 
     this.http.get<any>(`${environment.apiUrl}/documents`, { params }).subscribe({
       next: (res) => {
         this.documents.set(res.data || []);
+        if (res.meta) {
+          this.total.set(res.meta.total || 0);
+          this.pageIndex.set(res.meta.page || 1);
+        }
         this.loading.set(false);
       },
       error: () => {
@@ -181,34 +224,62 @@ export class DocumentListPage implements OnInit {
     });
   }
 
+  loadCategories() {
+    this.http.get<any>(`${environment.apiUrl}/categories`).subscribe({
+      next: (res) => this.categories.set(res.data || []),
+      error: () => {}
+    });
+  }
+
   onSearch() {
+    this.pageIndex.set(1);
     this.loadDocuments();
   }
 
   onFilter() {
+    this.pageIndex.set(1);
+    this.loadDocuments();
+  }
+
+  onPageIndexChange(index: number) {
+    this.pageIndex.set(index);
+    this.loadDocuments();
+  }
+
+  onPageSizeChange(size: number) {
+    this.pageSize.set(size);
+    this.pageIndex.set(1);
     this.loadDocuments();
   }
 
   deleteDocument(doc: Document) {
-    if (confirm(`Hapus dokumen "${doc.title}"?`)) {
-      this.http.delete(`${environment.apiUrl}/documents/${doc.id}`).subscribe({
-        next: () => {
-          this.message.success('Dokumen berhasil dihapus');
-          this.loadDocuments();
-        },
-        error: () => this.message.error('Gagal menghapus dokumen')
-      });
-    }
+    this.modal.confirm({
+      nzTitle: 'Hapus Dokumen',
+      nzContent: `Apakah Anda yakin ingin menghapus dokumen "<b>${doc.title}</b>"?`,
+      nzOkText: 'Hapus',
+      nzOkDanger: true,
+      nzCancelText: 'Batal',
+      nzOnOk: () => {
+        this.http.delete(`${environment.apiUrl}/documents/${doc.id}`).subscribe({
+          next: () => {
+            this.message.success('Dokumen berhasil dihapus');
+            this.loadDocuments();
+          },
+          error: () => this.message.error('Gagal menghapus dokumen')
+        });
+      }
+    });
   }
 
   getStatusColor(status: string): string {
     const colors: Record<string, string> = {
       draft: 'default',
       in_review: 'processing',
+      revision: 'warning',
       approved: 'success',
       final: 'blue',
-      archived: 'default',
-      revision: 'warning'
+      obsolete: 'error',
+      archived: 'default'
     };
     return colors[status] || 'default';
   }
@@ -216,12 +287,31 @@ export class DocumentListPage implements OnInit {
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       draft: 'Draft',
-      in_review: 'Review',
-      approved: 'Approved',
+      in_review: 'Dalam Review',
+      revision: 'Revisi',
+      approved: 'Disetujui',
       final: 'Final',
-      archived: 'Archived',
-      revision: 'Revisi'
+      obsolete: 'Usang',
+      archived: 'Diarsipkan'
     };
     return labels[status] || status;
+  }
+
+  getPriorityColor(priority: string): string {
+    const colors: Record<string, string> = {
+      normal: 'default',
+      high: 'orange',
+      urgent: 'red'
+    };
+    return colors[priority] || 'default';
+  }
+
+  getPriorityLabel(priority: string): string {
+    const labels: Record<string, string> = {
+      normal: 'Normal',
+      high: 'Tinggi',
+      urgent: 'Mendesak'
+    };
+    return labels[priority] || priority;
   }
 }

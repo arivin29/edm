@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -11,7 +11,19 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
+
+interface DropdownItem {
+  id: string;
+  name: string;
+}
+
+interface TemplateItem {
+  id: string;
+  name: string;
+  document_type_id?: string;
+}
 
 @Component({
   selector: 'app-document-form',
@@ -51,7 +63,7 @@ import { environment } from '../../../environments/environment';
                 <nz-form-item>
                   <nz-form-label nzRequired>Tipe Dokumen</nz-form-label>
                   <nz-form-control nzErrorTip="Tipe wajib dipilih">
-                    <nz-select formControlName="type_id" nzPlaceHolder="Pilih tipe dokumen" nzShowSearch>
+                    <nz-select formControlName="document_type_id" nzPlaceHolder="Pilih tipe dokumen" nzShowSearch>
                       @for (type of documentTypes(); track type.id) {
                         <nz-option [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
                       }
@@ -71,6 +83,13 @@ import { environment } from '../../../environments/environment';
                 </nz-form-item>
 
                 <nz-form-item>
+                  <nz-form-label nzRequired>Nama Folder</nz-form-label>
+                  <nz-form-control nzErrorTip="Nama folder wajib diisi">
+                    <input nz-input formControlName="folder_name" placeholder="Masukkan nama folder" />
+                  </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
                   <nz-form-label>Deskripsi</nz-form-label>
                   <nz-form-control>
                     <textarea nz-input formControlName="description" placeholder="Deskripsi dokumen (opsional)"
@@ -84,9 +103,31 @@ import { environment } from '../../../environments/environment';
             <div class="col-span-2 lg:col-span-1">
               <nz-card nzSize="small" nzTitle="Organisasi">
                 <nz-form-item>
-                  <nz-form-label>Department</nz-form-label>
-                  <nz-form-control>
-                    <nz-select formControlName="department_id" nzPlaceHolder="Pilih department" nzAllowClear nzShowSearch>
+                  <nz-form-label nzRequired>Perusahaan</nz-form-label>
+                  <nz-form-control nzErrorTip="Perusahaan wajib dipilih">
+                    <nz-select formControlName="company_id" nzPlaceHolder="Pilih perusahaan" nzShowSearch>
+                      @for (company of companies(); track company.id) {
+                        <nz-option [nzValue]="company.id" [nzLabel]="company.name"></nz-option>
+                      }
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
+                  <nz-form-label nzRequired>Kantor</nz-form-label>
+                  <nz-form-control nzErrorTip="Kantor wajib dipilih">
+                    <nz-select formControlName="office_id" nzPlaceHolder="Pilih kantor" nzShowSearch>
+                      @for (office of offices(); track office.id) {
+                        <nz-option [nzValue]="office.id" [nzLabel]="office.name"></nz-option>
+                      }
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
+                  <nz-form-label nzRequired>Departemen</nz-form-label>
+                  <nz-form-control nzErrorTip="Departemen wajib dipilih">
+                    <nz-select formControlName="department_id" nzPlaceHolder="Pilih departemen" nzShowSearch>
                       @for (dept of departments(); track dept.id) {
                         <nz-option [nzValue]="dept.id" [nzLabel]="dept.name"></nz-option>
                       }
@@ -95,12 +136,37 @@ import { environment } from '../../../environments/environment';
                 </nz-form-item>
 
                 <nz-form-item>
-                  <nz-form-label>Section</nz-form-label>
+                  <nz-form-label>Seksi</nz-form-label>
                   <nz-form-control>
-                    <nz-select formControlName="section_id" nzPlaceHolder="Pilih section" nzAllowClear nzShowSearch>
+                    <nz-select formControlName="section_id" nzPlaceHolder="Pilih seksi" nzAllowClear nzShowSearch>
                       @for (sec of sections(); track sec.id) {
                         <nz-option [nzValue]="sec.id" [nzLabel]="sec.name"></nz-option>
                       }
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
+              </nz-card>
+
+              <nz-card nzSize="small" nzTitle="Pengaturan" class="mt-3">
+                <nz-form-item>
+                  <nz-form-label>Prioritas</nz-form-label>
+                  <nz-form-control>
+                    <nz-select formControlName="priority" nzPlaceHolder="Pilih prioritas">
+                      <nz-option nzValue="normal" nzLabel="Normal"></nz-option>
+                      <nz-option nzValue="tinggi" nzLabel="Tinggi"></nz-option>
+                      <nz-option nzValue="urgent" nzLabel="Urgent"></nz-option>
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
+                  <nz-form-label>Kerahasiaan</nz-form-label>
+                  <nz-form-control>
+                    <nz-select formControlName="confidentiality" nzPlaceHolder="Pilih kerahasiaan">
+                      <nz-option nzValue="internal" nzLabel="Internal"></nz-option>
+                      <nz-option nzValue="terbatas" nzLabel="Terbatas"></nz-option>
+                      <nz-option nzValue="rahasia" nzLabel="Rahasia"></nz-option>
+                      <nz-option nzValue="sangat_rahasia" nzLabel="Sangat Rahasia"></nz-option>
                     </nz-select>
                   </nz-form-control>
                 </nz-form-item>
@@ -111,7 +177,7 @@ import { environment } from '../../../environments/environment';
                   <nz-form-label>Gunakan Template</nz-form-label>
                   <nz-form-control>
                     <nz-select formControlName="template_id" nzPlaceHolder="Pilih template (opsional)" nzAllowClear nzShowSearch>
-                      @for (tpl of templates(); track tpl.id) {
+                      @for (tpl of filteredTemplates(); track tpl.id) {
                         <nz-option [nzValue]="tpl.id" [nzLabel]="tpl.name"></nz-option>
                       }
                     </nz-select>
@@ -153,25 +219,54 @@ export class DocumentFormPage implements OnInit {
 
   form!: FormGroup;
   isEdit = false;
-  documentId: number | null = null;
+  documentId: string | null = null;
 
   loading = signal(false);
   submitting = signal(false);
-  documentTypes = signal<{id: number; name: string}[]>([]);
-  categories = signal<{id: number; name: string}[]>([]);
-  departments = signal<{id: number; name: string}[]>([]);
-  sections = signal<{id: number; name: string}[]>([]);
-  templates = signal<{id: number; name: string}[]>([]);
+  selectedTypeId = signal<string | null>(null);
+
+  documentTypes = signal<DropdownItem[]>([]);
+  categories = signal<DropdownItem[]>([]);
+  companies = signal<DropdownItem[]>([]);
+  offices = signal<DropdownItem[]>([]);
+  departments = signal<DropdownItem[]>([]);
+  sections = signal<DropdownItem[]>([]);
+  allTemplates = signal<TemplateItem[]>([]);
+
+  filteredTemplates = computed(() => {
+    const typeId = this.selectedTypeId();
+    const all = this.allTemplates();
+    if (!typeId) return all;
+    return all.filter(t => !t.document_type_id || t.document_type_id === typeId);
+  });
 
   ngOnInit() {
     this.form = this.fb.group({
       title: ['', Validators.required],
-      type_id: [null, Validators.required],
+      document_type_id: [null, Validators.required],
       category_id: [null, Validators.required],
+      company_id: [null, Validators.required],
+      office_id: [null, Validators.required],
+      department_id: [null, Validators.required],
+      folder_name: ['', Validators.required],
       description: [''],
-      department_id: [null],
       section_id: [null],
-      template_id: [null]
+      template_id: [null],
+      priority: ['normal'],
+      confidentiality: ['internal']
+    });
+
+    // Filter templates when document type changes
+    this.form.get('document_type_id')!.valueChanges.subscribe(typeId => {
+      this.selectedTypeId.set(typeId);
+      // Reset template if it no longer matches
+      const currentTemplate = this.form.get('template_id')!.value;
+      if (currentTemplate) {
+        const stillValid = this.filteredTemplates().some(t => t.id === currentTemplate);
+        if (!stillValid) {
+          this.form.get('template_id')!.setValue(null);
+        }
+      }
     });
 
     this.loadDropdowns();
@@ -179,42 +274,54 @@ export class DocumentFormPage implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEdit = true;
-      this.documentId = +id;
-      this.loadDocument(this.documentId);
+      this.documentId = id;
+      this.loadDocument(id);
     }
   }
 
   loadDropdowns() {
-    this.http.get<any>(`${environment.apiUrl}/document-types`).subscribe({
-      next: (res) => this.documentTypes.set(res.data || [])
-    });
-    this.http.get<any>(`${environment.apiUrl}/document-categories`).subscribe({
-      next: (res) => this.categories.set(res.data || [])
-    });
-    this.http.get<any>(`${environment.apiUrl}/departments`).subscribe({
-      next: (res) => this.departments.set(res.data || [])
-    });
-    this.http.get<any>(`${environment.apiUrl}/sections`).subscribe({
-      next: (res) => this.sections.set(res.data || [])
-    });
-    this.http.get<any>(`${environment.apiUrl}/templates`).subscribe({
-      next: (res) => this.templates.set(res.data || [])
+    forkJoin({
+      types: this.http.get<any>(`${environment.apiUrl}/document-types`),
+      categories: this.http.get<any>(`${environment.apiUrl}/categories`),
+      companies: this.http.get<any>(`${environment.apiUrl}/companies`),
+      offices: this.http.get<any>(`${environment.apiUrl}/offices`),
+      departments: this.http.get<any>(`${environment.apiUrl}/departments`),
+      sections: this.http.get<any>(`${environment.apiUrl}/sections`),
+      templates: this.http.get<any>(`${environment.apiUrl}/templates`)
+    }).subscribe({
+      next: (res) => {
+        this.documentTypes.set(res.types.data || []);
+        this.categories.set(res.categories.data || []);
+        this.companies.set(res.companies.data || []);
+        this.offices.set(res.offices.data || []);
+        this.departments.set(res.departments.data || []);
+        this.sections.set(res.sections.data || []);
+        this.allTemplates.set(res.templates.data || []);
+      },
+      error: () => {
+        this.message.error('Gagal memuat data dropdown');
+      }
     });
   }
 
-  loadDocument(id: number) {
+  loadDocument(id: string) {
     this.loading.set(true);
     this.http.get<any>(`${environment.apiUrl}/documents/${id}`).subscribe({
       next: (res) => {
         const doc = res.data;
         this.form.patchValue({
           title: doc.title,
-          type_id: doc.type_id,
+          document_type_id: doc.document_type_id,
           category_id: doc.category_id,
-          description: doc.description,
+          company_id: doc.company_id,
+          office_id: doc.office_id,
           department_id: doc.department_id,
+          folder_name: doc.folder_name,
+          description: doc.description,
           section_id: doc.section_id,
-          template_id: doc.template_id
+          template_id: doc.template_id,
+          priority: doc.priority || 'normal',
+          confidentiality: doc.confidentiality || 'internal'
         });
         this.loading.set(false);
       },
