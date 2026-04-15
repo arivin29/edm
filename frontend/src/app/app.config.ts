@@ -1,6 +1,45 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, importProvidersFrom } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+
+// ng-zorro
+import { provideNzIcons } from 'ng-zorro-antd/icon';
+import { provideNzI18n, en_US } from 'ng-zorro-antd/i18n';
+import {
+  MenuFoldOutline,
+  MenuUnfoldOutline,
+  DashboardOutline,
+  FileTextOutline,
+  UserOutline,
+  TeamOutline,
+  SettingOutline,
+  LogoutOutline,
+  SearchOutline,
+  BellOutline,
+  PlusOutline,
+  EditOutline,
+  DeleteOutline,
+  EyeOutline,
+  CheckOutline,
+  CloseOutline,
+  DownOutline,
+  RightOutline,
+  HomeOutline,
+  FolderOutline,
+  SafetyOutline,
+  ApartmentOutline,
+  ClockCircleOutline,
+  CheckCircleOutline,
+  ArrowLeftOutline,
+  SendOutline,
+  DownloadOutline,
+  PrinterOutline,
+  ShareAltOutline,
+  MoreOutline,
+  UploadOutline,
+  ExclamationCircleOutline
+} from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
@@ -9,10 +48,47 @@ import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { ApiConfiguration } from './api/api-configuration';
 import { environment } from '../environments/environment';
 
+// Only import icons that are used
+const icons = [
+  MenuFoldOutline,
+  MenuUnfoldOutline,
+  DashboardOutline,
+  FileTextOutline,
+  UserOutline,
+  TeamOutline,
+  SettingOutline,
+  LogoutOutline,
+  SearchOutline,
+  BellOutline,
+  PlusOutline,
+  EditOutline,
+  DeleteOutline,
+  EyeOutline,
+  CheckOutline,
+  CloseOutline,
+  DownOutline,
+  RightOutline,
+  HomeOutline,
+  FolderOutline,
+  SafetyOutline,
+  ApartmentOutline,
+  ClockCircleOutline,
+  CheckCircleOutline,
+  ArrowLeftOutline,
+  SendOutline,
+  DownloadOutline,
+  PrinterOutline,
+  ShareAltOutline,
+  MoreOutline,
+  UploadOutline,
+  ExclamationCircleOutline
+];
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
+    provideAnimationsAsync(),
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(
       withInterceptors([
@@ -21,6 +97,9 @@ export const appConfig: ApplicationConfig = {
         errorInterceptor
       ])
     ),
+    // ng-zorro
+    provideNzI18n(en_US),
+    provideNzIcons(icons),
     // API Configuration
     {
       provide: ApiConfiguration,

@@ -1,394 +1,171 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzStatisticModule } from 'ng-zorro-antd/statistic';
+import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzTableModule } from 'ng-zorro-antd/table';
+import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzTimelineModule } from 'ng-zorro-antd/timeline';
 import { AuthStateService } from '../../core/auth/auth-state.service';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    CommonModule,
+    RouterLink,
+    NzCardModule,
+    NzStatisticModule,
+    NzGridModule,
+    NzIconModule,
+    NzButtonModule,
+    NzTableModule,
+    NzTagModule,
+    NzTimelineModule
+  ],
   template: `
-    <div class="dashboard">
+    <div class="p-4">
       <!-- Page Header -->
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Dashboard</h1>
-          <p class="page-subtitle">Selamat datang, {{ authState.user()?.name || 'User' }}</p>
-        </div>
-        <div class="header-date">
-          <span class="text-gray-500">{{ currentDate.weekday }},</span>
-          {{ currentDate.day }} {{ currentDate.month }} {{ currentDate.year }}
-        </div>
+      <div class="mb-4">
+        <h1 class="text-xl font-semibold text-gray-900 m-0">Dashboard</h1>
+        <p class="text-gray-500 text-sm m-0">Selamat datang, {{ authState.user()?.name || 'User' }}</p>
       </div>
 
-      <!-- Stats Grid -->
-      <div class="stats-grid">
-        @for (stat of stats; track stat.label) {
-          <div class="stat-card">
-            <div class="stat-icon" [class]="stat.iconClass">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="stat.icon"/>
-              </svg>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">{{ stat.label }}</span>
-              <span class="stat-value">{{ stat.value }}</span>
-            </div>
+      <!-- Stats -->
+      <div nz-row [nzGutter]="12" class="mb-4">
+        @for (stat of stats; track stat.title) {
+          <div nz-col [nzSpan]="6" [nzXs]="12" [nzSm]="12" [nzMd]="6">
+            <nz-card nzSize="small" class="stat-card">
+              <div class="flex items-center gap-3">
+                <div class="stat-icon" [style.background]="stat.bgColor">
+                  <span nz-icon [nzType]="stat.icon" [style.color]="stat.color"></span>
+                </div>
+                <div>
+                  <div class="text-2xl font-semibold" [style.color]="stat.color">{{ stat.value }}</div>
+                  <div class="text-xs text-gray-500">{{ stat.title }}</div>
+                </div>
+              </div>
+            </nz-card>
           </div>
         }
       </div>
 
-      <!-- Main Content Grid -->
-      <div class="content-grid">
-        <!-- Quick Actions -->
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">Aksi Cepat</h2>
-          </div>
-          <div class="card-body">
-            <div class="quick-actions">
-              @for (action of quickActions; track action.label) {
-                <a [routerLink]="action.link" class="quick-action">
-                  <div class="quick-action-icon" [class]="action.iconClass">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="action.icon"/>
-                    </svg>
-                  </div>
-                  <span class="quick-action-label">{{ action.label }}</span>
-                </a>
-              }
+      <!-- Quick Actions & Recent Documents -->
+      <div nz-row [nzGutter]="12" class="mb-4">
+        <div nz-col [nzSpan]="12" [nzXs]="24" [nzMd]="12">
+          <nz-card nzSize="small" nzTitle="Aksi Cepat">
+            <div class="grid grid-cols-2 gap-2">
+              <button nz-button nzType="primary" nzSize="small" routerLink="/documents/create">
+                <span nz-icon nzType="plus"></span>
+                Buat Dokumen
+              </button>
+              <button nz-button nzSize="small" routerLink="/documents">
+                <span nz-icon nzType="file-text"></span>
+                Lihat Dokumen
+              </button>
+              <button nz-button nzSize="small" routerLink="/users">
+                <span nz-icon nzType="team"></span>
+                Kelola User
+              </button>
+              <button nz-button nzSize="small" routerLink="/settings">
+                <span nz-icon nzType="setting"></span>
+                Pengaturan
+              </button>
             </div>
-          </div>
+          </nz-card>
         </div>
-
-        <!-- Recent Documents -->
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">Dokumen Terbaru</h2>
-            <a routerLink="/documents" class="text-sm text-primary-600 hover:text-primary-700">
-              Lihat Semua →
-            </a>
-          </div>
-          <div class="doc-list">
-            @for (doc of recentDocs; track doc.id) {
-              <div class="doc-item">
-                <div class="doc-icon" [class]="getDocIconClass(doc.type)">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                  </svg>
-                </div>
-                <div class="doc-info">
-                  <span class="doc-title">{{ doc.title }}</span>
-                  <span class="doc-meta">{{ doc.type }} • {{ doc.date }}</span>
-                </div>
-                <span class="doc-status" [class]="getStatusClass(doc.status)">
-                  {{ doc.status }}
-                </span>
-              </div>
-            }
-          </div>
+        <div nz-col [nzSpan]="12" [nzXs]="24" [nzMd]="12">
+          <nz-card nzSize="small" nzTitle="Dokumen Terbaru" [nzExtra]="extraTpl">
+            <nz-table #docTable [nzData]="recentDocs" [nzShowPagination]="false" nzSize="small">
+              <tbody>
+                @for (doc of docTable.data; track doc.id) {
+                  <tr>
+                    <td>{{ doc.title }}</td>
+                    <td>{{ doc.type }}</td>
+                    <td>
+                      <nz-tag [nzColor]="getStatusColor(doc.status)">{{ doc.status }}</nz-tag>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </nz-table>
+          </nz-card>
+          <ng-template #extraTpl>
+            <a routerLink="/documents" class="text-xs">Lihat Semua</a>
+          </ng-template>
         </div>
       </div>
 
-      <!-- Activity -->
-      <div class="card activity-card">
-        <div class="card-header">
-          <h2 class="card-title">Aktivitas Terkini</h2>
-        </div>
-        <div class="activity-list">
-          @for (activity of activities; track activity.id) {
-            <div class="activity-item">
-              <div class="activity-dot" [class]="activity.type"></div>
-              <div class="activity-content">
-                <p class="activity-text">{{ activity.text }}</p>
-                <span class="activity-time">{{ activity.time }}</span>
-              </div>
-            </div>
-          }
+      <!-- Activity Timeline -->
+      <div nz-row>
+        <div nz-col [nzSpan]="12" [nzXs]="24" [nzMd]="12">
+          <nz-card nzSize="small" nzTitle="Aktivitas Terkini">
+            <nz-timeline>
+              @for (activity of activities; track activity.id) {
+                <nz-timeline-item [nzColor]="activity.color">
+                  <p class="m-0 text-sm">{{ activity.text }}</p>
+                  <span class="text-xs text-gray-500">{{ activity.time }}</span>
+                </nz-timeline-item>
+              }
+            </nz-timeline>
+          </nz-card>
         </div>
       </div>
     </div>
   `,
   styles: [`
-    .dashboard {
-      @apply p-6;
-    }
-
-    .page-header {
-      @apply flex items-center justify-between mb-6;
-    }
-
-    .page-title {
-      @apply text-2xl font-semibold text-gray-900;
-    }
-
-    .page-subtitle {
-      @apply text-sm text-gray-500 mt-1;
-    }
-
-    .header-date {
-      @apply text-sm text-gray-500;
-    }
-
-    .stats-grid {
-      @apply grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6;
-    }
-
-    .stat-card {
-      @apply bg-white rounded-lg shadow p-4 flex items-center gap-4;
-    }
-
+    .stat-card { border-radius: 6px; }
     .stat-icon {
-      @apply w-12 h-12 rounded-lg flex items-center justify-center;
-      &.primary { @apply bg-blue-100 text-blue-600; }
-      &.warning { @apply bg-yellow-100 text-yellow-600; }
-      &.success { @apply bg-green-100 text-green-600; }
-      &.info { @apply bg-indigo-100 text-indigo-600; }
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
     }
-
-    .stat-content {
-      @apply flex flex-col;
-    }
-
-    .stat-label {
-      @apply text-xs text-gray-500 uppercase tracking-wider;
-    }
-
-    .stat-value {
-      @apply text-2xl font-semibold text-gray-900;
-    }
-
-    .content-grid {
-      @apply grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6;
-    }
-
-    .card {
-      @apply bg-white rounded-lg shadow;
-    }
-
-    .card-header {
-      @apply flex items-center justify-between px-4 py-3 border-b border-gray-100;
-    }
-
-    .card-title {
-      @apply text-base font-medium text-gray-900;
-    }
-
-    .card-body {
-      @apply p-4;
-    }
-
-    .quick-actions {
-      @apply grid grid-cols-2 gap-3;
-    }
-
-    .quick-action {
-      @apply flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors no-underline;
-    }
-
-    .quick-action-icon {
-      @apply w-10 h-10 rounded-lg flex items-center justify-center text-white;
-      &.primary { @apply bg-blue-500; }
-      &.success { @apply bg-green-500; }
-      &.warning { @apply bg-yellow-500; }
-      &.gray { @apply bg-gray-500; }
-    }
-
-    .quick-action-label {
-      @apply text-sm font-medium text-gray-700;
-    }
-
-    .doc-list {
-      @apply divide-y divide-gray-100;
-    }
-
-    .doc-item {
-      @apply flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer;
-    }
-
-    .doc-icon {
-      @apply w-8 h-8 rounded-lg flex items-center justify-center;
-      &.sop { @apply bg-blue-100 text-blue-600; }
-      &.kontrak { @apply bg-green-100 text-green-600; }
-      &.laporan { @apply bg-yellow-100 text-yellow-600; }
-      &.kebijakan { @apply bg-indigo-100 text-indigo-600; }
-    }
-
-    .doc-info {
-      @apply flex-1 flex flex-col min-w-0;
-    }
-
-    .doc-title {
-      @apply text-sm font-medium text-gray-900 truncate;
-    }
-
-    .doc-meta {
-      @apply text-xs text-gray-500;
-    }
-
-    .doc-status {
-      @apply px-2 py-1 rounded-full text-xs font-medium;
-      &.approved { @apply bg-green-100 text-green-700; }
-      &.pending { @apply bg-yellow-100 text-yellow-700; }
-      &.draft { @apply bg-gray-100 text-gray-600; }
-      &.rejected { @apply bg-red-100 text-red-700; }
-    }
-
-    .activity-card {
-      @apply max-w-2xl;
-    }
-
-    .activity-list {
-      @apply p-4 space-y-3;
-    }
-
-    .activity-item {
-      @apply flex gap-3;
-    }
-
-    .activity-dot {
-      @apply w-2 h-2 rounded-full mt-2 flex-shrink-0;
-      &.create { @apply bg-blue-500; }
-      &.approve { @apply bg-green-500; }
-      &.update { @apply bg-yellow-500; }
-      &.comment { @apply bg-indigo-500; }
-    }
-
-    .activity-content {
-      @apply flex-1;
-    }
-
-    .activity-text {
-      @apply text-sm text-gray-700 m-0;
-    }
-
-    .activity-time {
-      @apply text-xs text-gray-500;
-    }
-
-    @media (max-width: 640px) {
-      .page-header {
-        @apply flex-col items-start gap-2;
-      }
-      .quick-actions {
-        @apply grid-cols-1;
-      }
-    }
+    :host ::ng-deep .ant-card-head { padding: 0 12px; min-height: 40px; }
+    :host ::ng-deep .ant-card-head-title { padding: 8px 0; font-size: 13px; }
+    :host ::ng-deep .ant-card-body { padding: 12px; }
+    :host ::ng-deep .ant-table-small .ant-table-tbody > tr > td { padding: 6px 8px; font-size: 12px; }
+    :host ::ng-deep .ant-tag { font-size: 11px; line-height: 18px; padding: 0 6px; }
+    :host ::ng-deep .ant-timeline-item-content { font-size: 13px; }
   `]
 })
-export class DashboardPage implements OnInit {
+export class DashboardPage {
   readonly authState = inject(AuthStateService);
 
-  currentDate = {
-    day: '',
-    weekday: '',
-    month: '',
-    year: ''
-  };
-
   stats = [
-    {
-      label: 'Total Dokumen',
-      value: '1,234',
-      icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-      iconClass: 'primary'
-    },
-    {
-      label: 'Menunggu Approval',
-      value: '23',
-      icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-      iconClass: 'warning'
-    },
-    {
-      label: 'Disetujui Hari Ini',
-      value: '8',
-      icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-      iconClass: 'success'
-    },
-    {
-      label: 'Pengguna Aktif',
-      value: '56',
-      icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
-      iconClass: 'info'
-    }
-  ];
-
-  quickActions = [
-    {
-      label: 'Buat Dokumen',
-      link: '/documents/create',
-      icon: 'M12 4v16m8-8H4',
-      iconClass: 'primary'
-    },
-    {
-      label: 'Lihat Dokumen',
-      link: '/documents',
-      icon: 'M4 6h16M4 10h16M4 14h16M4 18h16',
-      iconClass: 'success'
-    },
-    {
-      label: 'Kelola User',
-      link: '/users',
-      icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m9 5.197v1',
-      iconClass: 'warning'
-    },
-    {
-      label: 'Pengaturan',
-      link: '/settings',
-      icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
-      iconClass: 'gray'
-    }
+    { title: 'Total Dokumen', value: 1234, icon: 'file-text', color: '#1890ff', bgColor: '#e6f7ff' },
+    { title: 'Menunggu Approval', value: 23, icon: 'clock-circle', color: '#faad14', bgColor: '#fff7e6' },
+    { title: 'Disetujui Hari Ini', value: 8, icon: 'check-circle', color: '#52c41a', bgColor: '#f6ffed' },
+    { title: 'Pengguna Aktif', value: 56, icon: 'team', color: '#722ed1', bgColor: '#f9f0ff' }
   ];
 
   recentDocs = [
-    { id: 1, title: 'SOP Pengajuan Cuti', type: 'SOP', date: '15 Apr 2026', status: 'Disetujui' },
-    { id: 2, title: 'Kontrak Kerja Baru', type: 'Kontrak', date: '14 Apr 2026', status: 'Menunggu' },
-    { id: 3, title: 'Laporan Bulanan', type: 'Laporan', date: '13 Apr 2026', status: 'Draft' },
-    { id: 4, title: 'Kebijakan Remote Work', type: 'Kebijakan', date: '12 Apr 2026', status: 'Disetujui' }
+    { id: 1, title: 'SOP Pengajuan Cuti', type: 'SOP', status: 'Disetujui' },
+    { id: 2, title: 'Kontrak Kerja Baru', type: 'Kontrak', status: 'Menunggu' },
+    { id: 3, title: 'Laporan Bulanan', type: 'Laporan', status: 'Draft' },
+    { id: 4, title: 'Kebijakan Remote', type: 'Kebijakan', status: 'Disetujui' }
   ];
 
   activities = [
-    { id: 1, type: 'create', text: 'Anda membuat dokumen baru: SOP Pengajuan Cuti', time: '5 menit lalu' },
-    { id: 2, type: 'approve', text: 'Dokumen PKS-003 telah disetujui', time: '1 jam lalu' },
-    { id: 3, type: 'update', text: 'Dokumen REG-012 diperbarui', time: '2 jam lalu' },
-    { id: 4, type: 'comment', text: 'Komentar baru pada SOP-045', time: '3 jam lalu' }
+    { id: 1, text: 'Anda membuat dokumen baru: SOP Pengajuan Cuti', time: '5 menit lalu', color: 'blue' },
+    { id: 2, text: 'Dokumen PKS-003 telah disetujui', time: '1 jam lalu', color: 'green' },
+    { id: 3, text: 'Dokumen REG-012 diperbarui', time: '2 jam lalu', color: 'orange' },
+    { id: 4, text: 'Komentar baru pada SOP-045', time: '3 jam lalu', color: 'gray' }
   ];
 
-  ngOnInit(): void {
-    this.updateCurrentDate();
-  }
-
-  updateCurrentDate(): void {
-    const now = new Date();
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
-                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    
-    this.currentDate = {
-      day: now.getDate().toString(),
-      weekday: days[now.getDay()],
-      month: months[now.getMonth()],
-      year: now.getFullYear().toString()
+  getStatusColor(status: string): string {
+    const colors: Record<string, string> = {
+      'Disetujui': 'green',
+      'Menunggu': 'orange',
+      'Draft': 'default',
+      'Ditolak': 'red'
     };
-  }
-
-  getDocIconClass(type: string): string {
-    const typeMap: Record<string, string> = {
-      'SOP': 'sop',
-      'Kontrak': 'kontrak',
-      'Laporan': 'laporan',
-      'Kebijakan': 'kebijakan'
-    };
-    return typeMap[type] || 'sop';
-  }
-
-  getStatusClass(status: string): string {
-    const statusMap: Record<string, string> = {
-      'Disetujui': 'approved',
-      'Menunggu': 'pending',
-      'Draft': 'draft',
-      'Ditolak': 'rejected'
-    };
-    return statusMap[status] || 'draft';
+    return colors[status] || 'default';
   }
 }

@@ -4,6 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+const STORAGE_PREFIX = 'dms_';
 const AUTH_STORAGE_KEY = 'auth';
 
 /**
@@ -12,7 +13,7 @@ const AUTH_STORAGE_KEY = 'auth';
 function getTokenFromStorage(): string | null {
   if (typeof localStorage === 'undefined') return null;
   try {
-    const data = localStorage.getItem(AUTH_STORAGE_KEY);
+    const data = localStorage.getItem(STORAGE_PREFIX + AUTH_STORAGE_KEY);
     if (data) {
       const parsed = JSON.parse(data);
       return parsed.token || null;

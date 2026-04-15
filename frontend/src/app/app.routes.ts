@@ -34,29 +34,78 @@ export const routes: Routes = [
           import('./pages/dashboard/dashboard.page').then(m => m.DashboardPage),
         title: 'Dashboard - DMS'
       },
+      // Documents
       {
         path: 'documents',
-        loadChildren: () =>
-          import('./features/documents/documents.routes').then(m => m.DOCUMENTS_ROUTES),
-        title: 'Dokumen - DMS'
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/documents/document-list.page').then(m => m.DocumentListPage),
+            title: 'Dokumen - DMS'
+          },
+          {
+            path: 'create',
+            loadComponent: () =>
+              import('./pages/documents/document-form.page').then(m => m.DocumentFormPage),
+            title: 'Buat Dokumen - DMS'
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./pages/documents/document-detail.page').then(m => m.DocumentDetailPage),
+            title: 'Detail Dokumen - DMS'
+          },
+          {
+            path: ':id/edit',
+            loadComponent: () =>
+              import('./pages/documents/document-form.page').then(m => m.DocumentFormPage),
+            title: 'Edit Dokumen - DMS'
+          }
+        ]
       },
+      // Users
       {
         path: 'users',
-        loadChildren: () =>
-          import('./features/users/users.routes').then(m => m.USERS_ROUTES),
+        loadComponent: () =>
+          import('./pages/users/user-list.page').then(m => m.UserListPage),
         title: 'Pengguna - DMS'
       },
+      // Organization
       {
         path: 'organization',
-        loadChildren: () =>
-          import('./features/organization/organization.routes').then(m => m.ORGANIZATION_ROUTES),
-        title: 'Organisasi - DMS'
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/organization/organization.page').then(m => m.OrganizationPage),
+            title: 'Organisasi - DMS'
+          }
+        ]
       },
+      // Templates
       {
         path: 'templates',
-        loadChildren: () =>
-          import('./features/templates/templates.routes').then(m => m.TEMPLATES_ROUTES),
-        title: 'Template - DMS'
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/templates/template-list.page').then(m => m.TemplateListPage),
+            title: 'Template - DMS'
+          }
+        ]
+      },
+      // Roles
+      {
+        path: 'roles',
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/roles/role-list.page').then(m => m.RoleListPage),
+            title: 'Role - DMS'
+          }
+        ]
       },
       {
         path: '',
