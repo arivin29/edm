@@ -16,18 +16,20 @@ import (
 
 // Allowed extensions per module
 var allowedExtensions = map[string][]string{
-	"documents":  {".docx", ".pdf"},
-	"templates":  {".docx"},
-	"signatures": {".png", ".jpg", ".jpeg"},
-	"avatars":    {".png", ".jpg", ".jpeg"},
+	"documents":   {".docx", ".pdf"},
+	"templates":   {".docx"},
+	"signatures":  {".png", ".jpg", ".jpeg"},
+	"avatars":     {".png", ".jpg", ".jpeg"},
+	"attachments": {".pdf", ".docx", ".doc", ".xlsx", ".xls", ".pptx", ".ppt", ".png", ".jpg", ".jpeg", ".gif", ".zip", ".rar", ".csv", ".txt"},
 }
 
 // Max file sizes in bytes per module
 var maxFileSizes = map[string]int64{
-	"documents":  50 * 1024 * 1024, // 50MB
-	"templates":  20 * 1024 * 1024, // 20MB
-	"signatures": 2 * 1024 * 1024,  // 2MB
-	"avatars":    5 * 1024 * 1024,  // 5MB
+	"documents":   50 * 1024 * 1024, // 50MB
+	"templates":   20 * 1024 * 1024, // 20MB
+	"signatures":  2 * 1024 * 1024,  // 2MB
+	"avatars":     5 * 1024 * 1024,  // 5MB
+	"attachments": 50 * 1024 * 1024, // 50MB
 }
 
 type FileUploadOptions struct {

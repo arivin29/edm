@@ -63,7 +63,15 @@ import {
   TagOutline,
   CopyOutline,
   StarOutline,
-  FlagOutline
+  FlagOutline,
+  FilePdfOutline,
+  FileWordOutline,
+  FileExcelOutline,
+  FilePptOutline,
+  FileImageOutline,
+  FileZipOutline,
+  FileOutline,
+  PaperClipOutline
 } from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
@@ -131,7 +139,15 @@ const icons = [
   TagOutline,
   CopyOutline,
   StarOutline,
-  FlagOutline
+  FlagOutline,
+  FilePdfOutline,
+  FileWordOutline,
+  FileExcelOutline,
+  FilePptOutline,
+  FileImageOutline,
+  FileZipOutline,
+  FileOutline,
+  PaperClipOutline
 ];
 
 export const appConfig: ApplicationConfig = {

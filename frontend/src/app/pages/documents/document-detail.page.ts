@@ -18,6 +18,8 @@ import { NzBadgeModule } from 'ng-zorro-antd/badge';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzUploadModule } from 'ng-zorro-antd/upload';
+import { NzListModule } from 'ng-zorro-antd/list';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
@@ -97,6 +99,19 @@ interface Distribution {
   status: string;
 }
 
+interface Attachment {
+  id: string;
+  file_name: string;
+  original_name: string;
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  module: string;
+  uploaded_by: string;
+  created_at: string;
+  uploader?: { id: string; name: string; email: string };
+}
+
 @Component({
   selector: 'app-document-detail',
   standalone: true,
@@ -105,7 +120,8 @@ interface Distribution {
     NzCardModule, NzButtonModule, NzIconModule, NzTagModule,
     NzDescriptionsModule, NzTabsModule, NzTimelineModule,
     NzCommentModule, NzAvatarModule, NzInputModule, NzSpinModule,
-    NzModalModule, NzBadgeModule, NzToolTipModule, NzTableModule, NzEmptyModule
+    NzModalModule, NzBadgeModule, NzToolTipModule, NzTableModule, NzEmptyModule,
+    NzUploadModule, NzListModule
   ],
   template: `
     <div class="p-4">
@@ -384,6 +400,71 @@ interface Distribution {
                     </nz-table>
                   }
                 </nz-tab>
+
+                <!-- Lampiran Tab -->
+                <nz-tab nzTitle="Lampiran">
+                  <div class="py-3">
+                    <!-- Upload Area -->
+                    <div class="mb-3">
+                      <nz-upload
+                        nzType="drag"
+                        [nzAction]="getAttachmentUploadUrl()"
+                        [nzHeaders]="getAuthHeaders()"
+                        nzName="file"
+                        [nzMultiple]="true"
+                        [nzShowUploadList]="false"
+                        (nzChange)="onAttachmentUpload($event)"
+                        [nzAccept]="'.pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.png,.jpg,.jpeg,.gif,.zip,.rar,.csv,.txt'"
+                      >
+                        <p class="ant-upload-drag-icon">
+                          <span nz-icon nzType="inbox" style="font-size: 32px; color: #999;"></span>
+                        </p>
+                        <p class="text-sm text-gray-500">Klik atau seret file ke area ini</p>
+                        <p class="text-xs text-gray-400">PDF, Word, Excel, Gambar, ZIP (maks 50MB)</p>
+                      </nz-upload>
+                    </div>
+
+                    <!-- Attachment List -->
+                    @if (attachments().length > 0) {
+                      <nz-table #attachTable [nzData]="attachments()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
+                        <thead>
+                          <tr>
+                            <th>File</th>
+                            <th nzWidth="100px">Ukuran</th>
+                            <th nzWidth="120px">Diupload oleh</th>
+                            <th nzWidth="120px">Tanggal</th>
+                            <th nzWidth="80px">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (att of attachTable.data; track att.id) {
+                            <tr>
+                              <td>
+                                <div class="flex items-center gap-2">
+                                  <span nz-icon [nzType]="getFileIcon(att.mime_type)" class="text-base"></span>
+                                  <span class="text-xs">{{ att.original_name }}</span>
+                                </div>
+                              </td>
+                              <td class="text-xs text-gray-500">{{ formatFileSize(att.file_size) }}</td>
+                              <td class="text-xs">{{ att.uploader?.name || '-' }}</td>
+                              <td class="text-xs text-gray-500">{{ att.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+                              <td>
+                                <button nz-button nzType="link" nzSize="small" (click)="downloadAttachment(att)" nz-tooltip nzTooltipTitle="Download">
+                                  <span nz-icon nzType="download"></span>
+                                </button>
+                                <button nz-button nzType="link" nzSize="small" nzDanger (click)="deleteAttachment(att)" nz-tooltip nzTooltipTitle="Hapus">
+                                  <span nz-icon nzType="delete"></span>
+                                </button>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </nz-table>
+                    } @else {
+                      <nz-empty nzNotFoundContent="Belum ada lampiran"></nz-empty>
+                    }
+                  </div>
+                </nz-tab>
               </nz-tabset>
             </nz-card>
           </div>
@@ -454,12 +535,14 @@ export class DocumentDetailPage implements OnInit {
   comments = signal<Comment[]>([]);
   workflow = signal<WorkflowStatus | null>(null);
   distributions = signal<Distribution[]>([]);
+  attachments = signal<Attachment[]>([]);
 
   loading = signal(true);
   versionsLoading = signal(false);
   commentsLoading = signal(false);
   workflowLoading = signal(false);
   distributionsLoading = signal(false);
+  uploadingAttachment = signal(false);
 
   newComment = '';
   replyContent = '';
@@ -530,6 +613,84 @@ export class DocumentDetailPage implements OnInit {
     if (index === 3 && this.distributions().length === 0 && !this.distributionsLoading()) {
       this.loadDistributions(this.documentId);
     }
+    // Lazy-load attachments on first visit
+    if (index === 4 && this.attachments().length === 0) {
+      this.loadAttachments();
+    }
+  }
+
+  loadAttachments() {
+    this.http.get<any>(`${environment.apiUrl}/documents/${this.documentId}/attachments`).subscribe({
+      next: (res) => this.attachments.set(res.data || []),
+      error: () => {}
+    });
+  }
+
+  getAttachmentUploadUrl(): string {
+    return `${environment.apiUrl}/documents/${this.documentId}/attachments`;
+  }
+
+  getAuthHeaders(): any {
+    const authData = localStorage.getItem('dms_auth');
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      return { Authorization: `Bearer ${parsed.token}` };
+    }
+    return {};
+  }
+
+  onAttachmentUpload(info: any) {
+    const { file } = info;
+    if (file.status === 'done') {
+      this.message.success(`${file.name} berhasil diupload`);
+      this.loadAttachments();
+    } else if (file.status === 'error') {
+      this.message.error(`${file.name} gagal diupload`);
+    }
+  }
+
+  downloadAttachment(att: Attachment) {
+    this.http.get(`${environment.apiUrl}/documents/${this.documentId}/attachments/${att.id}/download`, {
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = att.original_name;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => this.message.error('Gagal mengunduh file')
+    });
+  }
+
+  deleteAttachment(att: Attachment) {
+    this.modal.confirm({
+      nzTitle: 'Hapus Lampiran?',
+      nzContent: `Yakin ingin menghapus "${att.original_name}"?`,
+      nzOkText: 'Hapus',
+      nzOkDanger: true,
+      nzOnOk: () => {
+        this.http.delete(`${environment.apiUrl}/documents/${this.documentId}/attachments/${att.id}`).subscribe({
+          next: () => {
+            this.message.success('Lampiran berhasil dihapus');
+            this.loadAttachments();
+          },
+          error: () => this.message.error('Gagal menghapus lampiran')
+        });
+      }
+    });
+  }
+
+  getFileIcon(mimeType: string): string {
+    if (mimeType?.includes('pdf')) return 'file-pdf';
+    if (mimeType?.includes('word') || mimeType?.includes('document')) return 'file-word';
+    if (mimeType?.includes('sheet') || mimeType?.includes('excel')) return 'file-excel';
+    if (mimeType?.includes('presentation') || mimeType?.includes('powerpoint')) return 'file-ppt';
+    if (mimeType?.includes('image')) return 'file-image';
+    if (mimeType?.includes('zip') || mimeType?.includes('rar') || mimeType?.includes('compressed')) return 'file-zip';
+    return 'file';
   }
 
   submitForReview() {

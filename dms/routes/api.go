@@ -25,6 +25,7 @@ commentController := controllers.NewCommentController()
 notificationController := controllers.NewNotificationController()
 onlyofficeController := controllers.NewOnlyOfficeController()
 distributionController := controllers.NewDistributionController()
+	attachmentController := controllers.NewAttachmentController()
 
 // Global CORS preflight handler - must be before other routes
 facades.Route().Fallback(func(ctx http.Context) http.Response {
@@ -169,6 +170,12 @@ router.Middleware(middleware.RequirePermission("document.download")).Get("/docum
 router.Middleware(middleware.RequirePermission("document.edit")).Post("/documents/{id}/versions/{ver}/restore", documentController.RestoreVersion)
 router.Middleware(middleware.RequirePermission("document.download")).Get("/documents/{id}/download", documentController.Download)
 router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/editor-config", onlyofficeController.GetConfig)
+
+// Document Attachments
+router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/attachments", attachmentController.ListAttachments)
+router.Middleware(middleware.RequirePermission("document.create")).Post("/documents/{id}/attachments", attachmentController.UploadAttachment)
+router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/attachments/{attachmentId}/download", attachmentController.DownloadAttachment)
+router.Middleware(middleware.RequirePermission("document.delete")).Delete("/documents/{id}/attachments/{attachmentId}", attachmentController.DeleteAttachment)
 
 // Document Comments
 router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/comments", commentController.Index)
