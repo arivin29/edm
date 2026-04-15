@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -15,9 +15,15 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzStepsModule } from 'ng-zorro-antd/steps';
+import { NzDescriptionsModule } from 'ng-zorro-antd/descriptions';
+import { NzDividerModule } from 'ng-zorro-antd/divider';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 interface DropdownItem {
@@ -62,6 +68,16 @@ interface TagGroup {
   tags: TemplateTag[];
 }
 
+interface DraftData {
+  step: number;
+  formData: any;
+  metadata: Record<string, any>;
+  selectedTemplateId: string | null;
+  timestamp: number;
+}
+
+const DRAFT_KEY = 'dms_document_draft';
+
 @Component({
   selector: 'app-document-form',
   standalone: true,
@@ -69,163 +85,52 @@ interface TagGroup {
     CommonModule, RouterLink, ReactiveFormsModule,
     NzCardModule, NzButtonModule, NzIconModule, NzFormModule,
     NzInputModule, NzInputNumberModule, NzSelectModule, NzDatePickerModule,
-    NzCheckboxModule, NzRadioModule, NzSpinModule, NzToolTipModule, NzGridModule
+    NzCheckboxModule, NzRadioModule, NzSpinModule, NzToolTipModule, NzGridModule,
+    NzStepsModule, NzDescriptionsModule, NzDividerModule, NzAlertModule, NzModalModule
   ],
   template: `
-    <div class="p-4">
+    <div class="doc-wizard">
       <!-- Header -->
-      <div class="flex items-center gap-2 mb-4">
-        <a routerLink="/documents" class="text-gray-500 hover:text-gray-700">
-          <span nz-icon nzType="arrow-left"></span>
-        </a>
-        <h1 class="text-lg font-semibold m-0">{{ isEdit ? 'Edit Dokumen' : 'Buat Dokumen Baru' }}</h1>
+      <div class="wizard-header">
+        <div class="header-left">
+          <a routerLink="/documents" class="back-link">
+            <span nz-icon nzType="arrow-left"></span>
+          </a>
+          <h1 class="header-title">{{ isEdit ? 'Edit Dokumen' : 'Buat Dokumen Baru' }}</h1>
+        </div>
+        @if (!isEdit) {
+          <button nz-button nzSize="small" nzDanger type="button" (click)="clearDraft()">
+            <span nz-icon nzType="delete"></span> Hapus Draft
+          </button>
+        }
       </div>
 
       @if (loading()) {
-        <div class="text-center py-12">
+        <div class="loading-wrap">
           <nz-spin nzSimple></nz-spin>
         </div>
       } @else {
-        <form nz-form [formGroup]="form" nzLayout="vertical" (ngSubmit)="onSubmit()">
-          <div class="grid grid-cols-2 gap-4">
-            <!-- Left Column -->
-            <div class="col-span-2 lg:col-span-1">
-              <nz-card nzSize="small" nzTitle="Informasi Utama">
-                <nz-form-item>
-                  <nz-form-label nzRequired>Judul Dokumen</nz-form-label>
-                  <nz-form-control nzErrorTip="Judul wajib diisi">
-                    <input nz-input nzSize="small" formControlName="title" placeholder="Masukkan judul dokumen" />
-                  </nz-form-control>
-                </nz-form-item>
+        <!-- Stepper -->
+        <nz-steps [nzCurrent]="currentStep()" nzSize="small" class="wizard-steps">
+          <nz-step nzTitle="Klasifikasi"></nz-step>
+          <nz-step nzTitle="Organisasi"></nz-step>
+          <nz-step nzTitle="Informasi"></nz-step>
+          <nz-step nzTitle="Metadata"></nz-step>
+          <nz-step nzTitle="Review"></nz-step>
+        </nz-steps>
 
-                <nz-form-item>
-                  <nz-form-label>Deskripsi</nz-form-label>
-                  <nz-form-control>
-                    <textarea nz-input nzSize="small" formControlName="description" placeholder="Deskripsi dokumen (opsional)"
-                              [nzAutosize]="{ minRows: 3, maxRows: 6 }"></textarea>
-                  </nz-form-control>
-                </nz-form-item>
-              </nz-card>
+        <!-- Step Content -->
+        <div class="step-content">
 
-              <!-- Dynamic Metadata Template Card -->
-              @if (loadingTags()) {
-                <nz-card nzSize="small" nzTitle="Metadata Template" class="mt-3">
-                  <div class="text-center py-6">
-                    <nz-spin nzSimple nzSize="small"></nz-spin>
-                    <p class="text-xs text-gray-400 mt-2">Memuat field template...</p>
-                  </div>
-                </nz-card>
-              } @else if (tagGroups().length > 0) {
-                <nz-card nzSize="small" nzTitle="Metadata Template" class="mt-3">
-                  @for (group of tagGroups(); track group.name) {
-                    @if (tagGroups().length > 1) {
-                      <div class="text-xs font-semibold text-gray-500 mb-2 mt-1">{{ group.name }}</div>
-                    }
-                    <div nz-row [nzGutter]="12">
-                      @for (tag of group.tags; track tag.tag_key) {
-                        @if (!tag.is_hidden) {
-                          <div nz-col [nzSpan]="tag.col_span || 12">
-                            <nz-form-item>
-                              <nz-form-label [nzRequired]="tag.is_required">
-                                {{ tag.label }}
-                                @if (tag.description) {
-                                  <span nz-icon nzType="info-circle" nz-tooltip [nzTooltipTitle]="tag.description"
-                                        class="ml-1 text-gray-400 cursor-help" style="font-size:11px"></span>
-                                }
-                              </nz-form-label>
-                              <nz-form-control [nzErrorTip]="tag.validation_message || (tag.label + ' wajib diisi')">
-
-                                @switch (tag.data_type) {
-                                  @case ('text') {
-                                    <input nz-input nzSize="small"
-                                           [formControl]="getTagControl(tag.tag_key)"
-                                           [placeholder]="tag.placeholder_text || ''"
-                                           [readOnly]="tag.is_readonly" />
-                                  }
-                                  @case ('number') {
-                                    <nz-input-number nzSize="small" style="width:100%"
-                                                     [formControl]="getTagControl(tag.tag_key)"
-                                                     [nzPlaceHolder]="tag.placeholder_text || ''"
-                                                     [nzMin]="tag.min_value ?? -9999999999"
-                                                     [nzMax]="tag.max_value ?? 9999999999"
-                                                     [nzDisabled]="tag.is_readonly">
-                                    </nz-input-number>
-                                  }
-                                  @case ('date') {
-                                    <nz-date-picker nzSize="small" style="width:100%"
-                                                    [formControl]="getTagControl(tag.tag_key)"
-                                                    [nzPlaceHolder]="tag.placeholder_text || 'Pilih tanggal'"
-                                                    [nzDisabled]="tag.is_readonly"
-                                                    [nzFormat]="tag.format_pattern || 'dd/MM/yyyy'">
-                                    </nz-date-picker>
-                                  }
-                                  @case ('select') {
-                                    <nz-select nzSize="small" nzShowSearch
-                                               [formControl]="getTagControl(tag.tag_key)"
-                                               [nzPlaceHolder]="tag.placeholder_text || 'Pilih'"
-                                               [nzDisabled]="tag.is_readonly">
-                                      @for (opt of getSelectOptions(tag); track opt.value) {
-                                        <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
-                                      }
-                                    </nz-select>
-                                  }
-                                  @case ('textarea') {
-                                    <textarea nz-input nzSize="small"
-                                              [formControl]="getTagControl(tag.tag_key)"
-                                              [placeholder]="tag.placeholder_text || ''"
-                                              [readOnly]="tag.is_readonly"
-                                              [nzAutosize]="{ minRows: 2, maxRows: 5 }"></textarea>
-                                  }
-                                  @case ('checkbox') {
-                                    <label nz-checkbox nzSize="small"
-                                           [formControl]="getTagControl(tag.tag_key)"
-                                           [nzDisabled]="tag.is_readonly">
-                                      {{ tag.placeholder_text || tag.label }}
-                                    </label>
-                                  }
-                                  @case ('radio') {
-                                    <nz-radio-group nzSize="small"
-                                                    [formControl]="getTagControl(tag.tag_key)"
-                                                    [nzDisabled]="tag.is_readonly">
-                                      @for (opt of getSelectOptions(tag); track opt.value) {
-                                        <label nz-radio [nzValue]="opt.value">{{ opt.label }}</label>
-                                      }
-                                    </nz-radio-group>
-                                  }
-                                  @case ('file') {
-                                    <span class="text-xs text-gray-400 italic">(akan diupload setelah dokumen dibuat)</span>
-                                  }
-                                  @case ('signature') {
-                                    <span class="text-xs text-gray-400 italic">(tanda tangan digital)</span>
-                                  }
-                                  @case ('table') {
-                                    <span class="text-xs text-gray-400 italic">(tabel akan diisi di editor)</span>
-                                  }
-                                  @default {
-                                    <input nz-input nzSize="small"
-                                           [formControl]="getTagControl(tag.tag_key)"
-                                           [placeholder]="tag.placeholder_text || ''" />
-                                  }
-                                }
-
-                              </nz-form-control>
-                            </nz-form-item>
-                          </div>
-                        }
-                      }
-                    </div>
-                  }
-                </nz-card>
-              }
-            </div>
-
-            <!-- Right Column -->
-            <div class="col-span-2 lg:col-span-1">
-              <nz-card nzSize="small" nzTitle="Klasifikasi">
+          <!-- STEP 0: Klasifikasi & Template -->
+          @if (currentStep() === 0) {
+            <nz-card nzSize="small" nzTitle="Klasifikasi & Template">
+              <form nz-form [formGroup]="form" nzLayout="vertical">
                 <nz-form-item>
                   <nz-form-label nzRequired>Tipe Dokumen</nz-form-label>
-                  <nz-form-control nzErrorTip="Tipe wajib dipilih">
-                    <nz-select nzSize="small" formControlName="document_type_id" nzPlaceHolder="Pilih tipe dokumen" nzShowSearch>
+                  <nz-form-control nzErrorTip="Tipe dokumen wajib dipilih">
+                    <nz-select nzSize="small" formControlName="document_type_id"
+                               nzPlaceHolder="Pilih tipe dokumen" nzShowSearch>
                       @for (type of documentTypes(); track type.id) {
                         <nz-option [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
                       }
@@ -236,7 +141,8 @@ interface TagGroup {
                 <nz-form-item>
                   <nz-form-label nzRequired>Template</nz-form-label>
                   <nz-form-control nzErrorTip="Template wajib dipilih">
-                    <nz-select nzSize="small" formControlName="template_id" nzPlaceHolder="Pilih template" nzShowSearch>
+                    <nz-select nzSize="small" formControlName="template_id"
+                               nzPlaceHolder="Pilih template" nzShowSearch>
                       @for (tpl of filteredTemplates(); track tpl.id) {
                         <nz-option [nzValue]="tpl.id" [nzLabel]="tpl.name"></nz-option>
                       }
@@ -247,20 +153,29 @@ interface TagGroup {
                 <nz-form-item>
                   <nz-form-label>Kategori</nz-form-label>
                   <nz-form-control>
-                    <nz-select nzSize="small" formControlName="category_id" nzPlaceHolder="Pilih kategori" nzShowSearch nzAllowClear>
+                    <nz-select nzSize="small" formControlName="category_id"
+                               nzPlaceHolder="Pilih kategori (opsional)" nzShowSearch nzAllowClear>
                       @for (cat of categories(); track cat.id) {
                         <nz-option [nzValue]="cat.id" [nzLabel]="cat.name"></nz-option>
                       }
                     </nz-select>
                   </nz-form-control>
                 </nz-form-item>
-              </nz-card>
+              </form>
+            </nz-card>
+          }
 
-              <nz-card nzSize="small" nzTitle="Organisasi" class="mt-3">
+          <!-- STEP 1: Organisasi -->
+          @if (currentStep() === 1) {
+            <nz-card nzSize="small" nzTitle="Organisasi">
+              <nz-alert nzType="info" nzMessage="Semua field opsional, namun disarankan untuk diisi." nzShowIcon
+                        class="org-alert"></nz-alert>
+              <form nz-form [formGroup]="form" nzLayout="vertical">
                 <nz-form-item>
                   <nz-form-label>Perusahaan</nz-form-label>
                   <nz-form-control>
-                    <nz-select nzSize="small" formControlName="company_id" nzPlaceHolder="Pilih perusahaan" nzShowSearch nzAllowClear>
+                    <nz-select nzSize="small" formControlName="company_id"
+                               nzPlaceHolder="Pilih perusahaan" nzShowSearch nzAllowClear>
                       @for (company of companies(); track company.id) {
                         <nz-option [nzValue]="company.id" [nzLabel]="company.name"></nz-option>
                       }
@@ -271,7 +186,8 @@ interface TagGroup {
                 <nz-form-item>
                   <nz-form-label>Kantor</nz-form-label>
                   <nz-form-control>
-                    <nz-select nzSize="small" formControlName="office_id" nzPlaceHolder="Pilih kantor" nzShowSearch nzAllowClear>
+                    <nz-select nzSize="small" formControlName="office_id"
+                               nzPlaceHolder="Pilih kantor" nzShowSearch nzAllowClear>
                       @for (office of offices(); track office.id) {
                         <nz-option [nzValue]="office.id" [nzLabel]="office.name"></nz-option>
                       }
@@ -282,7 +198,8 @@ interface TagGroup {
                 <nz-form-item>
                   <nz-form-label>Departemen</nz-form-label>
                   <nz-form-control>
-                    <nz-select nzSize="small" formControlName="department_id" nzPlaceHolder="Pilih departemen" nzShowSearch nzAllowClear>
+                    <nz-select nzSize="small" formControlName="department_id"
+                               nzPlaceHolder="Pilih departemen" nzShowSearch nzAllowClear>
                       @for (dept of departments(); track dept.id) {
                         <nz-option [nzValue]="dept.id" [nzLabel]="dept.name"></nz-option>
                       }
@@ -293,16 +210,47 @@ interface TagGroup {
                 <nz-form-item>
                   <nz-form-label>Seksi</nz-form-label>
                   <nz-form-control>
-                    <nz-select nzSize="small" formControlName="section_id" nzPlaceHolder="Pilih seksi" nzAllowClear nzShowSearch>
+                    <nz-select nzSize="small" formControlName="section_id"
+                               nzPlaceHolder="Pilih seksi" nzShowSearch nzAllowClear>
                       @for (sec of sections(); track sec.id) {
                         <nz-option [nzValue]="sec.id" [nzLabel]="sec.name"></nz-option>
                       }
                     </nz-select>
                   </nz-form-control>
                 </nz-form-item>
-              </nz-card>
+              </form>
+            </nz-card>
+          }
 
-              <nz-card nzSize="small" nzTitle="Pengaturan" class="mt-3">
+          <!-- STEP 2: Informasi Dokumen -->
+          @if (currentStep() === 2) {
+            <nz-card nzSize="small" nzTitle="Informasi Dokumen">
+              <form nz-form [formGroup]="form" nzLayout="vertical">
+                <nz-form-item>
+                  <nz-form-label nzRequired>Judul Dokumen</nz-form-label>
+                  <nz-form-control nzErrorTip="Judul wajib diisi">
+                    <input nz-input nzSize="small" formControlName="title"
+                           placeholder="Masukkan judul dokumen" />
+                  </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
+                  <nz-form-label>Deskripsi</nz-form-label>
+                  <nz-form-control>
+                    <textarea nz-input nzSize="small" formControlName="description"
+                              placeholder="Deskripsi dokumen (opsional)"
+                              [nzAutosize]="{ minRows: 3, maxRows: 6 }"></textarea>
+                  </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
+                  <nz-form-label>Nama Folder</nz-form-label>
+                  <nz-form-control>
+                    <input nz-input nzSize="small" formControlName="folder_name"
+                           placeholder="Masukkan nama folder (opsional)" />
+                  </nz-form-control>
+                </nz-form-item>
+
                 <nz-form-item>
                   <nz-form-label>Prioritas</nz-form-label>
                   <nz-form-control>
@@ -325,46 +273,301 @@ interface TagGroup {
                     </nz-select>
                   </nz-form-control>
                 </nz-form-item>
+              </form>
+            </nz-card>
+          }
 
-                <nz-form-item>
-                  <nz-form-label>Nama Folder</nz-form-label>
-                  <nz-form-control>
-                    <input nz-input nzSize="small" formControlName="folder_name" placeholder="Masukkan nama folder" />
-                  </nz-form-control>
-                </nz-form-item>
+          <!-- STEP 3: Metadata Template -->
+          @if (currentStep() === 3) {
+            @if (loadingTags()) {
+              <nz-card nzSize="small" nzTitle="Metadata Template">
+                <div class="loading-wrap">
+                  <nz-spin nzSimple nzSize="small"></nz-spin>
+                  <p class="loading-text">Memuat field template...</p>
+                </div>
               </nz-card>
-            </div>
-          </div>
+            } @else if (tagGroups().length > 0) {
+              <nz-card nzSize="small" nzTitle="Metadata Template">
+                @for (group of tagGroups(); track group.name) {
+                  @if (tagGroups().length > 1) {
+                    <div class="group-title">{{ group.name }}</div>
+                  }
+                  <div nz-row [nzGutter]="12">
+                    @for (tag of group.tags; track tag.tag_key) {
+                      @if (!tag.is_hidden) {
+                        <div nz-col [nzSpan]="tag.col_span || 12">
+                          <nz-form-item>
+                            <nz-form-label [nzRequired]="tag.is_required">
+                              {{ tag.label }}
+                              @if (tag.description) {
+                                <span nz-icon nzType="info-circle" nz-tooltip
+                                      [nzTooltipTitle]="tag.description"
+                                      class="tag-info-icon"></span>
+                              }
+                            </nz-form-label>
+                            <nz-form-control [nzErrorTip]="tag.validation_message || (tag.label + ' wajib diisi')">
+                              @switch (tag.data_type) {
+                                @case ('text') {
+                                  <input nz-input nzSize="small"
+                                         [formControl]="getTagControl(tag.tag_key)"
+                                         [placeholder]="tag.placeholder_text || ''"
+                                         [readOnly]="tag.is_readonly" />
+                                }
+                                @case ('number') {
+                                  <nz-input-number nzSize="small" style="width:100%"
+                                                   [formControl]="getTagControl(tag.tag_key)"
+                                                   [nzPlaceHolder]="tag.placeholder_text || ''"
+                                                   [nzMin]="tag.min_value ?? -9999999999"
+                                                   [nzMax]="tag.max_value ?? 9999999999"
+                                                   [nzDisabled]="tag.is_readonly">
+                                  </nz-input-number>
+                                }
+                                @case ('date') {
+                                  <nz-date-picker nzSize="small" style="width:100%"
+                                                  [formControl]="getTagControl(tag.tag_key)"
+                                                  [nzPlaceHolder]="tag.placeholder_text || 'Pilih tanggal'"
+                                                  [nzDisabled]="tag.is_readonly"
+                                                  [nzFormat]="tag.format_pattern || 'dd/MM/yyyy'">
+                                  </nz-date-picker>
+                                }
+                                @case ('select') {
+                                  <nz-select nzSize="small" nzShowSearch
+                                             [formControl]="getTagControl(tag.tag_key)"
+                                             [nzPlaceHolder]="tag.placeholder_text || 'Pilih'"
+                                             [nzDisabled]="tag.is_readonly">
+                                    @for (opt of getSelectOptions(tag); track opt.value) {
+                                      <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+                                    }
+                                  </nz-select>
+                                }
+                                @case ('textarea') {
+                                  <textarea nz-input nzSize="small"
+                                            [formControl]="getTagControl(tag.tag_key)"
+                                            [placeholder]="tag.placeholder_text || ''"
+                                            [readOnly]="tag.is_readonly"
+                                            [nzAutosize]="{ minRows: 2, maxRows: 5 }"></textarea>
+                                }
+                                @case ('checkbox') {
+                                  <label nz-checkbox
+                                         [formControl]="getTagControl(tag.tag_key)"
+                                         [nzDisabled]="tag.is_readonly">
+                                    {{ tag.placeholder_text || tag.label }}
+                                  </label>
+                                }
+                                @case ('radio') {
+                                  <nz-radio-group nzSize="small"
+                                                  [formControl]="getTagControl(tag.tag_key)"
+                                                  [nzDisabled]="tag.is_readonly">
+                                    @for (opt of getSelectOptions(tag); track opt.value) {
+                                      <label nz-radio [nzValue]="opt.value">{{ opt.label }}</label>
+                                    }
+                                  </nz-radio-group>
+                                }
+                                @case ('file') {
+                                  <span class="placeholder-text">(akan diupload setelah dokumen dibuat)</span>
+                                }
+                                @case ('signature') {
+                                  <span class="placeholder-text">(tanda tangan digital)</span>
+                                }
+                                @case ('table') {
+                                  <span class="placeholder-text">(tabel akan diisi di editor)</span>
+                                }
+                                @default {
+                                  <input nz-input nzSize="small"
+                                         [formControl]="getTagControl(tag.tag_key)"
+                                         [placeholder]="tag.placeholder_text || ''" />
+                                }
+                              }
+                            </nz-form-control>
+                          </nz-form-item>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              </nz-card>
+            } @else {
+              <nz-card nzSize="small" nzTitle="Metadata Template">
+                <nz-alert nzType="info"
+                          nzMessage="Template ini tidak memiliki parameter tambahan."
+                          nzShowIcon></nz-alert>
+              </nz-card>
+            }
+          }
 
-          <!-- Actions -->
-          <div class="flex justify-end gap-2 mt-4">
-            <button nz-button nzSize="small" type="button" routerLink="/documents">Batal</button>
-            <button nz-button nzSize="small" nzType="default" type="button" (click)="onSubmit(true)" [nzLoading]="submitting()">
-              Simpan Draft
-            </button>
-            <button nz-button nzSize="small" nzType="primary" type="submit" [nzLoading]="submitting()">
-              {{ isEdit ? 'Simpan' : 'Buat Dokumen' }}
-            </button>
+          <!-- STEP 4: Review & Kirim -->
+          @if (currentStep() === 4) {
+            <nz-card nzSize="small">
+              <!-- Klasifikasi Section -->
+              <div class="review-section-header">
+                <span class="review-section-title">Klasifikasi & Template</span>
+                <a class="review-edit-link" (click)="goToStep(0)">Edit</a>
+              </div>
+              <div class="review-grid">
+                <div class="review-row">
+                  <span class="review-label">Tipe Dokumen</span>
+                  <span class="review-value">{{ lookupName(documentTypes(), form.value.document_type_id) }}</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-label">Template</span>
+                  <span class="review-value">{{ lookupName(allTemplates(), form.value.template_id) }}</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-label">Kategori</span>
+                  <span class="review-value">{{ lookupName(categories(), form.value.category_id) || '-' }}</span>
+                </div>
+              </div>
+
+              <nz-divider></nz-divider>
+
+              <!-- Organisasi Section -->
+              <div class="review-section-header">
+                <span class="review-section-title">Organisasi</span>
+                <a class="review-edit-link" (click)="goToStep(1)">Edit</a>
+              </div>
+              <div class="review-grid">
+                <div class="review-row">
+                  <span class="review-label">Perusahaan</span>
+                  <span class="review-value">{{ lookupName(companies(), form.value.company_id) || '-' }}</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-label">Kantor</span>
+                  <span class="review-value">{{ lookupName(offices(), form.value.office_id) || '-' }}</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-label">Departemen</span>
+                  <span class="review-value">{{ lookupName(departments(), form.value.department_id) || '-' }}</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-label">Seksi</span>
+                  <span class="review-value">{{ lookupName(sections(), form.value.section_id) || '-' }}</span>
+                </div>
+              </div>
+
+              <nz-divider></nz-divider>
+
+              <!-- Informasi Dokumen Section -->
+              <div class="review-section-header">
+                <span class="review-section-title">Informasi Dokumen</span>
+                <a class="review-edit-link" (click)="goToStep(2)">Edit</a>
+              </div>
+              <div class="review-grid">
+                <div class="review-row">
+                  <span class="review-label">Judul</span>
+                  <span class="review-value">{{ form.value.title }}</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-label">Deskripsi</span>
+                  <span class="review-value">{{ form.value.description || '-' }}</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-label">Nama Folder</span>
+                  <span class="review-value">{{ form.value.folder_name || '-' }}</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-label">Prioritas</span>
+                  <span class="review-value">{{ form.value.priority || 'normal' }}</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-label">Kerahasiaan</span>
+                  <span class="review-value">{{ form.value.confidentiality || 'internal' }}</span>
+                </div>
+              </div>
+
+              @if (tagGroups().length > 0) {
+                <nz-divider></nz-divider>
+                <div class="review-section-header">
+                  <span class="review-section-title">Metadata</span>
+                  <a class="review-edit-link" (click)="goToStep(3)">Edit</a>
+                </div>
+                <div class="review-grid">
+                  @for (group of tagGroups(); track group.name) {
+                    @for (tag of group.tags; track tag.tag_key) {
+                      @if (!tag.is_hidden && !isSkippedDataType(tag.data_type)) {
+                        <div class="review-row">
+                          <span class="review-label">{{ tag.label }}</span>
+                          <span class="review-value">{{ getMetadataDisplayValue(tag) }}</span>
+                        </div>
+                      }
+                    }
+                  }
+                </div>
+              }
+            </nz-card>
+          }
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="wizard-nav">
+          <div>
+            @if (currentStep() > 0) {
+              <button nz-button nzSize="small" type="button" (click)="prevStep()">
+                <span nz-icon nzType="arrow-left"></span> Sebelumnya
+              </button>
+            }
           </div>
-        </form>
+          <div class="nav-right">
+            @if (currentStep() < 4) {
+              <button nz-button nzSize="small" nzType="primary" type="button" (click)="nextStep()">
+                Selanjutnya <span nz-icon nzType="right"></span>
+              </button>
+            } @else {
+              <button nz-button nzSize="small" type="button" (click)="onSubmit(true)" [nzLoading]="submitting()">
+                Simpan Draft
+              </button>
+              <button nz-button nzSize="small" nzType="primary" type="button" (click)="onSubmit(false)" [nzLoading]="submitting()">
+                {{ isEdit ? 'Simpan' : 'Buat Dokumen' }}
+              </button>
+            }
+          </div>
+        </div>
       }
     </div>
   `,
   styles: [`
+    .doc-wizard { padding: 16px; font-size: 12px; }
+    .wizard-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .back-link { color: #888; font-size: 14px; }
+    .back-link:hover { color: #333; }
+    .header-title { font-size: 16px; font-weight: 600; margin: 0; }
+    .wizard-steps { margin-bottom: 20px; }
+    .step-content { max-width: 700px; margin: 0 auto 16px; }
+    .wizard-nav { max-width: 700px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .nav-right { display: flex; gap: 8px; }
+    .loading-wrap { text-align: center; padding: 48px 0; }
+    .loading-text { font-size: 12px; color: #999; margin-top: 8px; }
+    .org-alert { margin-bottom: 12px; }
+    .group-title { font-size: 12px; font-weight: 600; color: #666; margin: 4px 0 8px; }
+    .tag-info-icon { margin-left: 4px; color: #aaa; cursor: help; font-size: 11px; }
+    .placeholder-text { font-size: 12px; color: #aaa; font-style: italic; }
+
+    .review-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .review-section-title { font-size: 13px; font-weight: 600; color: #333; }
+    .review-edit-link { font-size: 12px; color: #1890ff; cursor: pointer; }
+    .review-edit-link:hover { text-decoration: underline; }
+    .review-grid { display: flex; flex-direction: column; gap: 4px; }
+    .review-row { display: flex; gap: 8px; font-size: 12px; line-height: 20px; }
+    .review-label { width: 140px; flex-shrink: 0; color: #888; }
+    .review-value { color: #333; word-break: break-word; }
+
     :host ::ng-deep .ant-card-head { padding: 0 12px; min-height: 36px; }
     :host ::ng-deep .ant-card-head-title { padding: 8px 0; font-size: 13px; }
     :host ::ng-deep .ant-card-body { padding: 12px; }
     :host ::ng-deep .ant-form-item { margin-bottom: 12px; }
     :host ::ng-deep .ant-form-item-label { padding: 0 0 4px; }
     :host ::ng-deep .ant-form-item-label > label { font-size: 12px; height: auto; }
+    :host ::ng-deep .ant-steps-item-title { font-size: 12px !important; }
+    :host ::ng-deep .ant-divider { margin: 12px 0; }
   `]
 })
-export class DocumentFormPage implements OnInit {
+export class DocumentFormPage implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private message = inject(NzMessageService);
+  private modal = inject(NzModalService);
 
   form!: FormGroup;
   metadataForm!: FormGroup;
@@ -372,6 +575,10 @@ export class DocumentFormPage implements OnInit {
   documentId: string | null = null;
   private existingMetadata: Record<string, any> | null = null;
 
+  private autoSave$ = new Subject<void>();
+  private subscriptions: Subscription[] = [];
+
+  currentStep = signal(0);
   loading = signal(false);
   submitting = signal(false);
   loadingTags = signal(false);
@@ -433,26 +640,42 @@ export class DocumentFormPage implements OnInit {
     });
 
     // Filter templates when document type changes
-    this.form.get('document_type_id')!.valueChanges.subscribe(typeId => {
-      this.selectedTypeId.set(typeId);
-      const currentTemplate = this.form.get('template_id')!.value;
-      if (currentTemplate) {
-        const stillValid = this.filteredTemplates().some(t => t.id === currentTemplate);
-        if (!stillValid) {
-          this.form.get('template_id')!.setValue(null);
+    this.subscriptions.push(
+      this.form.get('document_type_id')!.valueChanges.subscribe(typeId => {
+        this.selectedTypeId.set(typeId);
+        const currentTemplate = this.form.get('template_id')!.value;
+        if (currentTemplate) {
+          const stillValid = this.filteredTemplates().some(t => t.id === currentTemplate);
+          if (!stillValid) {
+            this.form.get('template_id')!.setValue(null);
+          }
         }
-      }
-    });
+        this.triggerAutoSave();
+      })
+    );
 
     // Load template tags when template changes
-    this.form.get('template_id')!.valueChanges.subscribe(templateId => {
-      if (templateId) {
-        this.loadTemplateTags(templateId);
-      } else {
-        this.templateTags.set([]);
-        this.metadataForm = this.fb.group({});
-      }
-    });
+    this.subscriptions.push(
+      this.form.get('template_id')!.valueChanges.subscribe(templateId => {
+        if (templateId) {
+          this.loadTemplateTags(templateId);
+        } else {
+          this.templateTags.set([]);
+          this.metadataForm = this.fb.group({});
+        }
+        this.triggerAutoSave();
+      })
+    );
+
+    // Autosave on any form change
+    this.subscriptions.push(
+      this.form.valueChanges.subscribe(() => this.triggerAutoSave())
+    );
+
+    // Debounced autosave writer
+    this.subscriptions.push(
+      this.autoSave$.pipe(debounceTime(1000)).subscribe(() => this.saveDraft())
+    );
 
     this.loadDropdowns();
 
@@ -461,8 +684,141 @@ export class DocumentFormPage implements OnInit {
       this.isEdit = true;
       this.documentId = id;
       this.loadDocument(id);
+    } else {
+      this.checkForDraft();
     }
   }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  // --- Draft / Autosave ---
+
+  private triggerAutoSave() {
+    if (!this.isEdit) {
+      this.autoSave$.next();
+    }
+  }
+
+  private saveDraft() {
+    const metaValues: Record<string, any> = {};
+    if (this.metadataForm) {
+      const controls = this.metadataForm.controls;
+      for (const key of Object.keys(controls)) {
+        let val = controls[key].value;
+        if (val instanceof Date) {
+          val = val.toISOString();
+        }
+        metaValues[key] = val;
+      }
+    }
+    const draft: DraftData = {
+      step: this.currentStep(),
+      formData: this.form.getRawValue(),
+      metadata: metaValues,
+      selectedTemplateId: this.form.get('template_id')!.value,
+      timestamp: Date.now()
+    };
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch { /* ignore quota errors */ }
+  }
+
+  private checkForDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft: DraftData = JSON.parse(raw);
+      if (!draft.formData) return;
+
+      this.modal.confirm({
+        nzTitle: 'Draft Ditemukan',
+        nzContent: 'Ditemukan draft dokumen yang belum selesai. Muat kembali?',
+        nzOkText: 'Muat Draft',
+        nzCancelText: 'Abaikan',
+        nzOnOk: () => this.restoreDraft(draft),
+        nzOnCancel: () => this.clearDraftSilent()
+      });
+    } catch { /* ignore parse errors */ }
+  }
+
+  private restoreDraft(draft: DraftData) {
+    this.form.patchValue(draft.formData);
+    if (draft.formData.document_type_id) {
+      this.selectedTypeId.set(draft.formData.document_type_id);
+    }
+    this.currentStep.set(draft.step || 0);
+    // Metadata will be restored after template tags load
+    this.existingMetadata = draft.metadata || null;
+  }
+
+  clearDraft() {
+    this.modal.confirm({
+      nzTitle: 'Hapus Draft',
+      nzContent: 'Yakin ingin menghapus draft yang tersimpan?',
+      nzOkText: 'Hapus',
+      nzOkDanger: true,
+      nzCancelText: 'Batal',
+      nzOnOk: () => this.clearDraftSilent()
+    });
+  }
+
+  private clearDraftSilent() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+  }
+
+  // --- Navigation ---
+
+  nextStep() {
+    if (!this.validateCurrentStep()) return;
+    this.currentStep.update(s => Math.min(s + 1, 4));
+    this.triggerAutoSave();
+  }
+
+  prevStep() {
+    this.currentStep.update(s => Math.max(s - 1, 0));
+    this.triggerAutoSave();
+  }
+
+  goToStep(n: number) {
+    this.currentStep.set(n);
+    this.triggerAutoSave();
+  }
+
+  private validateCurrentStep(): boolean {
+    const step = this.currentStep();
+    if (step === 0) {
+      const typeCtrl = this.form.get('document_type_id')!;
+      const tplCtrl = this.form.get('template_id')!;
+      typeCtrl.markAsDirty(); typeCtrl.updateValueAndValidity();
+      tplCtrl.markAsDirty(); tplCtrl.updateValueAndValidity();
+      if (!typeCtrl.value || !tplCtrl.value) {
+        this.message.warning('Tipe Dokumen dan Template wajib dipilih');
+        return false;
+      }
+    } else if (step === 2) {
+      const titleCtrl = this.form.get('title')!;
+      titleCtrl.markAsDirty(); titleCtrl.updateValueAndValidity();
+      if (!titleCtrl.value) {
+        this.message.warning('Judul dokumen wajib diisi');
+        return false;
+      }
+    } else if (step === 3) {
+      if (this.metadataForm && Object.keys(this.metadataForm.controls).length > 0) {
+        if (this.metadataForm.invalid) {
+          Object.values(this.metadataForm.controls).forEach(c => {
+            c.markAsDirty(); c.updateValueAndValidity();
+          });
+          this.message.warning('Mohon lengkapi field metadata yang wajib diisi');
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  // --- Data Loading ---
 
   loadDropdowns() {
     forkJoin({
@@ -512,7 +868,6 @@ export class DocumentFormPage implements OnInit {
     for (const tag of tags) {
       if (tag.is_hidden) continue;
 
-      // Determine initial value
       let defaultVal: any = tag.default_value ?? '';
       if (tag.data_type === 'checkbox') {
         defaultVal = defaultVal === 'true' || defaultVal === true;
@@ -522,7 +877,6 @@ export class DocumentFormPage implements OnInit {
         defaultVal = defaultVal ? new Date(defaultVal) : null;
       }
 
-      // Override with existing metadata if editing
       if (this.existingMetadata && tag.tag_key in this.existingMetadata) {
         let val = this.existingMetadata[tag.tag_key];
         if (tag.data_type === 'checkbox') {
@@ -535,7 +889,6 @@ export class DocumentFormPage implements OnInit {
         defaultVal = val;
       }
 
-      // Build validators
       const validators: any[] = [];
       if (tag.is_required) validators.push(Validators.required);
       if (tag.min_length) validators.push(Validators.minLength(tag.min_length));
@@ -545,6 +898,11 @@ export class DocumentFormPage implements OnInit {
       group[tag.tag_key] = new FormControl(defaultVal, validators);
     }
     this.metadataForm = this.fb.group(group);
+
+    // Subscribe metadata form changes to autosave
+    this.subscriptions.push(
+      this.metadataForm.valueChanges.subscribe(() => this.triggerAutoSave())
+    );
   }
 
   getTagControl(tagKey: string): FormControl {
@@ -587,36 +945,45 @@ export class DocumentFormPage implements OnInit {
     });
   }
 
-  onSubmit(asDraft = false) {
-    // Validate main form
-    if (this.form.invalid) {
-      Object.values(this.form.controls).forEach(c => {
-        c.markAsDirty();
-        c.updateValueAndValidity();
-      });
-      return;
-    }
+  // --- Review Helpers ---
 
-    // Validate metadata form
-    if (this.metadataForm && Object.keys(this.metadataForm.controls).length > 0) {
-      if (this.metadataForm.invalid) {
-        Object.values(this.metadataForm.controls).forEach(c => {
-          c.markAsDirty();
-          c.updateValueAndValidity();
-        });
-        this.message.warning('Mohon lengkapi field metadata template');
-        return;
+  lookupName(list: { id: string; name: string }[], id: string | null): string {
+    if (!id) return '';
+    return list.find(item => item.id === id)?.name || id;
+  }
+
+  isSkippedDataType(dataType: string): boolean {
+    return ['file', 'signature', 'table'].includes(dataType);
+  }
+
+  getMetadataDisplayValue(tag: TemplateTag): string {
+    const ctrl = this.metadataForm.get(tag.tag_key);
+    if (!ctrl) return '-';
+    const val = ctrl.value;
+    if (val == null || val === '') return '-';
+    if (tag.data_type === 'checkbox') return val ? 'Ya' : 'Tidak';
+    if (tag.data_type === 'date' && val instanceof Date) return val.toLocaleDateString('id-ID');
+    return String(val);
+  }
+
+  // --- Submit ---
+
+  onSubmit(asDraft = false) {
+    if (!asDraft) {
+      // Validate all steps
+      for (let s = 0; s <= 3; s++) {
+        this.currentStep.set(s);
+        if (!this.validateCurrentStep()) return;
       }
+      this.currentStep.set(4);
     }
 
     this.submitting.set(true);
 
-    // Build metadata from tag values
     const metadata: Record<string, any> = {};
     const tags = this.templateTags();
     for (const tag of tags) {
       if (tag.is_hidden) continue;
-      // Skip non-input types
       if (['file', 'signature', 'table'].includes(tag.data_type)) continue;
       const ctrl = this.metadataForm.get(tag.tag_key);
       if (ctrl) {
@@ -640,6 +1007,7 @@ export class DocumentFormPage implements OnInit {
 
     req.subscribe({
       next: (res: any) => {
+        this.clearDraftSilent();
         this.message.success(this.isEdit ? 'Dokumen berhasil diperbarui' : 'Dokumen berhasil dibuat');
         this.router.navigate(['/documents', res.data?.id || this.documentId]);
         this.submitting.set(false);
