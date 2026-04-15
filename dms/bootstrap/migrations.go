@@ -24,5 +24,7 @@ func Migrations() []schema.Migration {
 		&migrations.M20250414000013CreateSystemSettingsTable{},
 		&migrations.M20250414000014SeedDefaultData{},
 		&migrations.M20250414000015SeedAdminUser{},
+		&migrations.M20250414000016AddFulltextSearch{},
+		&migrations.M20250414000017AddDocumentRelationsIndexes{},
 	}
 }

@@ -1,82 +1,303 @@
+// ── Sidebar Shell ──
+$sb-bg: #111318;
+$sb-border: #1e2028;
+$sb-text: #9ca3af;
+$sb-text-hover: #e5e7eb;
+$sb-active-bg: rgba(2, 132, 199, 0.12);
+$sb-active-text: #38bdf8;
+$sb-active-border: #0284c7;
+$sb-submenu-bg: rgba(0, 0, 0, 0.15);
+
 .sidebar {
-  @apply fixed left-0 top-0 h-screen flex flex-col bg-gray-900;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   width: var(--sidebar-width);
+  background: $sb-bg;
   z-index: var(--z-fixed);
   transition: width 0.2s ease;
+  border-right: 1px solid $sb-border;
 
   &.collapsed {
     width: var(--sidebar-collapsed-width);
+
+    .sidebar-nav ::ng-deep {
+      .ant-menu-submenu-title,
+      .ant-menu-item {
+        padding: 0 !important;
+        justify-content: center;
+      }
+    }
   }
 }
 
+// ── Header / Logo ──
 .sidebar-header {
-  @apply flex items-center px-4 border-b border-gray-800;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
   height: var(--header-height);
+  border-bottom: 1px solid $sb-border;
+  flex-shrink: 0;
 }
 
 .logo {
-  @apply flex items-center gap-3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .logo-icon {
-  @apply w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0284c7, #0ea5e9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  span[nz-icon] {
+    font-size: 16px;
+    color: #fff;
+  }
 }
 
-.logo-text {
-  @apply flex flex-col;
-
-  .title {
-    @apply text-white font-semibold;
-  }
-
-  .subtitle {
-    @apply text-xs text-gray-400;
-  }
+.logo-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
 }
 
+.logo-sub {
+  font-size: 10px;
+  color: #6b7280;
+  letter-spacing: 0.2px;
+  display: block;
+}
+
+// ── Navigation ──
 .sidebar-nav {
-  @apply flex-1 overflow-y-auto;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
 
-  // Override ng-zorro menu styles
-  .ant-menu {
-    @apply bg-transparent border-none;
-  }
+  // Thin scrollbar
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: #2a2d35; border-radius: 3px; }
 
-  .ant-menu-item,
-  .ant-menu-submenu-title {
-    @apply text-gray-300;
+  // ── ng-zorro menu overrides ──
+  ::ng-deep {
+    .ant-menu {
+      background: transparent !important;
+      border-right: none !important;
+      padding: 0 8px;
+    }
 
-    &:hover {
-      @apply text-white;
+    // ── Top-level items & submenu titles ──
+    .ant-menu-item,
+    .ant-menu-submenu-title {
+      height: 34px !important;
+      line-height: 34px !important;
+      margin: 1px 0 !important;
+      padding: 0 10px !important;
+      border-radius: 6px !important;
+      color: $sb-text !important;
+      font-size: 12.5px !important;
+      font-weight: 500;
+      transition: all 0.15s ease;
+
+      &:hover {
+        color: $sb-text-hover !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+      }
+
+      // Icon sizing
+      .anticon {
+        font-size: 15px !important;
+        margin-right: 8px;
+        vertical-align: -0.15em;
+        opacity: 0.7;
+      }
+    }
+
+    // ── Selected / Active item ──
+    .ant-menu-item-selected,
+    .ant-menu-item.ant-menu-item-selected {
+      background: $sb-active-bg !important;
+      color: $sb-active-text !important;
+      font-weight: 600;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 6px;
+        bottom: 6px;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: $sb-active-border;
+      }
+
+      .anticon {
+        color: $sb-active-text !important;
+        opacity: 1;
+      }
+
+      a { color: $sb-active-text !important; }
+    }
+
+    // ── Submenu (group header) ──
+    .ant-menu-submenu {
+      // Group title
+      > .ant-menu-submenu-title {
+        font-weight: 600;
+        font-size: 12px !important;
+        letter-spacing: 0.2px;
+
+        .anticon { opacity: 0.65; }
+
+        // Arrow
+        .ant-menu-submenu-arrow {
+          color: #4b5563 !important;
+          right: 10px;
+          &::before, &::after {
+            background: #4b5563 !important;
+          }
+        }
+      }
+
+      // Open state
+      &.ant-menu-submenu-open > .ant-menu-submenu-title {
+        color: $sb-text-hover !important;
+        .anticon { opacity: 0.9; }
+        .ant-menu-submenu-arrow {
+          color: #6b7280 !important;
+          &::before, &::after { background: #6b7280 !important; }
+        }
+      }
+    }
+
+    // ── Sub-menu items (children) ──
+    .ant-menu-sub.ant-menu-inline {
+      background: $sb-submenu-bg !important;
+      border-radius: 0 0 6px 6px;
+      padding: 2px 0 4px !important;
+      margin-top: -2px;
+
+      .ant-menu-item {
+        height: 30px !important;
+        line-height: 30px !important;
+        padding-left: 38px !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        font-size: 12px !important;
+        font-weight: 400;
+        color: #8b919e !important;
+        position: relative;
+
+        // Dot indicator
+        &::after {
+          content: '';
+          position: absolute;
+          left: 22px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: #3f4451;
+          transition: all 0.15s;
+        }
+
+        &:hover {
+          color: $sb-text-hover !important;
+          background: rgba(255, 255, 255, 0.03) !important;
+          &::after { background: #6b7280; }
+        }
+
+        &.ant-menu-item-selected {
+          background: transparent !important;
+          color: $sb-active-text !important;
+          font-weight: 500;
+
+          &::before { display: none; }
+          &::after {
+            background: $sb-active-text;
+            width: 5px;
+            height: 5px;
+            box-shadow: 0 0 4px rgba(56, 189, 248, 0.4);
+          }
+        }
+
+        a {
+          color: inherit !important;
+          display: block;
+        }
+      }
+    }
+
+    // ── Collapsed state ──
+    .ant-menu-inline-collapsed {
+      width: var(--sidebar-collapsed-width) !important;
+      padding: 0 6px;
+
+      .ant-menu-item,
+      .ant-menu-submenu-title {
+        padding: 0 !important;
+        text-align: center;
+
+        .anticon {
+          margin: 0 !important;
+          font-size: 16px !important;
+          line-height: 34px;
+        }
+      }
     }
   }
-
-  .ant-menu-item-selected {
-    @apply bg-blue-600 text-white;
-  }
 }
 
+// ── Footer ──
 .sidebar-footer {
-  @apply p-3 border-t border-gray-800;
+  padding: 8px;
+  border-top: 1px solid $sb-border;
+  flex-shrink: 0;
 }
 
 .collapse-btn {
-  @apply w-full flex items-center gap-2 px-3 py-2;
-  @apply text-gray-400 rounded-lg bg-transparent border-0;
-  @apply hover:bg-gray-800 hover:text-white cursor-pointer;
-  @apply transition-colors;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  span[nz-icon] { font-size: 14px; }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #9ca3af;
+  }
 }
 
-.collapse-text {
-  @apply text-sm;
-}
-
+// ── Responsive ──
 @media (max-width: 1023px) {
   .sidebar {
-    @apply -translate-x-full;
-
-    &.open {
-      @apply translate-x-0;
-    }
+    transform: translateX(-100%);
+    &.open { transform: translateX(0); }
   }
 }

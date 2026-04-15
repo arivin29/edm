@@ -26,6 +26,7 @@ notificationController := controllers.NewNotificationController()
 onlyofficeController := controllers.NewOnlyOfficeController()
 distributionController := controllers.NewDistributionController()
 	attachmentController := controllers.NewAttachmentController()
+	relationController := controllers.NewDocumentRelationController()
 
 // Global CORS preflight handler - must be before other routes
 facades.Route().Fallback(func(ctx http.Context) http.Response {
@@ -184,6 +185,11 @@ router.Middleware(middleware.RequirePermission("document.view")).Put("/documents
 router.Middleware(middleware.RequirePermission("document.view")).Delete("/documents/{id}/comments/{commentId}", commentController.Destroy)
 router.Middleware(middleware.RequirePermission("document.review")).Post("/documents/{id}/comments/{commentId}/resolve", commentController.Resolve)
 router.Middleware(middleware.RequirePermission("document.review")).Post("/documents/{id}/comments/{commentId}/unresolve", commentController.Unresolve)
+
+// Document Relations
+router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/relations", relationController.Index)
+router.Middleware(middleware.RequirePermission("document.create")).Post("/documents/{id}/relations", relationController.Store)
+router.Middleware(middleware.RequirePermission("document.delete")).Delete("/documents/{id}/relations/{relationId}", relationController.Destroy)
 
 // Workflows
 router.Middleware(middleware.RequirePermission("workflow.view")).Get("/workflows", workflowController.Index)

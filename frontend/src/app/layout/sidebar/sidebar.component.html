@@ -3,12 +3,12 @@
   <div class="sidebar-header">
     <div class="logo">
       <div class="logo-icon">
-        <span nz-icon nzType="file-text" nzTheme="outline" class="text-2xl text-white"></span>
+        <span nz-icon nzType="file-text" nzTheme="outline"></span>
       </div>
       @if (!collapsed()) {
         <div class="logo-text">
-          <span class="title">Askara</span>
-          <span class="subtitle">Document System</span>
+          <span class="logo-title">Askara</span>
+          <span class="logo-sub">Document System</span>
         </div>
       }
     </div>
@@ -47,7 +47,7 @@
     <button class="collapse-btn" (click)="toggleCollapse.emit()">
       <span nz-icon [nzType]="collapsed() ? 'menu-unfold' : 'menu-fold'" nzTheme="outline"></span>
       @if (!collapsed()) {
-        <span class="collapse-text">Tutup Menu</span>
+        <span>Tutup Menu</span>
       }
     </button>
   </div>

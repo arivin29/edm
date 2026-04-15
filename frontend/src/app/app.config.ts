@@ -5,7 +5,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 
 // ng-zorro
 import { provideNzIcons } from 'ng-zorro-antd/icon';
-import { provideNzI18n, en_US } from 'ng-zorro-antd/i18n';
+import { provideNzI18n, id_ID } from 'ng-zorro-antd/i18n';
 import {
   MenuFoldOutline,
   MenuUnfoldOutline,
@@ -176,7 +176,7 @@ export const appConfig: ApplicationConfig = {
       ])
     ),
     // ng-zorro
-    provideNzI18n(en_US),
+    provideNzI18n(id_ID),
     provideNzIcons(icons),
     // API Configuration
     {

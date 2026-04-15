@@ -133,9 +133,16 @@ interface Document {
                   [nzPageIndex]="pageIndex()"
                   [nzPageSize]="pageSize()"
                   [nzShowSizeChanger]="true"
-                  [nzPageSizeOptions]="[15, 30, 50]"
+                  [nzPageSizeOptions]="[15, 30, 50, 100]"
+                  [nzShowQuickJumper]="true"
+                  [nzShowTotal]="totalTemplate"
                   (nzPageIndexChange)="onPageIndexChange($event)"
                   (nzPageSizeChange)="onPageSizeChange($event)">
+        <ng-template #totalTemplate let-total let-range="range">
+          <span class="pagination-total">
+            Menampilkan <strong>{{ range[0] }}-{{ range[1] }}</strong> dari <strong>{{ total }}</strong> dokumen
+          </span>
+        </ng-template>
           <thead>
             <tr>
               <th nzWidth="140px">No. Dokumen</th>

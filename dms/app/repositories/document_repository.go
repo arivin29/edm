@@ -106,10 +106,11 @@ func (r *documentRepository) List(filters map[string]any) ([]models.Document, in
 		q = q.Where("created_at <= ?", v)
 	}
 
-	// Search filter (title, document_number, description)
+	// Search filter — use full-text search with ranking
+	searchActive := false
 	if search, ok := filters["search"].(string); ok && search != "" {
-		like := "%" + search + "%"
-		q = q.Where("title ILIKE ? OR document_number ILIKE ? OR description ILIKE ?", like, like, like)
+		searchActive = true
+		q = q.Where("search_vector @@ websearch_to_tsquery('simple', ?)", search)
 	}
 
 	// Data scope filters
@@ -126,7 +127,7 @@ func (r *documentRepository) List(filters map[string]any) ([]models.Document, in
 		return nil, 0, err
 	}
 
-	// Sorting
+	// Sorting — default to relevance when searching
 	sortBy := "created_at"
 	sortDir := "desc"
 	if v, ok := filters["sort_by"].(string); ok && v != "" {
@@ -136,13 +137,26 @@ func (r *documentRepository) List(filters map[string]any) ([]models.Document, in
 			"document_number": true,
 			"title":           true,
 			"status":          true,
+			"relevance":       true,
 		}
 		if allowed[v] {
 			sortBy = v
 		}
+	} else if searchActive {
+		sortBy = "relevance"
 	}
 	if v, ok := filters["sort_dir"].(string); ok && v == "asc" {
 		sortDir = "asc"
+	}
+
+	// For relevance sorting, use ts_rank
+	orderClause := fmt.Sprintf("%s %s", sortBy, sortDir)
+	if sortBy == "relevance" {
+		if search, ok := filters["search"].(string); ok && search != "" {
+			orderClause = fmt.Sprintf("ts_rank(search_vector, websearch_to_tsquery('simple', '%s')) DESC", search)
+		} else {
+			orderClause = "created_at desc"
+		}
 	}
 
 	var items []models.Document
@@ -150,7 +164,7 @@ func (r *documentRepository) List(filters map[string]any) ([]models.Document, in
 		With("DocumentType").
 		With("Category").
 		With("Creator").
-		Order(fmt.Sprintf("%s %s", sortBy, sortDir)).
+		Order(orderClause).
 		Offset(offset).
 		Limit(perPage).
 		Get(&items); err != nil {

@@ -20,6 +20,8 @@ import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzListModule } from 'ng-zorro-antd/list';
+import { NzDrawerModule } from 'ng-zorro-antd/drawer';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
@@ -112,6 +114,19 @@ interface Attachment {
   uploader?: { id: string; name: string; email: string };
 }
 
+interface DocumentRelation {
+  id: string;
+  document_id: string;
+  related_document_id: string;
+  relation_type: string;
+  notes?: string;
+  created_by: string;
+  created_at: string;
+  document?: { id: string; title: string; document_number: string; status: string };
+  related_document?: { id: string; title: string; document_number: string; status: string };
+  creator?: { id: string; name: string };
+}
+
 @Component({
   selector: 'app-document-detail',
   standalone: true,
@@ -121,7 +136,7 @@ interface Attachment {
     NzDescriptionsModule, NzTabsModule, NzTimelineModule,
     NzCommentModule, NzAvatarModule, NzInputModule, NzSpinModule,
     NzModalModule, NzBadgeModule, NzToolTipModule, NzTableModule, NzEmptyModule,
-    NzUploadModule, NzListModule
+    NzUploadModule, NzListModule, NzDrawerModule, NzSelectModule
   ],
   template: `
     @if (loading()) {
@@ -531,6 +546,84 @@ interface Attachment {
                   }
                 </div>
               </nz-tab>
+
+              <!-- Relasi Tab -->
+              <nz-tab nzTitle="Relasi">
+                <div class="py-3">
+                  <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs text-gray-500">Dokumen yang terkait</span>
+                    <button nz-button nzType="primary" nzSize="small" (click)="openRelationDrawer()">
+                      <span nz-icon nzType="plus"></span> Tambah Relasi
+                    </button>
+                  </div>
+
+                  @if (outboundRelations().length > 0) {
+                    <div class="text-xs font-semibold text-gray-600 mb-1">Relasi Keluar</div>
+                    <nz-table #outRelTable [nzData]="outboundRelations()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false" class="mb-3">
+                      <thead>
+                        <tr>
+                          <th>Tipe</th>
+                          <th>Dokumen Terkait</th>
+                          <th nzWidth="120px">Catatan</th>
+                          <th nzWidth="100px">Tanggal</th>
+                          <th nzWidth="50px">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (rel of outRelTable.data; track rel.id) {
+                          <tr>
+                            <td><nz-tag [nzColor]="getRelationTypeColor(rel.relation_type)">{{ getRelationTypeLabel(rel.relation_type) }}</nz-tag></td>
+                            <td>
+                              <a class="text-xs text-blue-600 cursor-pointer" [routerLink]="['/documents', rel.related_document?.id]">
+                                {{ rel.related_document?.document_number || '-' }} — {{ rel.related_document?.title || '-' }}
+                              </a>
+                            </td>
+                            <td class="text-xs text-gray-500">{{ rel.notes || '-' }}</td>
+                            <td class="text-xs text-gray-400">{{ rel.created_at | date:'dd/MM/yyyy' }}</td>
+                            <td>
+                              <button nz-button nzType="link" nzSize="small" nzDanger (click)="deleteRelation(rel.id)" nz-tooltip nzTooltipTitle="Hapus">
+                                <span nz-icon nzType="delete"></span>
+                              </button>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </nz-table>
+                  }
+
+                  @if (inboundRelations().length > 0) {
+                    <div class="text-xs font-semibold text-gray-600 mb-1">Dirujuk Oleh</div>
+                    <nz-table #inRelTable [nzData]="inboundRelations()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
+                      <thead>
+                        <tr>
+                          <th>Tipe</th>
+                          <th>Dari Dokumen</th>
+                          <th nzWidth="120px">Catatan</th>
+                          <th nzWidth="100px">Tanggal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (rel of inRelTable.data; track rel.id) {
+                          <tr>
+                            <td><nz-tag [nzColor]="getRelationTypeColor(rel.relation_type)">{{ getRelationTypeLabel(rel.relation_type) }}</nz-tag></td>
+                            <td>
+                              <a class="text-xs text-blue-600 cursor-pointer" [routerLink]="['/documents', rel.document?.id]">
+                                {{ rel.document?.document_number || '-' }} — {{ rel.document?.title || '-' }}
+                              </a>
+                            </td>
+                            <td class="text-xs text-gray-500">{{ rel.notes || '-' }}</td>
+                            <td class="text-xs text-gray-400">{{ rel.created_at | date:'dd/MM/yyyy' }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </nz-table>
+                  }
+
+                  @if (outboundRelations().length === 0 && inboundRelations().length === 0) {
+                    <nz-empty nzNotFoundContent="Belum ada relasi dokumen"></nz-empty>
+                  }
+                </div>
+              </nz-tab>
             </nz-tabset>
           </div>
         </div>
@@ -591,6 +684,43 @@ interface Attachment {
         Dokumen tidak ditemukan
       </div>
     }
+
+    <!-- Add Relation Drawer -->
+    <nz-drawer
+      [nzVisible]="relationDrawerVisible"
+      nzTitle="Tambah Relasi Dokumen"
+      nzPlacement="right"
+      [nzWidth]="420"
+      (nzOnClose)="relationDrawerVisible = false">
+      <div *nzDrawerContent>
+        <div class="mb-3">
+          <label class="text-xs font-medium text-gray-600 block mb-1">Tipe Relasi *</label>
+          <nz-select nzSize="small" [(ngModel)]="newRelation.relation_type" class="w-full" nzPlaceHolder="Pilih tipe relasi">
+            <nz-option nzValue="references" nzLabel="Mereferensi"></nz-option>
+            <nz-option nzValue="supersedes" nzLabel="Menggantikan"></nz-option>
+            <nz-option nzValue="related_to" nzLabel="Terkait Dengan"></nz-option>
+            <nz-option nzValue="parent_child" nzLabel="Induk-Anak"></nz-option>
+          </nz-select>
+        </div>
+        <div class="mb-3">
+          <label class="text-xs font-medium text-gray-600 block mb-1">Dokumen Tujuan *</label>
+          <nz-select nzSize="small" [(ngModel)]="newRelation.related_document_id" class="w-full"
+                     nzPlaceHolder="Cari dokumen..." nzShowSearch nzServerSearch
+                     (nzOnSearch)="searchDocuments($event)">
+            @for (doc of searchResults(); track doc.id) {
+              <nz-option [nzValue]="doc.id" [nzLabel]="doc.document_number + ' — ' + doc.title"></nz-option>
+            }
+          </nz-select>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs font-medium text-gray-600 block mb-1">Catatan</label>
+          <textarea nz-input [(ngModel)]="newRelation.notes" nzSize="small" [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Catatan relasi (opsional)"></textarea>
+        </div>
+        <button nz-button nzType="primary" nzSize="small" [nzLoading]="savingRelation()" (click)="saveRelation()" class="w-full">
+          <span nz-icon nzType="plus"></span> Simpan Relasi
+        </button>
+      </div>
+    </nz-drawer>
   `,
   styles: [`
     :host { display: block; }
@@ -987,6 +1117,9 @@ export class DocumentDetailPage implements OnInit {
   workflow = signal<WorkflowStatus | null>(null);
   distributions = signal<Distribution[]>([]);
   attachments = signal<Attachment[]>([]);
+  outboundRelations = signal<DocumentRelation[]>([]);
+  inboundRelations = signal<DocumentRelation[]>([]);
+  searchResults = signal<{ id: string; title: string; document_number: string }[]>([]);
 
   loading = signal(true);
   versionsLoading = signal(false);
@@ -994,6 +1127,10 @@ export class DocumentDetailPage implements OnInit {
   workflowLoading = signal(false);
   distributionsLoading = signal(false);
   uploadingAttachment = signal(false);
+  savingRelation = signal(false);
+
+  relationDrawerVisible = false;
+  newRelation = { related_document_id: '', relation_type: '', notes: '' };
 
   newComment = '';
   replyContent = '';
@@ -1067,6 +1204,10 @@ export class DocumentDetailPage implements OnInit {
     // Lazy-load attachments on first visit
     if (index === 4 && this.attachments().length === 0) {
       this.loadAttachments();
+    }
+    // Lazy-load relations on first visit
+    if (index === 5 && this.outboundRelations().length === 0 && this.inboundRelations().length === 0) {
+      this.loadRelations();
     }
   }
 
@@ -1383,5 +1524,88 @@ export class DocumentDetailPage implements OnInit {
       sent: 'Terkirim', received: 'Diterima', pending: 'Menunggu'
     };
     return labels[status] || status;
+  }
+
+  // === Document Relations ===
+
+  loadRelations(): void {
+    this.http.get<any>(`${environment.apiUrl}/documents/${this.documentId}/relations`).subscribe({
+      next: (res) => {
+        this.outboundRelations.set(res.outbound || []);
+        this.inboundRelations.set(res.inbound || []);
+      },
+      error: () => {}
+    });
+  }
+
+  openRelationDrawer(): void {
+    this.newRelation = { related_document_id: '', relation_type: '', notes: '' };
+    this.searchResults.set([]);
+    this.relationDrawerVisible = true;
+  }
+
+  searchDocuments(term: string): void {
+    if (!term || term.length < 2) return;
+    this.http.get<any>(`${environment.apiUrl}/documents`, {
+      params: { search: term, per_page: '10' }
+    }).subscribe({
+      next: (res) => {
+        const docs = (res.data || [])
+          .filter((d: any) => d.id !== this.documentId)
+          .map((d: any) => ({ id: d.id, title: d.title, document_number: d.document_number }));
+        this.searchResults.set(docs);
+      }
+    });
+  }
+
+  saveRelation(): void {
+    if (!this.newRelation.related_document_id || !this.newRelation.relation_type) {
+      this.message.warning('Pilih tipe relasi dan dokumen tujuan');
+      return;
+    }
+    this.savingRelation.set(true);
+    this.http.post(`${environment.apiUrl}/documents/${this.documentId}/relations`, this.newRelation).subscribe({
+      next: () => {
+        this.message.success('Relasi berhasil ditambahkan');
+        this.relationDrawerVisible = false;
+        this.savingRelation.set(false);
+        this.loadRelations();
+      },
+      error: () => {
+        this.message.error('Gagal menambahkan relasi');
+        this.savingRelation.set(false);
+      }
+    });
+  }
+
+  deleteRelation(relationId: string): void {
+    this.modal.confirm({
+      nzTitle: 'Hapus relasi ini?',
+      nzOnOk: () => {
+        this.http.delete(`${environment.apiUrl}/documents/${this.documentId}/relations/${relationId}`).subscribe({
+          next: () => {
+            this.message.success('Relasi berhasil dihapus');
+            this.loadRelations();
+          },
+          error: () => this.message.error('Gagal menghapus relasi')
+        });
+      }
+    });
+  }
+
+  getRelationTypeColor(type: string): string {
+    const colors: Record<string, string> = {
+      references: 'blue', supersedes: 'orange', related_to: 'green',
+      attachment: 'purple', parent_child: 'cyan'
+    };
+    return colors[type] || 'default';
+  }
+
+  getRelationTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      references: 'Mereferensi', supersedes: 'Menggantikan',
+      related_to: 'Terkait', attachment: 'Lampiran', parent_child: 'Induk-Anak'
+    };
+    return labels[type] || type;
   }
 }
