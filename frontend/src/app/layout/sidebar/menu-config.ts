@@ -11,35 +11,30 @@ export const MENU_ITEMS: MenuItem[] = [
     key: 'documents',
     label: 'Dokumen',
     icon: 'file-text',
-    route: '/documents'
-  },
-  {
-    key: 'workflows',
-    label: 'Workflow',
-    icon: 'branches',
-    route: '/workflows',
-    permission: 'workflow.view'
-  },
-  {
-    key: 'templates',
-    label: 'Template',
-    icon: 'folder',
-    route: '/templates',
-    permission: 'template.view'
-  },
-  {
-    key: 'numbering',
-    label: 'Penomoran',
-    icon: 'ordered-list',
-    route: '/numbering',
-    permission: 'template.view'
+    children: [
+      { key: 'doc-all', label: 'Semua Dokumen', route: '/documents' }
+    ]
   },
   {
     key: 'master',
     label: 'Master Data',
     icon: 'database',
-    route: '/master',
-    permission: 'document.view'
+    permission: 'document.view',
+    children: [
+      { key: 'master-doc-types', label: 'Tipe Dokumen', route: '/master/document-types' },
+      { key: 'master-categories', label: 'Kategori Dokumen', route: '/master/categories' },
+      { key: 'master-templates', label: 'Template', route: '/master/templates', permission: 'template.view' }
+    ]
+  },
+  {
+    key: 'workflow-group',
+    label: 'Workflow & Penomoran',
+    icon: 'branches',
+    permission: 'workflow.view',
+    children: [
+      { key: 'workflows', label: 'Workflow', route: '/workflows' },
+      { key: 'numbering', label: 'Penomoran', route: '/numbering' }
+    ]
   },
   {
     key: 'organization',
@@ -49,18 +44,14 @@ export const MENU_ITEMS: MenuItem[] = [
     permission: 'company.view'
   },
   {
-    key: 'users',
-    label: 'Pengguna',
+    key: 'access',
+    label: 'Manajemen Akses',
     icon: 'team',
-    route: '/users',
-    permission: 'user.view'
-  },
-  {
-    key: 'roles',
-    label: 'Role',
-    icon: 'safety',
-    route: '/roles',
-    permission: 'user.assign_role'
+    permission: 'user.view',
+    children: [
+      { key: 'users', label: 'Pengguna', route: '/users' },
+      { key: 'roles', label: 'Role & Permission', route: '/roles', permission: 'user.assign_role' }
+    ]
   },
   {
     key: 'settings',

@@ -83,24 +83,34 @@ export const routes: Routes = [
           }
         ]
       },
-      // Templates
+      // Master Data (Document Types, Categories, Templates)
       {
-        path: 'templates',
+        path: 'master',
         children: [
           {
-            path: '',
+            path: 'document-types',
+            loadComponent: () =>
+              import('./pages/master/document-types.page').then(m => m.DocumentTypesPage),
+            title: 'Tipe Dokumen - DMS'
+          },
+          {
+            path: 'categories',
+            loadComponent: () =>
+              import('./pages/master/categories.page').then(m => m.CategoriesPage),
+            title: 'Kategori Dokumen - DMS'
+          },
+          {
+            path: 'templates',
             loadComponent: () =>
               import('./pages/templates/template-list.page').then(m => m.TemplateListPage),
             title: 'Template - DMS'
+          },
+          {
+            path: '',
+            redirectTo: 'document-types',
+            pathMatch: 'full'
           }
         ]
-      },
-      // Master Data (Document Types & Categories)
-      {
-        path: 'master',
-        loadComponent: () =>
-          import('./pages/master/master-data.page').then(m => m.MasterDataPage),
-        title: 'Master Data - DMS'
       },
       // Roles
       {
