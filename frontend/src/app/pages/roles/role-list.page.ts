@@ -7,7 +7,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzCardModule } from 'ng-zorro-antd/card';
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
@@ -37,7 +37,7 @@ interface Role {
   imports: [
     CommonModule, FormsModule,
     NzTableModule, NzButtonModule, NzIconModule, NzTagModule,
-    NzInputModule, NzCardModule, NzDrawerModule, NzFormModule, NzCheckboxModule
+    NzInputModule, NzCardModule, NzDrawerModule, NzModalModule, NzFormModule, NzCheckboxModule
   ],
   template: `
     <div class="p-4">

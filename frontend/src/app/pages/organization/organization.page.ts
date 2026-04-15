@@ -8,7 +8,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -77,7 +77,7 @@ interface ApiResponse<T> {
   imports: [
     CommonModule, FormsModule,
     NzTabsModule, NzTableModule, NzButtonModule, NzIconModule, NzCardModule,
-    NzInputModule, NzDrawerModule, NzFormModule, NzSelectModule, NzTagModule, NzSpinModule
+    NzInputModule, NzDrawerModule, NzModalModule, NzFormModule, NzSelectModule, NzTagModule, NzSpinModule
   ],
   template: `
     <div class="p-3">

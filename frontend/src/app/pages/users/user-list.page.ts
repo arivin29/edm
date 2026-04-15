@@ -15,7 +15,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
@@ -38,7 +38,7 @@ interface User {
     CommonModule, FormsModule, ReactiveFormsModule,
     NzTableModule, NzButtonModule, NzIconModule, NzTagModule,
     NzInputModule, NzCardModule, NzAvatarModule, NzDropDownModule,
-    NzDrawerModule, NzFormModule, NzSelectModule, NzSwitchModule, NzSpinModule
+    NzDrawerModule, NzModalModule, NzFormModule, NzSelectModule, NzSwitchModule, NzSpinModule
   ],
   template: `
     <div class="p-4">

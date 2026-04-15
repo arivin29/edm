@@ -9,7 +9,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzUploadModule } from 'ng-zorro-antd/upload';
@@ -24,7 +24,7 @@ import { environment } from '../../../environments/environment';
     CommonModule, FormsModule,
     NzTableModule, NzButtonModule, NzIconModule, NzTagModule,
     NzInputModule, NzCardModule, NzDropDownModule,
-    NzDrawerModule, NzFormModule, NzSelectModule, NzUploadModule
+    NzDrawerModule, NzModalModule, NzFormModule, NzSelectModule, NzUploadModule
   ],
   template: `
     <div class="p-4">
