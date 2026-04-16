@@ -211,7 +211,7 @@
                     </div>
                   </ng-template>
 
-                  <div class="meta-grid">
+                  <div nz-form nzLayout="vertical" class="meta-grid">
                     @for (tag of group.tags; track tag.tag_key) {
                       @if (!tag.is_hidden) {
                         <div class="meta-field" [ngClass]="getColSpan(tag)">
