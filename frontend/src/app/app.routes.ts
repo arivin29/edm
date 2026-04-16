@@ -31,7 +31,7 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./pages/dashboard/dashboard.page').then(m => m.DashboardPage),
+          import('./pages/dashboard/dashboard-page/dashboard-page.component').then(m => m.DashboardPage),
         title: 'Dashboard - DMS'
       },
       // Documents
@@ -90,13 +90,13 @@ export const routes: Routes = [
           {
             path: 'document-types',
             loadComponent: () =>
-              import('./pages/master/document-types.page').then(m => m.DocumentTypesPage),
+              import('./pages/master/document-types/document-type-list/document-type-list.component').then(m => m.DocumentTypesPage),
             title: 'Tipe Dokumen - DMS'
           },
           {
             path: 'categories',
             loadComponent: () =>
-              import('./pages/master/categories.page').then(m => m.CategoriesPage),
+              import('./pages/master/categories/category-list/category-list.component').then(m => m.CategoriesPage),
             title: 'Kategori Dokumen - DMS'
           },
           {
@@ -157,35 +157,35 @@ export const routes: Routes = [
       {
         path: 'numbering',
         loadComponent: () =>
-          import('./pages/numbering/numbering-list.page').then(m => m.NumberingListPage),
+          import('./pages/numbering/numbering-list/numbering-list.component').then(m => m.NumberingListPage),
         title: 'Penomoran - DMS'
       },
       // System Settings
       {
         path: 'settings',
         loadComponent: () =>
-          import('./pages/settings/settings.page').then(m => m.SettingsPage),
+          import('./pages/settings/settings-list/settings-list.component').then(m => m.SettingsPage),
         title: 'Pengaturan - DMS'
       },
       // Audit Logs
       {
         path: 'audit-logs',
         loadComponent: () =>
-          import('./pages/audit/audit-log.page').then(m => m.AuditLogPage),
+          import('./pages/audit/audit-log/audit-log.component').then(m => m.AuditLogPage),
         title: 'Audit Log - DMS'
       },
       // Notifications
       {
         path: 'notifications',
         loadComponent: () =>
-          import('./pages/notifications/notification-list.page').then(m => m.NotificationListPage),
+          import('./pages/notifications/notification-list/notification-list.component').then(m => m.NotificationListPage),
         title: 'Notifikasi - DMS'
       },
       // Profile
       {
         path: 'profile',
         loadComponent: () =>
-          import('./pages/profile/profile.page').then(m => m.ProfilePage),
+          import('./pages/profile/profile-page/profile-page.component').then(m => m.ProfilePage),
         title: 'Profil - DMS'
       },
       {

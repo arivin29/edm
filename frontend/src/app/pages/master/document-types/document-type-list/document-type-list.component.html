@@ -1,0 +1,103 @@
+<div class="p-3">
+  <div class="flex justify-between items-center mb-3">
+    <div>
+      <h1 class="text-base font-semibold m-0">Tipe Dokumen</h1>
+      <p class="text-gray-500 text-xs m-0">Kelola tipe dokumen</p>
+    </div>
+    <button nz-button nzType="primary" nzSize="small" (click)="openDrawer()">
+      <span nz-icon nzType="plus"></span> Tambah
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-3 gap-3 mb-4">
+    <div class="bg-white rounded-lg border p-3">
+      <div class="text-xs text-gray-500">Total</div>
+      <div class="text-xl font-bold text-gray-800">{{ statsTotal() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-2 border-l-green-500">
+      <div class="text-xs text-gray-500">Aktif</div>
+      <div class="text-xl font-bold text-green-600">{{ statsActive() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-2 border-l-red-400">
+      <div class="text-xs text-gray-500">Nonaktif</div>
+      <div class="text-xl font-bold text-red-500">{{ statsInactive() }}</div>
+    </div>
+  </div>
+
+  <nz-spin [nzSpinning]="loading()">
+    <nz-card nzSize="small">
+      <div class="mb-2">
+        <nz-input-group nzSize="small" [nzPrefix]="searchIcon" class="w-48">
+          <input nz-input placeholder="Cari tipe..." [(ngModel)]="searchText" />
+        </nz-input-group>
+      </div>
+      <nz-table #tbl [nzData]="filteredItems()" nzSize="small"
+                [nzPageSize]="10" [nzShowSizeChanger]="false">
+        <thead>
+          <tr>
+            <th nzWidth="40px" nzAlign="center">Ikon</th>
+            <th nzWidth="100px">Kode</th>
+            <th>Nama</th>
+            <th>Deskripsi</th>
+            <th nzWidth="70px" nzAlign="center">Template</th>
+            <th nzWidth="60px" nzAlign="center">Urutan</th>
+            <th nzWidth="80px" nzAlign="center">Status</th>
+            <th nzWidth="90px">Dibuat</th>
+            <th nzWidth="80px" nzAlign="center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of tbl.data; track item.id) {
+            <tr>
+              <td nzAlign="center">
+                <span nz-icon [nzType]="item.icon || 'file-text'" class="text-blue-500 text-base"></span>
+              </td>
+              <td><code class="text-xs">{{ item.code }}</code></td>
+              <td class="font-medium">{{ item.name }}</td>
+              <td class="text-gray-500 text-xs">{{ item.description || '-' }}</td>
+              <td nzAlign="center">
+                <nz-tag class="m-0">{{ item.template_count || 0 }}</nz-tag>
+              </td>
+              <td nzAlign="center">{{ item.sort_order }}</td>
+              <td nzAlign="center">
+                <nz-tag [nzColor]="item.is_active ? 'green' : 'default'" class="text-xs m-0">
+                  {{ item.is_active ? 'Aktif' : 'Nonaktif' }}
+                </nz-tag>
+              </td>
+              <td>
+                <span class="text-xs text-gray-500">{{ formatDate(item.created_at) }}</span>
+              </td>
+              <td nzAlign="center">
+                <button nz-button nzType="text" nzSize="small" (click)="openDrawer(item)"
+                        nz-tooltip nzTooltipTitle="Edit">
+                  <span nz-icon nzType="edit" class="text-blue-500"></span>
+                </button>
+                <button nz-button nzType="text" nzSize="small" (click)="confirmDelete(item)"
+                        nz-tooltip nzTooltipTitle="Hapus">
+                  <span nz-icon nzType="delete" class="text-red-500"></span>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="text-center text-gray-400 py-4">Tidak ada data</td></tr>
+          }
+        </tbody>
+      </nz-table>
+    </nz-card>
+  </nz-spin>
+
+  <ng-template #searchIcon><span nz-icon nzType="search"></span></ng-template>
+
+  <!-- Drawer Form -->
+  <nz-drawer [nzVisible]="drawerVisible" [nzTitle]="drawerTitle" nzPlacement="right"
+             nzWidth="380px" (nzOnClose)="closeDrawer()">
+    <ng-container *nzDrawerContent>
+      <app-document-type-form
+        [formData]="formData"
+        [saving]="saving()"
+        (formSubmit)="save()">
+      </app-document-type-form>
+    </ng-container>
+  </nz-drawer>
+</div>

@@ -1,0 +1,61 @@
+<form nz-form nzLayout="vertical">
+  <nz-form-item>
+    <nz-form-label nzRequired>Kode</nz-form-label>
+    <nz-form-control nzErrorTip="Kode wajib diisi">
+      <input nz-input nzSize="small" [(ngModel)]="formData.code" name="code"
+             placeholder="Masukkan kode" [maxlength]="50" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label nzRequired>Nama</nz-form-label>
+    <nz-form-control nzErrorTip="Nama wajib diisi">
+      <input nz-input nzSize="small" [(ngModel)]="formData.name" name="name"
+             placeholder="Masukkan nama" [maxlength]="255" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Deskripsi</nz-form-label>
+    <nz-form-control>
+      <textarea nz-input nzSize="small" [(ngModel)]="formData.description" name="description"
+                placeholder="Deskripsi (opsional)" [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Ikon</nz-form-label>
+    <nz-form-control>
+      <nz-select nzSize="small" [(ngModel)]="formData.icon" name="icon"
+                 nzPlaceHolder="Pilih ikon" nzAllowClear nzShowSearch>
+        @for (ic of iconOptions; track ic) {
+          <nz-option [nzValue]="ic" [nzLabel]="ic" nzCustomContent>
+            <span nz-icon [nzType]="ic" class="mr-2"></span> {{ ic }}
+          </nz-option>
+        }
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Urutan</nz-form-label>
+    <nz-form-control>
+      <input nz-input nzSize="small" [(ngModel)]="formData.sort_order" name="sort_order"
+             type="number" placeholder="0" min="0" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Status</nz-form-label>
+    <nz-form-control>
+      <nz-switch [(ngModel)]="formData.is_active" [ngModelOptions]="{standalone: true}"
+                 nzCheckedChildren="Aktif" nzUnCheckedChildren="Nonaktif"></nz-switch>
+    </nz-form-control>
+  </nz-form-item>
+
+  <div class="mt-4">
+    <button nz-button nzType="primary" nzSize="small" nzBlock [nzLoading]="saving" (click)="onSubmit()">
+      Simpan
+    </button>
+  </div>
+</form>

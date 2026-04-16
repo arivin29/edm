@@ -1,0 +1,229 @@
+<div class="dash">
+  <!-- Header -->
+  <div class="dash-header">
+    <div class="dash-header__left">
+      <div class="dash-header__greeting">
+        <h1 class="dash-header__title">{{ getGreeting() }}, {{ authState.userName() || 'User' }}</h1>
+        <p class="dash-header__subtitle">
+          {{ authState.user()?.department_id ? '' : '' }}Berikut ringkasan dokumen dan tugas Anda hari ini
+        </p>
+      </div>
+    </div>
+    <div class="dash-header__right">
+      <span class="dash-header__date">
+        <span nz-icon nzType="calendar" nzTheme="outline"></span>
+        {{ today | date:'EEEE, dd MMMM yyyy' }}
+      </span>
+      <button nz-button nzType="primary" nzSize="small" routerLink="/documents/create" nz-tooltip nzTooltipTitle="Buat Dokumen Baru">
+        <span nz-icon nzType="plus"></span> Buat Dokumen
+      </button>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <nz-spin [nzSpinning]="loadingStats()">
+    <div class="dash-stats">
+      @for (stat of stats(); track stat.key) {
+        <div class="dash-stat" [class]="'dash-stat--' + stat.key" [routerLink]="stat.route" [queryParams]="stat.queryParams || {}">
+          <div class="dash-stat__icon" [style.background]="stat.bgColor" [style.color]="stat.color">
+            <span nz-icon [nzType]="stat.icon"></span>
+          </div>
+          <div class="dash-stat__info">
+            <span class="dash-stat__value">{{ stat.value }}</span>
+            <span class="dash-stat__label">{{ stat.title }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </nz-spin>
+
+  <!-- Zone 1: Perlu Tindakan -->
+  <div class="dash-section">
+    <div class="dash-section__header">
+      <div class="dash-section__title">
+        <span nz-icon nzType="alert" nzTheme="outline"></span>
+        Perlu Tindakan Anda
+        @if (pendingTasks().length > 0) {
+          <span class="dash-badge">{{ pendingTasks().length }}</span>
+        }
+      </div>
+    </div>
+    <nz-spin [nzSpinning]="loadingTasks()">
+      @if (pendingTasks().length === 0 && !loadingTasks()) {
+        <div class="dash-empty-action">
+          <span nz-icon nzType="check-circle" nzTheme="outline" class="dash-empty-action__icon"></span>
+          <span>Tidak ada tugas menunggu. Semua beres!</span>
+        </div>
+      } @else {
+        <div class="dash-actions-grid">
+          @for (task of pendingTasks(); track task.document_id) {
+            <a [routerLink]="['/documents', task.document_id]" class="dash-action-card">
+              <div class="dash-action-card__left">
+                <div class="dash-action-card__icon" [attr.data-action]="task.action_type">
+                  @if (task.action_type === 'approve') {
+                    <span nz-icon nzType="check-circle" nzTheme="outline"></span>
+                  } @else if (task.action_type === 'review') {
+                    <span nz-icon nzType="eye" nzTheme="outline"></span>
+                  } @else {
+                    <span nz-icon nzType="edit" nzTheme="outline"></span>
+                  }
+                </div>
+                <div class="dash-action-card__info">
+                  <span class="dash-action-card__title">{{ task.document_title }}</span>
+                  <span class="dash-action-card__meta">
+                    <span class="dash-action-card__num">{{ task.document_number }}</span>
+                    <span class="dash-action-card__sep">·</span>
+                    {{ task.step_name }}
+                  </span>
+                </div>
+              </div>
+              <div class="dash-action-card__right">
+                @if (task.deadline) {
+                  <span class="dash-action-card__deadline" [class.dash-action-card__deadline--urgent]="isUrgent(task.deadline)">
+                    <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+                    {{ task.deadline | date:'dd/MM' }}
+                  </span>
+                }
+                <span class="dash-action-card__arrow">
+                  <span nz-icon nzType="right" nzTheme="outline"></span>
+                </span>
+              </div>
+            </a>
+          }
+        </div>
+      }
+    </nz-spin>
+  </div>
+
+  <!-- Zone 2: Dokumen Terbaru + Aktivitas -->
+  <div class="dash-grid-2">
+    <!-- Dokumen Terbaru -->
+    <div class="dash-panel">
+      <div class="dash-panel__header">
+        <span class="dash-panel__title">
+          <span nz-icon nzType="file-text" nzTheme="outline"></span>
+          Dokumen Terbaru
+        </span>
+        <a routerLink="/documents" class="dash-panel__link">Lihat Semua</a>
+      </div>
+      <nz-spin [nzSpinning]="loadingDocs()">
+        @if (recentDocs().length === 0 && !loadingDocs()) {
+          <nz-empty nzNotFoundContent="Belum ada dokumen"></nz-empty>
+        } @else {
+          <div class="dash-doc-list">
+            @for (doc of recentDocs(); track doc.id) {
+              <a [routerLink]="['/documents', doc.id]" class="dash-doc-item">
+                <div class="dash-doc-item__main">
+                  <span class="dash-doc-item__title">{{ doc.title }}</span>
+                  <span class="dash-doc-item__meta">
+                    {{ doc.document_number || '-' }}
+                    @if (doc.document_type) {
+                      <span class="dash-doc-item__sep">·</span>
+                      {{ doc.document_type.code }}
+                    }
+                    <span class="dash-doc-item__sep">·</span>
+                    {{ doc.creator?.name || '-' }}
+                  </span>
+                </div>
+                <div class="dash-doc-item__right">
+                  <span class="dash-doc-status" [attr.data-status]="doc.status">
+                    <span class="dash-doc-status__dot"></span>
+                    {{ getStatusLabel(doc.status) }}
+                  </span>
+                  <span class="dash-doc-item__date">{{ doc.created_at | date:'dd/MM/yy' }}</span>
+                </div>
+              </a>
+            }
+          </div>
+        }
+      </nz-spin>
+    </div>
+
+    <!-- Aktivitas Terkini -->
+    <div class="dash-panel">
+      <div class="dash-panel__header">
+        <span class="dash-panel__title">
+          <span nz-icon nzType="bell" nzTheme="outline"></span>
+          Aktivitas Terkini
+        </span>
+      </div>
+      <nz-spin [nzSpinning]="loadingActivities()">
+        @if (activities().length === 0 && !loadingActivities()) {
+          <nz-empty nzNotFoundContent="Belum ada aktivitas"></nz-empty>
+        } @else {
+          <div class="dash-activity-list">
+            @for (a of activities(); track a.id) {
+              <div class="dash-activity" [class.dash-activity--unread]="!a.is_read">
+                <div class="dash-activity__dot" [attr.data-type]="a.type"></div>
+                <div class="dash-activity__body">
+                  <span class="dash-activity__title">{{ a.title }}</span>
+                  <span class="dash-activity__msg">{{ a.message }}</span>
+                  <span class="dash-activity__time">{{ formatTimeAgo(a.created_at) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </nz-spin>
+    </div>
+  </div>
+
+  <!-- Zone 3: Statistik (admin/manager only) -->
+  @if (isAdmin()) {
+    <div class="dash-grid-2" style="margin-top: 14px;">
+      <!-- Status Breakdown -->
+      <div class="dash-panel">
+        <div class="dash-panel__header">
+          <span class="dash-panel__title">
+            <span nz-icon nzType="pie-chart" nzTheme="outline"></span>
+            Distribusi Status Dokumen
+          </span>
+        </div>
+        <nz-spin [nzSpinning]="loadingStatusBreakdown()">
+          <div class="dash-status-chart">
+            @for (s of statusBreakdown(); track s.status) {
+              <div class="dash-status-row">
+                <div class="dash-status-row__label">
+                  <span class="dash-status-row__dot" [style.background]="s.color"></span>
+                  {{ s.label }}
+                </div>
+                <div class="dash-status-row__bar-wrap">
+                  <div class="dash-status-row__bar" [style.width.%]="getBarWidth(s.count)" [style.background]="s.color"></div>
+                </div>
+                <span class="dash-status-row__count">{{ s.count }}</span>
+              </div>
+            }
+            <div class="dash-status-total">
+              Total: <strong>{{ getTotalDocs() }}</strong> dokumen
+            </div>
+          </div>
+        </nz-spin>
+      </div>
+
+      <!-- Dokumen per Tipe -->
+      <div class="dash-panel">
+        <div class="dash-panel__header">
+          <span class="dash-panel__title">
+            <span nz-icon nzType="appstore" nzTheme="outline"></span>
+            Dokumen per Tipe
+          </span>
+        </div>
+        <nz-spin [nzSpinning]="loadingTypeBreakdown()">
+          @if (typeBreakdown().length === 0 && !loadingTypeBreakdown()) {
+            <nz-empty nzNotFoundContent="Belum ada data"></nz-empty>
+          } @else {
+            <div class="dash-type-grid">
+              @for (t of typeBreakdown(); track t.code) {
+                <div class="dash-type-item">
+                  <span class="dash-type-item__count">{{ t.count }}</span>
+                  <span class="dash-type-item__label">{{ t.name }}</span>
+                  <span class="dash-type-item__code">{{ t.code }}</span>
+                </div>
+              }
+            </div>
+          }
+        </nz-spin>
+      </div>
+    </div>
+  }
+</div>

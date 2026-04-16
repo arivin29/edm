@@ -1,0 +1,73 @@
+<div class="notification-page">
+  <div class="page-header">
+    <h2>Notifikasi</h2>
+    <div class="header-actions">
+      <button nz-button nzType="default" nzSize="small"
+              *ngIf="notifService.unreadCount() > 0"
+              (click)="markAllRead()">
+        <span nz-icon nzType="check" nzTheme="outline"></span>
+        Tandai Semua Dibaca
+      </button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <nz-segmented
+      [nzOptions]="filterOptions"
+      [ngModel]="filterIndex()"
+      (nzValueChange)="onFilterChange($event)">
+    </nz-segmented>
+  </div>
+
+  <nz-spin [nzSpinning]="loading()">
+    <nz-list *ngIf="filteredNotifications().length > 0; else emptyTpl"
+             [nzItemLayout]="'horizontal'">
+      <nz-list-item *ngFor="let n of filteredNotifications()">
+        <div class="notif-row" [class.unread]="!n.is_read" (click)="onNotificationClick(n)">
+          <div class="notif-icon">
+            <span nz-icon [nzType]="getIcon(n.type)" nzTheme="outline"
+                  [class]="getIconColor(n.type)"></span>
+          </div>
+          <div class="notif-body">
+            <div class="notif-title">
+              {{ n.title }}
+              <nz-tag *ngIf="!n.is_read" nzColor="blue">Baru</nz-tag>
+            </div>
+            <div class="notif-msg" *ngIf="n.message">{{ n.message }}</div>
+            <div class="notif-time">{{ timeAgo(n.created_at) }}</div>
+          </div>
+          <div class="notif-actions" (click)="$event.stopPropagation()">
+            <button nz-button nzType="text" nzSize="small"
+                    *ngIf="!n.is_read"
+                    nz-tooltip nzTooltipTitle="Tandai Dibaca"
+                    (click)="markRead(n)">
+              <span nz-icon nzType="check" nzTheme="outline"></span>
+            </button>
+            <button nz-button nzType="text" nzDanger nzSize="small"
+                    nz-popconfirm nzPopconfirmTitle="Hapus notifikasi ini?"
+                    (nzOnConfirm)="deleteNotification(n)">
+              <span nz-icon nzType="delete" nzTheme="outline"></span>
+            </button>
+          </div>
+        </div>
+      </nz-list-item>
+    </nz-list>
+
+    <ng-template #emptyTpl>
+      <nz-empty *ngIf="!loading()"
+                nzNotFoundContent="Tidak ada notifikasi"
+                style="padding: 60px 0;">
+      </nz-empty>
+    </ng-template>
+
+    <div class="pagination-wrapper" *ngIf="meta() && meta()!.total_pages > 1">
+      <nz-pagination
+        [nzPageIndex]="meta()!.page"
+        [nzTotal]="meta()!.total"
+        [nzPageSize]="meta()!.per_page"
+        nzSize="small"
+        (nzPageIndexChange)="onPageChange($event)">
+      </nz-pagination>
+    </div>
+  </nz-spin>
+</div>

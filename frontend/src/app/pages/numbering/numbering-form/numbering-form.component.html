@@ -1,0 +1,134 @@
+<nz-drawer [nzVisible]="visible" [nzTitle]="drawerTitle" nzPlacement="right"
+           nzWidth="500px" (nzOnClose)="close()" [nzFooter]="footerTpl">
+  <ng-container *nzDrawerContent>
+    <form nz-form nzLayout="vertical">
+      <nz-form-item>
+        <nz-form-label nzRequired>Perusahaan</nz-form-label>
+        <nz-form-control nzErrorTip="Perusahaan wajib dipilih">
+          <nz-select nzSize="small" [(ngModel)]="formData.company_id" name="company_id"
+                     nzPlaceHolder="Pilih perusahaan" nzShowSearch>
+            @for (c of companies; track c.id) {
+              <nz-option [nzValue]="c.id" [nzLabel]="c.name"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Kantor</nz-form-label>
+        <nz-form-control>
+          <nz-select nzSize="small" [(ngModel)]="formData.office_id" name="office_id"
+                     nzPlaceHolder="Pilih kantor (opsional)" nzShowSearch nzAllowClear>
+            @for (o of offices; track o.id) {
+              <nz-option [nzValue]="o.id" [nzLabel]="o.name"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Tipe Dokumen</nz-form-label>
+        <nz-form-control nzErrorTip="Tipe dokumen wajib dipilih">
+          <nz-select nzSize="small" [(ngModel)]="formData.document_type_id" name="document_type_id"
+                     nzPlaceHolder="Pilih tipe dokumen" nzShowSearch>
+            @for (dt of documentTypes; track dt.id) {
+              <nz-option [nzValue]="dt.id" [nzLabel]="dt.name"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Kategori</nz-form-label>
+        <nz-form-control>
+          <nz-select nzSize="small" [(ngModel)]="formData.category_id" name="category_id"
+                     nzPlaceHolder="Pilih kategori (opsional)" nzShowSearch nzAllowClear>
+            @for (cat of categories; track cat.id) {
+              <nz-option [nzValue]="cat.id" [nzLabel]="cat.name"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Departemen</nz-form-label>
+        <nz-form-control>
+          <nz-select nzSize="small" [(ngModel)]="formData.department_id" name="department_id"
+                     nzPlaceHolder="Pilih departemen (opsional)" nzShowSearch nzAllowClear>
+            @for (d of departments; track d.id) {
+              <nz-option [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <div class="grid grid-cols-2 gap-3">
+        <nz-form-item>
+          <nz-form-label>Prefix</nz-form-label>
+          <nz-form-control>
+            <input nz-input nzSize="small" [(ngModel)]="formData.prefix" name="prefix"
+                   placeholder="Contoh: DOC, INV, PO" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Separator</nz-form-label>
+          <nz-form-control>
+            <input nz-input nzSize="small" [(ngModel)]="formData.separator" name="separator"
+                   placeholder="/" style="width: 80px;" />
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+
+      <nz-form-item>
+        <nz-form-label>Format Nomor</nz-form-label>
+        <nz-form-control>
+          <input nz-input nzSize="small" [(ngModel)]="formData.format" name="format"
+                 [placeholder]="formatPlaceholder" />
+          <div class="format-help">
+            <p class="font-semibold mb-1">Token yang tersedia:</p>
+            <ul>
+              @for (token of formatTokens; track token.key) {
+                <li><code>{{ token.key }}</code> — {{ token.desc }}</li>
+              }
+            </ul>
+          </div>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Periode Reset</nz-form-label>
+        <nz-form-control>
+          <nz-select nzSize="small" [(ngModel)]="formData.reset_period" name="reset_period"
+                     nzPlaceHolder="Pilih periode reset">
+            <nz-option nzValue="never" nzLabel="Tidak Reset"></nz-option>
+            <nz-option nzValue="yearly" nzLabel="Tahunan"></nz-option>
+            <nz-option nzValue="monthly" nzLabel="Bulanan"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Preview -->
+      <div class="preview-section">
+        <div class="flex items-center gap-2 mb-1">
+          <button nz-button nzSize="small" (click)="previewNumber()" [nzLoading]="previewing()">
+            <span nz-icon nzType="eye"></span> Preview
+          </button>
+          @if (previewResult()) {
+            <code class="preview-result">{{ previewResult() }}</code>
+          }
+        </div>
+        <p class="text-gray-400 text-xs m-0">Klik untuk melihat contoh nomor yang akan dihasilkan</p>
+      </div>
+    </form>
+  </ng-container>
+</nz-drawer>
+
+<ng-template #footerTpl>
+  <div class="flex justify-end gap-2">
+    <button nz-button nzSize="small" (click)="close()">Batal</button>
+    <button nz-button nzType="primary" nzSize="small" [nzLoading]="saving()" (click)="save()">
+      Simpan
+    </button>
+  </div>
+</ng-template>

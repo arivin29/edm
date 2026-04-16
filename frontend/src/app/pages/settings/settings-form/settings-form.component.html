@@ -1,0 +1,85 @@
+<form nz-form nzLayout="vertical">
+  <nz-form-item>
+    <nz-form-label nzRequired>Key</nz-form-label>
+    <nz-form-control>
+      <input nz-input nzSize="small" [(ngModel)]="formData.key" name="key"
+             placeholder="contoh: app.name, email.smtp_host" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label nzRequired>Tipe</nz-form-label>
+    <nz-form-control>
+      <nz-select nzSize="small" [(ngModel)]="formData.type" name="type"
+                 (ngModelChange)="onTypeChange($event)">
+        <nz-option nzValue="string" nzLabel="String"></nz-option>
+        <nz-option nzValue="number" nzLabel="Number"></nz-option>
+        <nz-option nzValue="boolean" nzLabel="Boolean"></nz-option>
+        <nz-option nzValue="json" nzLabel="JSON"></nz-option>
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label nzRequired>Value</nz-form-label>
+    <nz-form-control>
+      @switch (formData.type) {
+        @case ('boolean') {
+          <nz-switch [(ngModel)]="formBoolValue" name="boolValue"></nz-switch>
+        }
+        @case ('number') {
+          <nz-input-number nzSize="small" [(ngModel)]="formNumValue" name="numValue"
+                           [nzStep]="1" style="width: 100%"></nz-input-number>
+        }
+        @case ('json') {
+          <textarea nz-input [(ngModel)]="formData.value" name="value"
+                    [nzAutosize]="{ minRows: 4, maxRows: 10 }"
+                    placeholder='{"key": "value"}'></textarea>
+        }
+        @default {
+          <input nz-input nzSize="small" [(ngModel)]="formData.value" name="value"
+                 placeholder="Masukkan nilai..." />
+        }
+      }
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Deskripsi</nz-form-label>
+    <nz-form-control>
+      <textarea nz-input [(ngModel)]="formData.description" name="description"
+                [nzAutosize]="{ minRows: 2, maxRows: 4 }"
+                placeholder="Deskripsi pengaturan (opsional)"></textarea>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Company</nz-form-label>
+    <nz-form-control>
+      <nz-select nzSize="small" [(ngModel)]="formData.company_id" name="company_id"
+                 nzPlaceHolder="Pilih company (opsional)" nzAllowClear>
+        @for (c of companies; track c.id) {
+          <nz-option [nzValue]="c.id" [nzLabel]="c.name"></nz-option>
+        }
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Office</nz-form-label>
+    <nz-form-control>
+      <nz-select nzSize="small" [(ngModel)]="formData.office_id" name="office_id"
+                 nzPlaceHolder="Pilih office (opsional)" nzAllowClear>
+        @for (o of offices; track o.id) {
+          <nz-option [nzValue]="o.id" [nzLabel]="o.name"></nz-option>
+        }
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+
+  <div class="mt-4">
+    <button nz-button nzType="primary" nzSize="small" nzBlock [nzLoading]="saving" (click)="onSave()">
+      Simpan
+    </button>
+  </div>
+</form>

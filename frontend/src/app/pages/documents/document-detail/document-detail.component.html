@@ -90,7 +90,7 @@
                       </div>
                       @if (workflowLoading()) {
                         <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
-                      } @else if (workflow() && workflow()!.steps.length > 0) {
+                      } @else if (workflow()?.steps?.length) {
                         <div class="approval-flow__steps">
                           @for (step of workflow()!.steps; track step.id; let i = $index; let last = $last) {
                             <div class="approval-flow__step" [attr.data-status]="step.status">

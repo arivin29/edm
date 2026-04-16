@@ -1,0 +1,79 @@
+<div class="p-3">
+  <div class="mb-3">
+    <h1 class="text-base font-semibold m-0">Penomoran Dokumen</h1>
+    <p class="text-gray-500 text-xs m-0">Konfigurasi format dan urutan nomor dokumen</p>
+  </div>
+
+  <nz-spin [nzSpinning]="loading()">
+    <nz-card nzSize="small">
+      <div class="flex justify-between items-center mb-2">
+        <nz-input-group nzSize="small" [nzPrefix]="searchIcon" class="w-56">
+          <input nz-input placeholder="Cari penomoran..." [(ngModel)]="searchTerm" />
+        </nz-input-group>
+        <button nz-button nzType="primary" nzSize="small" (click)="openDrawer()">
+          <span nz-icon nzType="plus"></span> Tambah
+        </button>
+      </div>
+
+      <nz-table #tbl [nzData]="filteredData()" nzSize="small"
+                [nzPageSize]="10" [nzShowSizeChanger]="false">
+        <thead>
+          <tr>
+            <th>Perusahaan</th>
+            <th>Tipe Dokumen</th>
+            <th>Kategori</th>
+            <th>Format</th>
+            <th>Prefix</th>
+            <th nzWidth="60px">Sep.</th>
+            <th nzWidth="80px">Seq. Saat Ini</th>
+            <th nzWidth="100px">Reset Period</th>
+            <th nzWidth="80px" nzAlign="center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of tbl.data; track item.id) {
+            <tr>
+              <td>{{ getCompanyName(item.company_id) }}</td>
+              <td>{{ getDocTypeName(item.document_type_id) }}</td>
+              <td>{{ item.category_id ? getCategoryName(item.category_id) : '-' }}</td>
+              <td><code class="format-code">{{ item.format }}</code></td>
+              <td>{{ item.prefix || '-' }}</td>
+              <td><code class="format-code">{{ item.separator }}</code></td>
+              <td>{{ item.current_sequence }}</td>
+              <td>
+                <nz-tag [nzColor]="getResetColor(item.reset_period)">
+                  {{ getResetLabel(item.reset_period) }}
+                </nz-tag>
+              </td>
+              <td nzAlign="center">
+                <button nz-button nzType="text" nzSize="small" nz-tooltip="Edit" (click)="openDrawer(item)">
+                  <span nz-icon nzType="edit" class="text-blue-500"></span>
+                </button>
+                <button nz-button nzType="text" nzSize="small" nz-tooltip="Hapus" (click)="confirmDelete(item)">
+                  <span nz-icon nzType="delete" class="text-red-500"></span>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="text-center text-gray-400 py-4">Tidak ada data</td></tr>
+          }
+        </tbody>
+      </nz-table>
+    </nz-card>
+  </nz-spin>
+
+  <ng-template #searchIcon><span nz-icon nzType="search"></span></ng-template>
+</div>
+
+<!-- Numbering Form Drawer -->
+<app-numbering-form
+  [visible]="drawerVisible"
+  [editItem]="editItem"
+  [companies]="companies()"
+  [offices]="offices()"
+  [documentTypes]="documentTypes()"
+  [categories]="categories()"
+  [departments]="departments()"
+  (closed)="closeDrawer()"
+  (saved)="onFormSaved()">
+</app-numbering-form>

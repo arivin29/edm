@@ -1,0 +1,47 @@
+::ng-deep .ant-form-item {
+  margin-bottom: 12px;
+}
+
+.format-help {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #666;
+
+  ul {
+    margin: 0;
+    padding-left: 16px;
+  }
+
+  li {
+    margin-bottom: 2px;
+  }
+
+  code {
+    background: #e6f4ff;
+    color: #1677ff;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-size: 11px;
+  }
+}
+
+.preview-section {
+  padding: 10px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.preview-result {
+  background: #52c41a;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}

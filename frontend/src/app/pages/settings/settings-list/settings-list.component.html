@@ -1,0 +1,90 @@
+<div class="p-3">
+  <div class="flex justify-between items-center mb-3">
+    <div>
+      <h1 class="text-base font-semibold m-0">System Settings</h1>
+      <p class="text-gray-500 text-xs m-0">Kelola pengaturan sistem aplikasi</p>
+    </div>
+    <button nz-button nzType="primary" nzSize="small" (click)="openDrawer()">
+      <span nz-icon nzType="plus"></span> Tambah
+    </button>
+  </div>
+
+  <nz-spin [nzSpinning]="loading()">
+    <nz-card nzSize="small">
+      <div class="mb-2">
+        <nz-input-group nzSize="small" [nzPrefix]="searchIcon" class="w-64">
+          <input nz-input placeholder="Cari key atau deskripsi..." [(ngModel)]="searchTerm" />
+        </nz-input-group>
+        <ng-template #searchIcon><span nz-icon nzType="search"></span></ng-template>
+      </div>
+
+      @if (filteredGroups().length === 0 && !loading()) {
+        <div class="text-center text-gray-400 py-8 text-xs">Tidak ada pengaturan ditemukan</div>
+      }
+
+      <nz-collapse [nzBordered]="false" class="settings-collapse">
+        @for (group of filteredGroups(); track group.prefix) {
+          <nz-collapse-panel [nzHeader]="group.label + ' (' + group.items.length + ')'" [nzActive]="true">
+            <nz-table #settingTable [nzData]="group.items" nzSize="small"
+                      [nzShowPagination]="group.items.length > 10" [nzPageSize]="10"
+                      [nzFrontPagination]="true">
+              <thead>
+                <tr>
+                  <th nzWidth="200px">Key</th>
+                  <th nzWidth="200px">Value</th>
+                  <th nzWidth="80px">Tipe</th>
+                  <th>Deskripsi</th>
+                  <th nzWidth="120px">Company</th>
+                  <th nzWidth="80px" nzAlign="center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of settingTable.data; track item.id) {
+                  <tr>
+                    <td><code class="text-xs">{{ item.key }}</code></td>
+                    <td>
+                      <span class="truncate-value" [nz-tooltip]="item.value">
+                        {{ truncateValue(item.value) }}
+                      </span>
+                    </td>
+                    <td>
+                      <nz-tag [nzColor]="typeColor(item.type)" class="text-xs">{{ item.type }}</nz-tag>
+                    </td>
+                    <td class="text-gray-500 text-xs">{{ item.description || '-' }}</td>
+                    <td class="text-xs">{{ getCompanyName(item.company_id) }}</td>
+                    <td nzAlign="center">
+                      <button nz-button nzType="text" nzSize="small" (click)="openDrawer(item)">
+                        <span nz-icon nzType="edit" class="text-blue-500"></span>
+                      </button>
+                      <button nz-button nzType="text" nzSize="small" (click)="confirmDelete(item)">
+                        <span nz-icon nzType="delete" class="text-red-500"></span>
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="text-center text-gray-400 py-4 text-xs">Tidak ada data</td>
+                  </tr>
+                }
+              </tbody>
+            </nz-table>
+          </nz-collapse-panel>
+        }
+      </nz-collapse>
+    </nz-card>
+  </nz-spin>
+
+  <!-- Drawer -->
+  <nz-drawer [nzVisible]="drawerVisible" [nzTitle]="editItem ? 'Edit Setting' : 'Tambah Setting'"
+             nzPlacement="right" [nzWidth]="420" (nzOnClose)="closeDrawer()">
+    <ng-container *nzDrawerContent>
+      <app-settings-form
+        [setting]="editItem"
+        [companies]="companies()"
+        [offices]="offices()"
+        [saving]="saving()"
+        (save)="onFormSave($event)">
+      </app-settings-form>
+    </ng-container>
+  </nz-drawer>
+</div>

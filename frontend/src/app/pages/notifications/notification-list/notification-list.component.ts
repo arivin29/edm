@@ -15,7 +15,7 @@ import {
   AppNotificationService,
   AppNotification,
   PaginationMeta,
-} from '../../core/services/app-notification.service';
+} from '../../../core/services/app-notification.service';
 import { Subscription } from 'rxjs';
 
 type FilterStatus = 'all' | 'unread' | 'read';
@@ -36,104 +36,8 @@ type FilterStatus = 'all' | 'unread' | 'read';
     NzPopconfirmModule,
     NzSegmentedModule,
   ],
-  template: `
-    <div class="notification-page">
-      <div class="page-header">
-        <h2>Notifikasi</h2>
-        <div class="header-actions">
-          <button nz-button nzType="default" nzSize="small"
-                  *ngIf="notifService.unreadCount() > 0"
-                  (click)="markAllRead()">
-            <span nz-icon nzType="check" nzTheme="outline"></span>
-            Tandai Semua Dibaca
-          </button>
-        </div>
-      </div>
-
-      <div class="filter-bar">
-        <nz-segmented
-          [nzOptions]="filterOptions"
-          [ngModel]="filterIndex()"
-          (nzValueChange)="onFilterChange($event)">
-        </nz-segmented>
-      </div>
-
-      <nz-spin [nzSpinning]="loading()">
-        <nz-list *ngIf="filteredNotifications().length > 0; else emptyTpl"
-                 [nzItemLayout]="'horizontal'">
-          <nz-list-item *ngFor="let n of filteredNotifications()">
-            <div class="notif-row" [class.unread]="!n.is_read" (click)="onNotificationClick(n)">
-              <div class="notif-icon">
-                <span nz-icon [nzType]="getIcon(n.type)" nzTheme="outline"
-                      [class]="getIconColor(n.type)"></span>
-              </div>
-              <div class="notif-body">
-                <div class="notif-title">
-                  {{ n.title }}
-                  <nz-tag *ngIf="!n.is_read" nzColor="blue">Baru</nz-tag>
-                </div>
-                <div class="notif-msg" *ngIf="n.message">{{ n.message }}</div>
-                <div class="notif-time">{{ timeAgo(n.created_at) }}</div>
-              </div>
-              <div class="notif-actions" (click)="$event.stopPropagation()">
-                <button nz-button nzType="text" nzSize="small"
-                        *ngIf="!n.is_read"
-                        nz-tooltip nzTooltipTitle="Tandai Dibaca"
-                        (click)="markRead(n)">
-                  <span nz-icon nzType="check" nzTheme="outline"></span>
-                </button>
-                <button nz-button nzType="text" nzDanger nzSize="small"
-                        nz-popconfirm nzPopconfirmTitle="Hapus notifikasi ini?"
-                        (nzOnConfirm)="deleteNotification(n)">
-                  <span nz-icon nzType="delete" nzTheme="outline"></span>
-                </button>
-              </div>
-            </div>
-          </nz-list-item>
-        </nz-list>
-
-        <ng-template #emptyTpl>
-          <nz-empty *ngIf="!loading()"
-                    nzNotFoundContent="Tidak ada notifikasi"
-                    style="padding: 60px 0;">
-          </nz-empty>
-        </ng-template>
-
-        <div class="pagination-wrapper" *ngIf="meta() && meta()!.total_pages > 1">
-          <nz-pagination
-            [nzPageIndex]="meta()!.page"
-            [nzTotal]="meta()!.total"
-            [nzPageSize]="meta()!.per_page"
-            nzSize="small"
-            (nzPageIndexChange)="onPageChange($event)">
-          </nz-pagination>
-        </div>
-      </nz-spin>
-    </div>
-  `,
-  styles: [`
-    .notification-page { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
-    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .page-header h2 { margin: 0; font-size: 20px; font-weight: 600; }
-    .filter-bar { margin-bottom: 16px; }
-    .notif-row { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; transition: background .15s; }
-    .notif-row:hover { background: #fafafa; }
-    .notif-row.unread { background: #e6f4ff; }
-    .notif-icon { font-size: 20px; padding-top: 2px; flex-shrink: 0; }
-    .notif-body { flex: 1; min-width: 0; }
-    .notif-title { font-size: 14px; font-weight: 500; color: #1a1a1a; display: flex; align-items: center; gap: 6px; }
-    .notif-msg { font-size: 13px; color: #666; margin-top: 2px; }
-    .notif-time { font-size: 12px; color: #999; margin-top: 4px; }
-    .notif-actions { display: flex; gap: 4px; flex-shrink: 0; }
-    .pagination-wrapper { display: flex; justify-content: flex-end; margin-top: 16px; }
-    .text-blue-500 { color: #3b82f6; }
-    .text-green-500 { color: #22c55e; }
-    .text-orange-500 { color: #f97316; }
-    .text-red-500 { color: #ef4444; }
-    .text-purple-500 { color: #a855f7; }
-    :host ::ng-deep .ant-tag { font-size: 10px; padding: 0 4px; line-height: 18px; }
-    :host ::ng-deep .ant-list-item { padding: 0 !important; border-bottom: 1px solid #f5f5f5 !important; }
-  `]
+  templateUrl: './notification-list.component.html',
+  styleUrls: ['./notification-list.component.scss'],
 })
 export class NotificationListPage implements OnInit, OnDestroy {
   readonly notifService = inject(AppNotificationService);
