@@ -221,6 +221,7 @@
 
 .fm-list {
   width: 100%;
+  overflow-x: auto;
 }
 
 .fm-list-header {
@@ -235,6 +236,7 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
   user-select: none;
+  min-width: max-content;
 }
 
 .fm-list-col {
@@ -251,16 +253,29 @@
 }
 
 .fm-list-col--name {
-  flex: 1;
-  min-width: 0;
+  min-width: 200px;
+  width: 200px;
+  flex-shrink: 0;
   gap: 6px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: inherit;
 }
 .fm-list-col--size { width: 72px; flex-shrink: 0; }
-.fm-list-col--type { width: 72px; flex-shrink: 0; }
+.fm-list-col--type { width: 90px; flex-shrink: 0; }
 .fm-list-col--version { width: 56px; flex-shrink: 0; }
-.fm-list-col--modified { width: 100px; flex-shrink: 0; }
-.fm-list-col--user { width: 80px; flex-shrink: 0; }
-.fm-list-col--actions { width: 80px; flex-shrink: 0; justify-content: flex-end; }
+.fm-list-col--modified { width: 110px; flex-shrink: 0; }
+.fm-list-col--user { width: 90px; flex-shrink: 0; }
+.fm-list-col--actions {
+  width: 48px;
+  flex-shrink: 0;
+  justify-content: center;
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  background: inherit;
+}
 
 .fm-sort-icon {
   font-size: 10px;
@@ -277,6 +292,8 @@
   transition: all 0.12s;
   font-size: 12px;
   color: #3f3f46;
+  min-width: max-content;
+  background: #fff;
 }
 .fm-list-row:hover {
   background: #f9fafb;
