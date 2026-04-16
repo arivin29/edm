@@ -581,7 +581,7 @@ export class DocumentDetailPage implements OnInit {
 
   getAssignedUsers(): { id: string; name: string; stepName?: string }[] {
     const wf = this.workflow();
-    if (!wf) return [];
+    if (!wf?.steps) return [];
     const seen = new Set<string>();
     const users: { id: string; name: string; stepName?: string }[] = [];
     for (const step of wf.steps) {

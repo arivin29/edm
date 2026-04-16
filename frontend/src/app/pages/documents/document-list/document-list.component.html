@@ -113,7 +113,7 @@
       <tbody>
         @for (doc of docTable.data; track doc.id) {
           <tr>
-            <td [nzExpand]="expandSet.has(doc.id)" (nzExpandChange)="onExpandChange(doc, $event)"></td>
+            <td [nzExpand]="expandSet().has(doc.id)" (nzExpandChange)="onExpandChange(doc, $event)"></td>
             <td>
               <a [routerLink]="['/documents', doc.id]" class="text-blue-600 font-mono text-[11px] hover:underline">
                 {{ doc.document_number || '-' }}
@@ -181,15 +181,15 @@
           </tr>
 
           <!-- Expanded Row -->
-          <tr [nzExpand]="expandSet.has(doc.id)">
+          <tr [nzExpand]="expandSet().has(doc.id)">
             <td colspan="10" class="expand-row-content">
-              @if (expandLoading.has(doc.id)) {
+              @if (expandLoading().has(doc.id)) {
                 <div class="expand-loading">
                   <nz-spin nzSimple nzSize="small"></nz-spin>
                   <span>Memuat detail...</span>
                 </div>
               } @else {
-                @let detail = expandData.get(doc.id);
+                @let detail = expandData().get(doc.id);
                 @if (detail) {
                   <div class="expand-grid">
                     <!-- Info Dokumen -->
@@ -262,9 +262,9 @@
                         <span nz-icon nzType="branches" nzTheme="outline"></span>
                         Status Workflow
                       </div>
-                      @if (expandWorkflow.get(doc.id)?.length) {
+                      @if (expandWorkflow().get(doc.id)?.length) {
                         <div class="expand-workflow">
-                          @for (step of expandWorkflow.get(doc.id); track step.id) {
+                          @for (step of expandWorkflow().get(doc.id); track step.id) {
                             <div class="expand-step" [attr.data-status]="step.status">
                               <div class="expand-step__icon">
                                 @if (step.status === 'approved' || step.status === 'completed') {

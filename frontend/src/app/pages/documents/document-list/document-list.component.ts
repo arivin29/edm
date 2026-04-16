@@ -62,11 +62,11 @@ export class DocumentListPage implements OnInit {
   getPriorityLabel = getPriorityLabel;
   formatDate = formatDate;
 
-  // Expand row state
-  expandSet = new Set<string>();
-  expandData = new Map<string, DocumentDetail>();
-  expandWorkflow = new Map<string, WorkflowStep[]>();
-  expandLoading = new Set<string>();
+  // Expand row state (signals for proper change detection)
+  expandSet = signal<Set<string>>(new Set());
+  expandData = signal<Map<string, DocumentDetail>>(new Map());
+  expandWorkflow = signal<Map<string, WorkflowStep[]>>(new Map());
+  expandLoading = signal<Set<string>>(new Set());
 
   ngOnInit() {
     this.loadDocumentTypes();
@@ -185,32 +185,32 @@ export class DocumentListPage implements OnInit {
 
   onExpandChange(doc: DocumentItem, expanded: boolean) {
     if (expanded) {
-      this.expandSet.add(doc.id);
-      if (!this.expandData.has(doc.id)) {
+      this.expandSet.update(s => { const ns = new Set(s); ns.add(doc.id); return ns; });
+      if (!this.expandData().has(doc.id)) {
         this.loadExpandDetail(doc.id);
       }
     } else {
-      this.expandSet.delete(doc.id);
+      this.expandSet.update(s => { const ns = new Set(s); ns.delete(doc.id); return ns; });
     }
   }
 
   private loadExpandDetail(docId: string) {
-    this.expandLoading.add(docId);
+    this.expandLoading.update(s => { const ns = new Set(s); ns.add(docId); return ns; });
 
     this.http.get<any>(`${environment.apiUrl}/documents/${docId}`).subscribe({
       next: (res) => {
-        this.expandData.set(docId, res.data || res);
-        this.expandLoading.delete(docId);
+        this.expandData.update(m => { const nm = new Map(m); nm.set(docId, res.data || res); return nm; });
+        this.expandLoading.update(s => { const ns = new Set(s); ns.delete(docId); return ns; });
       },
-      error: () => this.expandLoading.delete(docId)
+      error: () => this.expandLoading.update(s => { const ns = new Set(s); ns.delete(docId); return ns; })
     });
 
     this.http.get<any>(`${environment.apiUrl}/documents/${docId}/workflow`).subscribe({
       next: (res) => {
         const steps = res.data?.steps || res.steps || res.data || [];
-        this.expandWorkflow.set(docId, steps);
+        this.expandWorkflow.update(m => { const nm = new Map(m); nm.set(docId, steps); return nm; });
       },
-      error: () => this.expandWorkflow.set(docId, [])
+      error: () => this.expandWorkflow.update(m => { const nm = new Map(m); nm.set(docId, []); return nm; })
     });
   }
 
