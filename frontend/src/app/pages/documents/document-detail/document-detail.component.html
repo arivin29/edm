@@ -78,22 +78,94 @@
             <div class="doc-tabs-panel">
               <nz-tabset nzSize="small" [(nzSelectedIndex)]="activeTab" (nzSelectedIndexChange)="onTabChange($event)">
 
-                <!-- Tab: Berkas -->
-                <nz-tab nzTitle="Berkas">
-                  <app-file-manager
-                    [config]="{ documentId: documentId, readonly: false, showUpload: true, showCreateFolder: true, showVersions: true }"
-                    [tree]="mockFileTree"
-                    (fileDownload)="onFmDownload($event)"
-                    (filePreview)="onFmPreview($event)"
-                    (fileDelete)="onFmDelete($event)"
-                    (folderCreate)="onFmCreateFolder($event)"
-                    (fileUpload)="onFmUpload($event)"
-                  ></app-file-manager>
-                </nz-tab>
-
-                <!-- Tab: Informasi -->
+                <!-- Tab: Informasi (First Tab) -->
                 <nz-tab nzTitle="Informasi">
                   <div class="doc-info-section">
+
+                    <!-- Approval Flow Horizontal -->
+                    <div class="approval-flow">
+                      <div class="approval-flow__header">
+                        <span nz-icon nzType="node-index" nzTheme="outline"></span>
+                        <span>Alur Persetujuan</span>
+                      </div>
+                      @if (workflowLoading()) {
+                        <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                      } @else if (workflow() && workflow()!.steps.length > 0) {
+                        <div class="approval-flow__steps">
+                          @for (step of workflow()!.steps; track step.id; let i = $index; let last = $last) {
+                            <div class="approval-flow__step" [attr.data-status]="step.status">
+                              <div class="approval-flow__node">
+                                <div class="approval-flow__circle">
+                                  @if (step.status === 'completed') {
+                                    <span nz-icon nzType="check" nzTheme="outline"></span>
+                                  } @else if (step.status === 'rejected') {
+                                    <span nz-icon nzType="close" nzTheme="outline"></span>
+                                  } @else if (step.status === 'in_progress') {
+                                    <span nz-icon nzType="loading" nzTheme="outline"></span>
+                                  } @else {
+                                    <span class="approval-flow__num">{{ i + 1 }}</span>
+                                  }
+                                </div>
+                                <div class="approval-flow__label">{{ step.name }}</div>
+                                <div class="approval-flow__actor">{{ step.actor?.name || '-' }}</div>
+                                @if (step.completed_at) {
+                                  <div class="approval-flow__date">{{ step.completed_at | date:'dd/MM/yy' }}</div>
+                                } @else if (step.status === 'in_progress') {
+                                  <div class="approval-flow__date approval-flow__date--active">Menunggu</div>
+                                }
+                              </div>
+                              @if (!last) {
+                                <div class="approval-flow__connector" [attr.data-status]="step.status"></div>
+                              }
+                            </div>
+                          }
+                        </div>
+                      } @else {
+                        <div class="text-gray-400 text-xs text-center py-3">Workflow belum dimulai</div>
+                      }
+                    </div>
+
+                    <!-- Stat Cards -->
+                    <div class="info-stat-cards">
+                      <div class="info-stat-card">
+                        <div class="info-stat-card__icon info-stat-card__icon--files">
+                          <span nz-icon nzType="file-text" nzTheme="outline"></span>
+                        </div>
+                        <div class="info-stat-card__body">
+                          <div class="info-stat-card__value">{{ countFiles(mockFileTree) }}</div>
+                          <div class="info-stat-card__label">Total Berkas</div>
+                        </div>
+                      </div>
+                      <div class="info-stat-card">
+                        <div class="info-stat-card__icon info-stat-card__icon--comments">
+                          <span nz-icon nzType="message" nzTheme="outline"></span>
+                        </div>
+                        <div class="info-stat-card__body">
+                          <div class="info-stat-card__value">{{ comments().length }}</div>
+                          <div class="info-stat-card__label">Komentar</div>
+                        </div>
+                      </div>
+                      <div class="info-stat-card">
+                        <div class="info-stat-card__icon info-stat-card__icon--dist">
+                          <span nz-icon nzType="send" nzTheme="outline"></span>
+                        </div>
+                        <div class="info-stat-card__body">
+                          <div class="info-stat-card__value">{{ distributions().length }}</div>
+                          <div class="info-stat-card__label">Distribusi</div>
+                        </div>
+                      </div>
+                      <div class="info-stat-card">
+                        <div class="info-stat-card__icon info-stat-card__icon--assign">
+                          <span nz-icon nzType="team" nzTheme="outline"></span>
+                        </div>
+                        <div class="info-stat-card__body">
+                          <div class="info-stat-card__value">{{ getAssignedUsers().length }}</div>
+                          <div class="info-stat-card__label">Assigned</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Detail Informasi Grid -->
                     <div class="doc-info-grid">
                       <div class="doc-info-item">
                         <span class="doc-info-label">Tipe Dokumen</span>
@@ -148,6 +220,27 @@
                       </div>
                     </div>
 
+                    <!-- Assigned Users -->
+                    @if (getAssignedUsers().length > 0) {
+                      <div class="assigned-users-section">
+                        <div class="assigned-users__header">
+                          <span nz-icon nzType="team" nzTheme="outline"></span>
+                          <span>Assigned Users</span>
+                        </div>
+                        <div class="assigned-users__list">
+                          @for (u of getAssignedUsers(); track u.id) {
+                            <div class="assigned-user-chip">
+                              <nz-avatar nzIcon="user" [nzSize]="22" [style.background-color]="'#0284c7'" style="font-size: 10px"></nz-avatar>
+                              <span class="assigned-user-chip__name">{{ u.name }}</span>
+                              @if (u.stepName) {
+                                <span class="assigned-user-chip__role">{{ u.stepName }}</span>
+                              }
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+
                     <!-- Timestamps -->
                     <div class="doc-info-timestamps">
                       <div class="doc-info-ts">
@@ -183,6 +276,19 @@
                       </div>
                     }
                   </div>
+                </nz-tab>
+
+                <!-- Tab: Berkas -->
+                <nz-tab nzTitle="Berkas">
+                  <app-file-manager
+                    [config]="{ documentId: documentId, readonly: false, showUpload: true, showCreateFolder: true, showVersions: true }"
+                    [tree]="mockFileTree"
+                    (fileDownload)="onFmDownload($event)"
+                    (filePreview)="onFmPreview($event)"
+                    (fileDelete)="onFmDelete($event)"
+                    (folderCreate)="onFmCreateFolder($event)"
+                    (fileUpload)="onFmUpload($event)"
+                  ></app-file-manager>
                 </nz-tab>
 
                 <!-- Tab: Parameter -->

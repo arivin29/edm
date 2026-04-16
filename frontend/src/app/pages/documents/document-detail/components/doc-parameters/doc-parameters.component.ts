@@ -186,14 +186,15 @@ export class DocParametersComponent implements OnChanges {
     if (tag.source_type === 'api' && !this.apiLabelCache.has(tag.tag_key)) {
       this.apiLabelCache.set(tag.tag_key, new Map());
       const cfg = tag.source_config;
-      if (cfg?.endpoint) {
-        const url = cfg.endpoint.startsWith('http')
-          ? cfg.endpoint
-          : `${environment.apiUrl}${cfg.endpoint}`;
+      const endpoint = cfg?.endpoint || cfg?.url;
+      if (endpoint) {
+        const url = endpoint.startsWith('http')
+          ? endpoint
+          : `${environment.apiUrl}${endpoint}`;
         this.http.get<any>(url).subscribe(res => {
           const items = res.data || res || [];
-          const labelField = cfg.label_field || 'name';
-          const valueField = cfg.value_field || 'id';
+          const labelField = cfg.label_field || cfg.labelField || 'name';
+          const valueField = cfg.value_field || cfg.valueField || 'id';
           const map = new Map<any, string>();
           for (const item of (Array.isArray(items) ? items : [])) {
             map.set(item[valueField], item[labelField]);

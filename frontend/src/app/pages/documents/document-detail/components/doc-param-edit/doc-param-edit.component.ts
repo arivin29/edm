@@ -104,17 +104,18 @@ export class DocParamEditComponent implements OnInit {
     for (const tag of apiTags) {
       this.apiLoading.set(tag.tag_key, true);
       const cfg = parseSourceConfig(tag.source_config);
-      if (!cfg.endpoint) continue;
+      const endpoint = cfg.endpoint || cfg.url;
+      if (!endpoint) continue;
 
-      const url = cfg.endpoint.startsWith('http')
-        ? cfg.endpoint
-        : `${environment.apiUrl}${cfg.endpoint}`;
+      const url = endpoint.startsWith('http')
+        ? endpoint
+        : `${environment.apiUrl}${endpoint}`;
 
       requests[tag.tag_key] = this.http.get<any>(url).pipe(
         map(res => {
           const items = res.data || res || [];
-          const labelField = cfg.label_field || 'name';
-          const valueField = cfg.value_field || 'id';
+          const labelField = cfg.label_field || cfg.labelField || 'name';
+          const valueField = cfg.value_field || cfg.valueField || 'id';
           return (Array.isArray(items) ? items : []).map((item: any) => ({
             label: item[labelField] || String(item),
             value: item[valueField] || item

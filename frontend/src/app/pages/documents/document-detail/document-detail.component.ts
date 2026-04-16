@@ -197,6 +197,7 @@ export class DocumentDetailPage implements OnInit {
       this.loadVersions(id);
       this.loadComments(id);
       this.loadWorkflow(id);
+      this.loadDistributions(id);
     }
   }
 
@@ -251,7 +252,7 @@ export class DocumentDetailPage implements OnInit {
     });
   }
 
-  private fullWidthTabs = new Set([0]);
+  private fullWidthTabs = new Set([1]);
 
   onTabChange(index: number) {
     if (this.fullWidthTabs.has(index)) {
@@ -259,7 +260,7 @@ export class DocumentDetailPage implements OnInit {
     } else {
       this.sidebarCollapsed.set(false);
     }
-    if (index === 5 && this.distributions().length === 0 && !this.distributionsLoading()) {
+    if (index === 6 && this.distributions().length === 0 && !this.distributionsLoading()) {
       this.loadDistributions(this.documentId);
     }
   }
@@ -567,5 +568,28 @@ export class DocumentDetailPage implements OnInit {
     if (doc) {
       this.document.set({ ...doc, metadata });
     }
+  }
+
+  countFiles(nodes: FileNode[]): number {
+    let count = 0;
+    for (const node of nodes) {
+      if (node.type === 'file') { count++; }
+      if (node.children) { count += this.countFiles(node.children); }
+    }
+    return count;
+  }
+
+  getAssignedUsers(): { id: string; name: string; stepName?: string }[] {
+    const wf = this.workflow();
+    if (!wf) return [];
+    const seen = new Set<string>();
+    const users: { id: string; name: string; stepName?: string }[] = [];
+    for (const step of wf.steps) {
+      if (step.actor && !seen.has(step.actor.id)) {
+        seen.add(step.actor.id);
+        users.push({ id: step.actor.id, name: step.actor.name, stepName: step.name });
+      }
+    }
+    return users;
   }
 }

@@ -48,7 +48,7 @@
       </thead>
       <tbody>
         @for (role of roleTable.data; track role.id) {
-          <tr [nzExpand]="expandSet.has(role.id)">
+          <tr>
             <td [nzExpand]="expandSet.has(role.id)" (nzExpandChange)="onExpandChange(role.id, $event)"></td>
             <td>
               <div class="role-name">

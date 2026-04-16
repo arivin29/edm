@@ -236,9 +236,9 @@
           @if (tagFormData.source_type === 'api' || tagFormData.source_type === 'computed') {
             <nz-form-item>
               <nz-form-label>Konfigurasi Sumber (JSON)</nz-form-label>
-              <nz-form-control>
+              <nz-form-control nzExtra="Contoh endpoint: /departments, /users, /categories, /offices">
                 <textarea nz-input [(ngModel)]="sourceConfigStr" name="source_config"
-                          placeholder='{"url": "/api/...", "labelField": "name", "valueField": "id"}'
+                          placeholder='{"endpoint": "/departments", "label_field": "name", "value_field": "id"}'
                           [nzAutosize]="{ minRows: 3, maxRows: 6 }"></textarea>
               </nz-form-control>
             </nz-form-item>
