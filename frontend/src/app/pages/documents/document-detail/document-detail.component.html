@@ -182,18 +182,23 @@
                         <p class="doc-info-desc__text">{{ document()!.description }}</p>
                       </div>
                     }
-
-                    <!-- Parameter Template -->
-                    @if (document()!.template?.id) {
-                      <div class="doc-info-params">
-                        <div class="doc-info-params__title">Parameter Template</div>
-                        <app-doc-parameters
-                          [templateId]="document()!.template!.id"
-                          [metadata]="document()!.metadata || {}"
-                        ></app-doc-parameters>
-                      </div>
-                    }
                   </div>
+                </nz-tab>
+
+                <!-- Tab: Parameter -->
+                <nz-tab nzTitle="Parameter">
+                  @if (document()!.template?.id) {
+                    <app-doc-parameters
+                      [templateId]="document()!.template!.id"
+                      [templateName]="document()!.template!.name"
+                      [metadata]="document()!.metadata || {}"
+                      [documentStatus]="document()!.status"
+                    ></app-doc-parameters>
+                  } @else {
+                    <div class="tab-empty-state">
+                      <nz-empty nzNotFoundContent="Dokumen belum memiliki template" [nzNotFoundImage]="'simple'"></nz-empty>
+                    </div>
+                  }
                 </nz-tab>
 
                 <!-- Tab: Komentar -->

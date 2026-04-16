@@ -6,6 +6,10 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzBadgeModule } from 'ng-zorro-antd/badge';
+import { NzProgressModule } from 'ng-zorro-antd/progress';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../../environments/environment';
 import { TemplateTag, TagGroup } from '../../../document.models';
@@ -15,7 +19,8 @@ import { TemplateTag, TagGroup } from '../../../document.models';
   standalone: true,
   imports: [
     CommonModule, NzSpinModule, NzEmptyModule, NzTagModule,
-    NzToolTipModule, NzIconModule, NzDividerModule
+    NzToolTipModule, NzIconModule, NzDividerModule, NzCardModule,
+    NzBadgeModule, NzProgressModule, NzAlertModule
   ],
   templateUrl: './doc-parameters.component.html',
   styleUrls: ['./doc-parameters.component.scss']
@@ -24,18 +29,24 @@ export class DocParametersComponent implements OnChanges {
   private http = inject(HttpClient);
 
   @Input() templateId: string | null = null;
+  @Input() templateName: string = '';
   @Input() metadata: Record<string, any> = {};
+  @Input() documentStatus: string = '';
 
   loading = signal(false);
   tags = signal<TemplateTag[]>([]);
 
+  /** Visible (non-hidden, non-skipped) tags */
+  visibleTags = computed(() =>
+    this.tags().filter(t => !t.is_hidden && !this.isSkippedType(t.data_type))
+  );
+
   tagGroups = computed<TagGroup[]>(() => {
-    const allTags = this.tags();
+    const allTags = this.visibleTags();
     if (!allTags.length) return [];
 
     const groupMap = new Map<string, TagGroup>();
     for (const tag of allTags) {
-      if (tag.is_hidden) continue;
       const gName = tag.group_name || 'Umum';
       if (!groupMap.has(gName)) {
         groupMap.set(gName, { name: gName, order: tag.group_order, tags: [] });
@@ -50,6 +61,35 @@ export class DocParametersComponent implements OnChanges {
     }
     return groups;
   });
+
+  /** Stats: filled vs total */
+  filledCount = computed(() => {
+    const visible = this.visibleTags();
+    return visible.filter(t => {
+      const val = this.metadata?.[t.tag_key];
+      return val != null && val !== '';
+    }).length;
+  });
+
+  totalCount = computed(() => this.visibleTags().length);
+
+  requiredCount = computed(() => this.visibleTags().filter(t => t.is_required).length);
+
+  requiredFilledCount = computed(() => {
+    return this.visibleTags().filter(t => {
+      if (!t.is_required) return false;
+      const val = this.metadata?.[t.tag_key];
+      return val != null && val !== '';
+    }).length;
+  });
+
+  fillPercent = computed(() => {
+    const total = this.totalCount();
+    if (total === 0) return 100;
+    return Math.round((this.filledCount() / total) * 100);
+  });
+
+  allRequiredFilled = computed(() => this.requiredFilledCount() === this.requiredCount());
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['templateId'] && this.templateId) {
@@ -89,7 +129,22 @@ export class DocParametersComponent implements OnChanges {
     return String(val);
   }
 
+  isFilled(tag: TemplateTag): boolean {
+    const val = this.metadata?.[tag.tag_key];
+    return val != null && val !== '';
+  }
+
   isSkippedType(dataType: string): boolean {
     return ['file', 'signature', 'table'].includes(dataType);
   }
+
+  getDataTypeIcon(dataType: string): string {
+    const icons: Record<string, string> = {
+      text: 'font-size', textarea: 'align-left', number: 'number',
+      date: 'calendar', checkbox: 'check-square', select: 'unordered-list',
+      email: 'mail', url: 'link', phone: 'phone'
+    };
+    return icons[dataType] || 'form';
+  }
 }
+

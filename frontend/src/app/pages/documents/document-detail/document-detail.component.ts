@@ -254,7 +254,7 @@ export class DocumentDetailPage implements OnInit {
     } else {
       this.sidebarCollapsed.set(false);
     }
-    if (index === 4 && this.distributions().length === 0 && !this.distributionsLoading()) {
+    if (index === 5 && this.distributions().length === 0 && !this.distributionsLoading()) {
       this.loadDistributions(this.documentId);
     }
   }

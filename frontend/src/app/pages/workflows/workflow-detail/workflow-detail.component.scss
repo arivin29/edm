@@ -222,12 +222,6 @@
   display: flex;
   gap: 0;
   flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.step-item:hover .step-item__actions {
-  opacity: 1;
 }
 
 .step-item__meta {
@@ -254,6 +248,43 @@
   display: flex;
   gap: 4px;
   margin-top: 6px;
+}
+
+.step-item__config {
+  margin-top: 8px;
+  background: #fafbfc;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.step-config-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.step-config-label {
+  font-size: 11px;
+  color: #8c8c8c;
+  flex-shrink: 0;
+  min-width: 100px;
+}
+
+.step-config-value {
+  font-size: 11px;
+  color: #262626;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 // ── Overrides ──

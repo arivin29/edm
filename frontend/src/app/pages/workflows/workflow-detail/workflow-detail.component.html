@@ -146,28 +146,43 @@
                         </button>
                       </div>
                     </div>
-                    <div class="step-item__meta">
-                      <span>{{ getAssigneeTypeLabel(step.assignee_type) }}</span>
-                      @if (step.deadline_days) {
-                        <span class="step-sep">·</span>
-                        <span>Batas {{ step.deadline_days }} hari</span>
-                      }
-                      @if (step.is_parallel) {
-                        <span class="step-sep">·</span>
-                        <nz-tag nzColor="purple" class="!m-0">Paralel</nz-tag>
-                      }
-                      @if (step.required_approvals > 1) {
-                        <span class="step-sep">·</span>
-                        <span>Min. {{ step.required_approvals }} persetujuan</span>
-                      }
-                    </div>
-                    @if (step.instructions) {
-                      <div class="step-item__instructions">{{ step.instructions }}</div>
-                    }
-                    <div class="step-item__badges">
-                      @if (step.can_edit) { <nz-tag class="!m-0">Edit</nz-tag> }
-                      @if (step.can_comment) { <nz-tag class="!m-0">Komentar</nz-tag> }
-                      @if (step.can_delegate) { <nz-tag class="!m-0">Delegasi</nz-tag> }
+                    <div class="step-item__config">
+                      <div class="step-config-row">
+                        <span class="step-config-label">Penerima</span>
+                        <span class="step-config-value">{{ getAssigneeTypeLabel(step.assignee_type) }}</span>
+                      </div>
+                      <div class="step-config-row">
+                        <span class="step-config-label">Min. Persetujuan</span>
+                        <span class="step-config-value">{{ step.required_approvals || 1 }}</span>
+                      </div>
+                      <div class="step-config-row">
+                        <span class="step-config-label">Batas Hari</span>
+                        <span class="step-config-value">{{ step.deadline_days || '-' }}</span>
+                      </div>
+                      <div class="step-config-row">
+                        <span class="step-config-label">Aksi Ditolak</span>
+                        <span class="step-config-value">{{ getRejectActionLabel(step.on_reject_action) }}</span>
+                      </div>
+                      <div class="step-config-row">
+                        <span class="step-config-label">Paralel</span>
+                        <span class="step-config-value">
+                          <nz-tag [nzColor]="step.is_parallel ? 'purple' : 'default'" class="!m-0">
+                            {{ step.is_parallel ? 'Ya' : 'Tidak' }}
+                          </nz-tag>
+                        </span>
+                      </div>
+                      <div class="step-config-row">
+                        <span class="step-config-label">Hak Akses</span>
+                        <span class="step-config-value">
+                          <nz-tag [nzColor]="step.can_edit ? 'blue' : 'default'" class="!m-0">Edit: {{ step.can_edit ? 'Ya' : 'Tidak' }}</nz-tag>
+                          <nz-tag [nzColor]="step.can_comment ? 'blue' : 'default'" class="!m-0">Komentar: {{ step.can_comment ? 'Ya' : 'Tidak' }}</nz-tag>
+                          <nz-tag [nzColor]="step.can_delegate ? 'blue' : 'default'" class="!m-0">Delegasi: {{ step.can_delegate ? 'Ya' : 'Tidak' }}</nz-tag>
+                        </span>
+                      </div>
+                      <div class="step-config-row">
+                        <span class="step-config-label">Instruksi</span>
+                        <span class="step-config-value">{{ step.instructions || '-' }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

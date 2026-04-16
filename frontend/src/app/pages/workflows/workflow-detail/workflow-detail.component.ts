@@ -237,4 +237,13 @@ export class WorkflowDetailComponent implements OnInit {
     const map: Record<string, string> = { user: 'Pengguna', role: 'Role', position: 'Jabatan', department: 'Departemen' };
     return map[type] || type;
   }
+
+  getRejectActionLabel(action: string): string {
+    const map: Record<string, string> = {
+      to_creator: 'Kembali ke pembuat',
+      to_previous: 'Ke langkah sebelumnya',
+      to_step: 'Ke langkah tertentu'
+    };
+    return map[action] || action || '-';
+  }
 }
