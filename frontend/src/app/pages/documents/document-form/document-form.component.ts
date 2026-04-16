@@ -21,6 +21,9 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzProgressModule } from 'ng-zorro-antd/progress';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, of, Subject, Subscription } from 'rxjs';
 import { debounceTime, map, catchError } from 'rxjs/operators';
@@ -45,7 +48,8 @@ function parseSourceConfig(cfg: any): any {
     NzCardModule, NzButtonModule, NzIconModule, NzFormModule,
     NzInputModule, NzInputNumberModule, NzSelectModule, NzDatePickerModule,
     NzCheckboxModule, NzRadioModule, NzSpinModule, NzToolTipModule, NzGridModule,
-    NzStepsModule, NzDescriptionsModule, NzDividerModule, NzAlertModule, NzModalModule
+    NzStepsModule, NzDescriptionsModule, NzDividerModule, NzAlertModule, NzModalModule,
+    NzTagModule, NzProgressModule, NzEmptyModule
   ],
   templateUrl: './document-form.component.html',
   styleUrls: ['./document-form.component.scss']
@@ -490,6 +494,29 @@ export class DocumentFormPage implements OnInit, OnDestroy {
 
   isSkippedDataType(dataType: string): boolean {
     return ['file', 'signature', 'table'].includes(dataType);
+  }
+
+  getDataTypeIcon(dataType: string): string {
+    const icons: Record<string, string> = {
+      text: 'font-size', textarea: 'align-left', number: 'number',
+      date: 'calendar', checkbox: 'check-square', select: 'unordered-list',
+      email: 'mail', url: 'link', phone: 'phone', auto: 'thunderbolt',
+      radio: 'check-circle'
+    };
+    return icons[dataType] || 'form';
+  }
+
+  getColSpan(tag: TemplateTag): string {
+    if (tag.col_span >= 2 || tag.data_type === 'textarea') return 'col-full';
+    return '';
+  }
+
+  getGroupFilledCount(tags: TemplateTag[]): number {
+    return tags.filter(t => {
+      const ctrl = this.metadataForm.get(t.tag_key);
+      const val = ctrl?.value;
+      return val != null && val !== '';
+    }).length;
   }
 
   getMetadataDisplayValue(tag: TemplateTag): string {

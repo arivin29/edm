@@ -11,10 +11,102 @@
     .loading-wrap { text-align: center; padding: 48px 0; }
     .loading-text { font-size: 12px; color: #999; margin-top: 8px; }
     .org-alert { margin-bottom: 12px; }
-    .group-title { font-size: 12px; font-weight: 600; color: #666; margin: 4px 0 8px; }
-    .tag-info-icon { margin-left: 4px; color: #aaa; cursor: help; font-size: 11px; }
-    .placeholder-text { font-size: 12px; color: #aaa; font-style: italic; }
 
+    /* ===== Metadata Step — matches doc-param-edit layout ===== */
+    .meta-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 48px 16px;
+      color: #999;
+      font-size: 12px;
+    }
+
+    .meta-group-card { margin-bottom: 10px; }
+
+    .meta-group-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .meta-group-header__icon { font-size: 13px; color: #1890ff; }
+    .meta-group-header__count { font-size: 10px; margin-left: 4px; }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 16px;
+    }
+
+    .meta-field {
+      &.col-full { grid-column: 1 / -1; }
+    }
+
+    .meta-field__header {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .meta-field__type-icon { font-size: 11px; color: #94a3b8; margin-right: 2px; }
+
+    .meta-field__label {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .meta-field__required {
+      color: #ef4444;
+      font-weight: 700;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .meta-field__readonly-tag { font-size: 9px; margin-left: 4px; }
+
+    .meta-field__help {
+      font-size: 11px;
+      color: #cbd5e1;
+      cursor: help;
+      margin-left: 2px;
+    }
+
+    .meta-field__readonly { padding: 6px 0; }
+
+    .meta-field__readonly-value {
+      font-size: 13px;
+      color: #64748b;
+      background: #f8fafc;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px dashed #e2e8f0;
+    }
+
+    .meta-field__suffix { color: #94a3b8; font-size: 11px; margin-left: 4px; }
+
+    .meta-field__desc {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .meta-placeholder { font-size: 12px; color: #aaa; font-style: italic; }
+
+    .meta-auto-field {
+      background: #f8fafc !important;
+      color: #94a3b8 !important;
+      cursor: not-allowed;
+    }
+
+    /* ===== Review Step ===== */
     .review-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .review-section-title { font-size: 13px; font-weight: 600; color: #333; }
     .review-edit-link { font-size: 12px; color: #1890ff; cursor: pointer; }
@@ -24,11 +116,23 @@
     .review-label { width: 140px; flex-shrink: 0; color: #888; }
     .review-value { color: #333; word-break: break-word; }
 
+    /* ===== ng-zorro overrides ===== */
     :host ::ng-deep .ant-card-head { padding: 0 12px; min-height: 36px; }
     :host ::ng-deep .ant-card-head-title { padding: 8px 0; font-size: 13px; }
     :host ::ng-deep .ant-card-body { padding: 12px; }
-    :host ::ng-deep .ant-form-item { margin-bottom: 12px; }
-    :host ::ng-deep .ant-form-item-label { padding: 0 0 4px; }
+    :host ::ng-deep .ant-form-item { margin-bottom: 10px; }
+    :host ::ng-deep .ant-form-item-label { padding: 0 0 2px; }
     :host ::ng-deep .ant-form-item-label > label { font-size: 12px; height: auto; }
     :host ::ng-deep .ant-steps-item-title { font-size: 12px !important; }
     :host ::ng-deep .ant-divider { margin: 12px 0; }
+    :host ::ng-deep .ant-input, :host ::ng-deep .ant-select-selector { font-size: 12px !important; }
+    :host ::ng-deep .ant-input-number { font-size: 12px; }
+    :host ::ng-deep .ant-select { font-size: 12px; }
+    :host ::ng-deep .ant-picker { width: 100%; }
+    :host ::ng-deep .ant-tag { font-size: 11px; line-height: 20px; padding: 0 6px; }
+    :host ::ng-deep .ant-empty { padding: 24px 0; }
+    :host ::ng-deep .ant-empty-description { font-size: 12px; }
+
+    @media (max-width: 640px) {
+      .meta-grid { grid-template-columns: 1fr; }
+    }
