@@ -69,7 +69,9 @@
           <tr>
             <td><code class="text-xs">{{ tpl.code || '-' }}</code></td>
             <td>
-              <div class="font-medium text-gray-800">{{ tpl.name }}</div>
+              <a class="tpl-name-link" (click)="openDetail(tpl)">
+                <div class="font-medium">{{ tpl.name }}</div>
+              </a>
               @if (tpl.category?.name || tpl.category_name) {
                 <div class="text-xs text-gray-400">{{ tpl.category?.name || tpl.category_name }}</div>
               }
@@ -108,11 +110,11 @@
               </a>
               <nz-dropdown-menu #actionMenu="nzDropdownMenu">
                 <ul nz-menu nzSelectable>
+                  <li nz-menu-item (click)="openDetail(tpl)">
+                    <span nz-icon nzType="eye"></span> Detail
+                  </li>
                   <li nz-menu-item (click)="openForm(tpl)">
                     <span nz-icon nzType="edit"></span> Edit
-                  </li>
-                  <li nz-menu-item (click)="openDetail(tpl)">
-                    <span nz-icon nzType="setting"></span> Kelola Parameter
                   </li>
                   <li nz-menu-item (click)="download(tpl)">
                     <span nz-icon nzType="download"></span> Download
@@ -145,11 +147,4 @@
     (closed)="onFormClosed()"
     (saved)="onFormSaved()">
   </app-template-form>
-
-  <!-- Detail Drawer (Tag Management) -->
-  <app-template-detail
-    [visible]="detailVisible"
-    [template]="detailTemplate"
-    (closed)="onDetailClosed()">
-  </app-template-detail>
 </div>

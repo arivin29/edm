@@ -101,9 +101,20 @@ export const routes: Routes = [
           },
           {
             path: 'templates',
-            loadComponent: () =>
-              import('./pages/templates/template-list/template-list.component').then(m => m.TemplateListComponent),
-            title: 'Template - DMS'
+            children: [
+              {
+                path: '',
+                loadComponent: () =>
+                  import('./pages/templates/template-list/template-list.component').then(m => m.TemplateListComponent),
+                title: 'Template - DMS'
+              },
+              {
+                path: ':id',
+                loadComponent: () =>
+                  import('./pages/templates/template-detail/template-detail.component').then(m => m.TemplateDetailComponent),
+                title: 'Detail Template - DMS'
+              }
+            ]
           },
           {
             path: '',

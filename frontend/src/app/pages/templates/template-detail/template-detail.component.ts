@@ -1,11 +1,13 @@
-import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NzDrawerModule } from 'ng-zorro-antd/drawer';
-import { NzTableModule } from 'ng-zorro-antd/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
@@ -13,39 +15,72 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzSliderModule } from 'ng-zorro-antd/slider';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
-import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Template, TemplateTag } from '../template.models';
+import { TemplateFormComponent } from '../template-form/template-form.component';
+
+interface TagGroup {
+  name: string;
+  tags: TemplateTag[];
+}
 
 @Component({
   selector: 'app-template-detail',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
-    NzDrawerModule, NzTableModule, NzButtonModule, NzIconModule,
-    NzTagModule, NzFormModule, NzInputModule, NzInputNumberModule,
-    NzSelectModule, NzCheckboxModule, NzSliderModule, NzDividerModule,
-    NzToolTipModule, NzModalModule
+    CommonModule, FormsModule, RouterLink,
+    NzButtonModule, NzIconModule, NzTagModule, NzSpinModule,
+    NzToolTipModule, NzDrawerModule, NzFormModule, NzInputModule,
+    NzInputNumberModule, NzSelectModule, NzCheckboxModule,
+    NzSliderModule, NzDividerModule, NzModalModule, NzEmptyModule,
+    TemplateFormComponent
   ],
   templateUrl: './template-detail.component.html',
   styleUrl: './template-detail.component.scss'
 })
-export class TemplateDetailComponent {
+export class TemplateDetailComponent implements OnInit {
   private http = inject(HttpClient);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private message = inject(NzMessageService);
   private modal = inject(NzModalService);
 
-  @Input() visible = false;
-  @Input() template: Template | null = null;
-  @Output() closed = new EventEmitter<void>();
-
+  template = signal<Template | null>(null);
+  loading = signal(false);
   tags = signal<TemplateTag[]>([]);
   tagsLoading = signal(false);
 
-  // Tag form
+  // Dropdown data for form
+  documentTypes = signal<{ id: string; name: string }[]>([]);
+  categories = signal<{ id: string; name: string }[]>([]);
+  companies = signal<{ id: string; name: string }[]>([]);
+
+  // Tags grouped by group_name
+  tagGroups = computed<TagGroup[]>(() => {
+    const allTags = this.tags();
+    const groups = new Map<string, TemplateTag[]>();
+    for (const tag of allTags) {
+      const key = tag.group_name || '';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(tag);
+    }
+    // Sort groups by min group_order, then sort tags within each group by field_order
+    return Array.from(groups.entries())
+      .sort(([, a], [, b]) => (a[0]?.group_order ?? 0) - (b[0]?.group_order ?? 0))
+      .map(([name, tags]) => ({
+        name: name || 'Tanpa Grup',
+        tags: tags.sort((a, b) => a.field_order - b.field_order)
+      }));
+  });
+
+  // Edit form drawer
+  formVisible = false;
+
+  // Tag form drawer
   tagFormVisible = false;
   tagFormData: any = {};
   editTagId: string | null = null;
@@ -55,23 +90,37 @@ export class TemplateDetailComponent {
   dataTypeOptions = ['text', 'number', 'date', 'select', 'textarea', 'checkbox', 'radio', 'file', 'signature', 'table'];
   sourceTypeOptions = ['static', 'api', 'computed'];
 
-  ngOnChanges() {
-    if (this.visible && this.template) {
-      this.loadTags();
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.loadTemplate(id);
+      this.loadTags(id);
+      this.loadDropdowns();
     }
   }
 
-  close() {
-    this.tags.set([]);
-    this.closed.emit();
+  // ── Data Loading ──
+
+  loadTemplate(id: string) {
+    this.loading.set(true);
+    this.http.get<any>(`${environment.apiUrl}/templates/${id}`).subscribe({
+      next: (res) => {
+        this.template.set(res.data || null);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.message.error('Template tidak ditemukan');
+        this.loading.set(false);
+        this.router.navigate(['/master/templates']);
+      }
+    });
   }
 
-  // ── Tag List ──
-
-  loadTags() {
-    if (!this.template) return;
+  loadTags(id?: string) {
+    const templateId = id || this.template()?.id;
+    if (!templateId) return;
     this.tagsLoading.set(true);
-    this.http.get<any>(`${environment.apiUrl}/templates/${this.template.id}/tags`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/templates/${templateId}/tags`).subscribe({
       next: (res) => {
         this.tags.set(res.data || []);
         this.tagsLoading.set(false);
@@ -83,15 +132,51 @@ export class TemplateDetailComponent {
     });
   }
 
+  loadDropdowns() {
+    this.http.get<any>(`${environment.apiUrl}/document-types`).subscribe({
+      next: (res) => this.documentTypes.set(res.data || [])
+    });
+    this.http.get<any>(`${environment.apiUrl}/categories`).subscribe({
+      next: (res) => this.categories.set(res.data || [])
+    });
+    this.http.get<any>(`${environment.apiUrl}/companies`).subscribe({
+      next: (res) => this.companies.set(res.data || [])
+    });
+  }
+
+  // ── Actions ──
+
+  download() {
+    const tpl = this.template();
+    if (tpl) window.open(`${environment.apiUrl}/templates/${tpl.id}/download`, '_blank');
+  }
+
+  openEditForm() {
+    this.formVisible = true;
+  }
+
+  onFormClosed() {
+    this.formVisible = false;
+  }
+
+  onFormSaved() {
+    this.formVisible = false;
+    const id = this.template()?.id;
+    if (id) this.loadTemplate(id);
+  }
+
+  // ── Tag CRUD ──
+
   deleteTag(tag: TemplateTag) {
-    if (!this.template) return;
+    const tpl = this.template();
+    if (!tpl) return;
     this.modal.confirm({
       nzTitle: 'Hapus Parameter?',
       nzContent: `Yakin ingin menghapus parameter "${tag.label}" (${tag.tag_key})?`,
       nzOkText: 'Hapus',
       nzOkDanger: true,
       nzOnOk: () => {
-        this.http.delete(`${environment.apiUrl}/templates/${this.template!.id}/tags/${tag.id}`).subscribe({
+        this.http.delete(`${environment.apiUrl}/templates/${tpl.id}/tags/${tag.id}`).subscribe({
           next: () => {
             this.message.success('Parameter berhasil dihapus');
             this.loadTags();
@@ -101,8 +186,6 @@ export class TemplateDetailComponent {
       }
     });
   }
-
-  // ── Tag Form ──
 
   openTagForm(tag?: TemplateTag) {
     this.editTagId = tag?.id || null;
@@ -134,7 +217,7 @@ export class TemplateDetailComponent {
 
   onTagKeyChange() {
     if (this.tagFormData.tag_key) {
-      this.tagFormData.tag_placeholder = `{{${this.tagFormData.tag_key}}}`;
+      this.tagFormData.tag_placeholder = `\${${this.tagFormData.tag_key}}`;
     } else {
       this.tagFormData.tag_placeholder = '';
     }
@@ -149,7 +232,8 @@ export class TemplateDetailComponent {
       this.message.warning('Label wajib diisi');
       return;
     }
-    if (!this.template) return;
+    const tpl = this.template();
+    if (!tpl) return;
 
     if (this.sourceConfigStr) {
       try {
@@ -170,8 +254,8 @@ export class TemplateDetailComponent {
     delete payload.updated_at;
 
     const req = this.editTagId
-      ? this.http.put(`${environment.apiUrl}/templates/${this.template.id}/tags/${this.editTagId}`, payload)
-      : this.http.post(`${environment.apiUrl}/templates/${this.template.id}/tags`, payload);
+      ? this.http.put(`${environment.apiUrl}/templates/${tpl.id}/tags/${this.editTagId}`, payload)
+      : this.http.post(`${environment.apiUrl}/templates/${tpl.id}/tags`, payload);
 
     req.subscribe({
       next: () => {
@@ -185,5 +269,41 @@ export class TemplateDetailComponent {
         this.tagSaving.set(false);
       }
     });
+  }
+
+  // ── Helpers ──
+
+  formatFileSize(bytes: number | undefined): string {
+    if (!bytes) return '-';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '-';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return `${dd}/${mm}/${d.getFullYear()}`;
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'active': return 'green';
+      case 'draft': return 'orange';
+      case 'archived': return 'default';
+      default: return 'default';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'active': return 'Aktif';
+      case 'draft': return 'Draft';
+      case 'archived': return 'Arsip';
+      default: return status || '-';
+    }
   }
 }

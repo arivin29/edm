@@ -155,16 +155,30 @@ interface Attachment {
                   {{ document()!.document_number || 'Belum ada nomor' }}
                 </span>
                 <span class="doc-header__sep">·</span>
-                <span class="doc-header__meta">{{ document()!.document_type?.code || '' }}</span>
+                <span class="doc-header__meta">{{ document()!.document_type?.name || '' }}</span>
                 <span class="doc-header__sep">·</span>
                 <span class="doc-header__meta">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
+                <span class="doc-header__sep">·</span>
+                <span class="doc-header__meta">
+                  <span nz-icon nzType="user" nzTheme="outline" style="font-size: 10px; margin-right: 2px;"></span>
+                  {{ document()!.creator?.name || '-' }}
+                </span>
+                <span class="doc-header__sep">·</span>
+                <span class="doc-header__meta">{{ document()!.department?.name || '-' }}</span>
               </div>
             </div>
           </div>
           <div class="doc-header__actions">
-            <button nz-button nzSize="small" (click)="downloadDocument()" nz-tooltip nzTooltipTitle="Download dokumen">
-              <span nz-icon nzType="download"></span> Download
+            <button nz-button nzSize="small" (click)="downloadDocument()" nz-tooltip nzTooltipTitle="Download">
+              <span nz-icon nzType="download"></span>
             </button>
+            <button nz-button nzSize="small" nz-tooltip nzTooltipTitle="Print">
+              <span nz-icon nzType="printer"></span>
+            </button>
+            <button nz-button nzSize="small" nz-tooltip nzTooltipTitle="Share">
+              <span nz-icon nzType="share-alt"></span>
+            </button>
+            <span class="doc-header__divider"></span>
             <button nz-button nzSize="small" [routerLink]="['/documents', document()!.id, 'edit']">
               <span nz-icon nzType="edit"></span> Edit
             </button>
@@ -184,81 +198,14 @@ interface Attachment {
           </div>
         </div>
 
-        <!-- Content Grid -->
-        <div class="doc-content">
-          <!-- Main Column -->
+        <!-- Content Body: Tabs + Collapsible Sidebar -->
+        <div class="doc-body" [class.doc-body--collapsed]="sidebarCollapsed()">
+          <!-- Main Area -->
           <div class="doc-main">
-            <!-- Info Panel -->
-            <div class="doc-info-panel">
-              <div class="doc-info-panel__header">
-                <span nz-icon nzType="file-text" nzTheme="outline"></span>
-                <span>Informasi Dokumen</span>
-              </div>
-              <div class="doc-info-grid">
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Tipe</span>
-                  <span class="doc-info-value">{{ document()!.document_type?.name || '-' }}</span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Kategori</span>
-                  <span class="doc-info-value">{{ document()!.category?.name || '-' }}</span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Pembuat</span>
-                  <span class="doc-info-value">
-                    <span nz-icon nzType="user" nzTheme="outline" class="doc-info-icon"></span>
-                    {{ document()!.creator?.name || '-' }}
-                  </span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Versi</span>
-                  <span class="doc-info-value doc-info-value--mono">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Department</span>
-                  <span class="doc-info-value">{{ document()!.department?.name || '-' }}</span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Section</span>
-                  <span class="doc-info-value">{{ document()!.section?.name || '-' }}</span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Perusahaan</span>
-                  <span class="doc-info-value">{{ document()!.company?.name || '-' }}</span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Kantor</span>
-                  <span class="doc-info-value">{{ document()!.office?.name || '-' }}</span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Template</span>
-                  <span class="doc-info-value">{{ document()!.template?.name || '-' }}</span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Revisi</span>
-                  <span class="doc-info-value">{{ document()!.revision_count }}</span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Dibuat</span>
-                  <span class="doc-info-value">{{ document()!.created_at | date:'dd MMM yyyy HH:mm' }}</span>
-                </div>
-                <div class="doc-info-item">
-                  <span class="doc-info-label">Diperbarui</span>
-                  <span class="doc-info-value">{{ document()!.updated_at | date:'dd MMM yyyy HH:mm' }}</span>
-                </div>
-              </div>
-              @if (document()!.description) {
-                <div class="doc-info-desc">
-                  <span class="doc-info-label">Deskripsi</span>
-                  <p class="doc-info-desc__text">{{ document()!.description }}</p>
-                </div>
-              }
-            </div>
-
-            <!-- Tabs Panel -->
             <div class="doc-tabs-panel">
               <nz-tabset nzSize="small" [(nzSelectedIndex)]="activeTab" (nzSelectedIndexChange)="onTabChange($event)">
-                <!-- Berkas (File Manager) Tab -->
+
+                <!-- Tab: Berkas -->
                 <nz-tab nzTitle="Berkas">
                   <app-file-manager
                     [config]="{ documentId: documentId, readonly: false, showUpload: true, showCreateFolder: true, showVersions: true }"
@@ -271,7 +218,101 @@ interface Attachment {
                   ></app-file-manager>
                 </nz-tab>
 
-                <!-- Comments Tab -->
+                <!-- Tab: Informasi -->
+                <nz-tab nzTitle="Informasi">
+                  <div class="doc-info-section">
+                    <div class="doc-info-grid">
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Tipe Dokumen</span>
+                        <span class="doc-info-value">{{ document()!.document_type?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Kategori</span>
+                        <span class="doc-info-value">{{ document()!.category?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Kode Tipe</span>
+                        <span class="doc-info-value doc-info-value--mono">{{ document()!.document_type?.code || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Pembuat</span>
+                        <span class="doc-info-value">
+                          <span nz-icon nzType="user" nzTheme="outline" class="doc-info-icon"></span>
+                          {{ document()!.creator?.name || '-' }}
+                        </span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Versi</span>
+                        <span class="doc-info-value doc-info-value--mono">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Jumlah Revisi</span>
+                        <span class="doc-info-value">{{ document()!.revision_count }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Department</span>
+                        <span class="doc-info-value">{{ document()!.department?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Section</span>
+                        <span class="doc-info-value">{{ document()!.section?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Perusahaan</span>
+                        <span class="doc-info-value">{{ document()!.company?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Kantor</span>
+                        <span class="doc-info-value">{{ document()!.office?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Template</span>
+                        <span class="doc-info-value">{{ document()!.template?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Nomor Dokumen</span>
+                        <span class="doc-info-value doc-info-value--mono">{{ document()!.document_number || 'Belum ada' }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Timestamps -->
+                    <div class="doc-info-timestamps">
+                      <div class="doc-info-ts">
+                        <span nz-icon nzType="calendar" nzTheme="outline"></span>
+                        <span class="doc-info-label">Dibuat</span>
+                        <span class="doc-info-value">{{ document()!.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                      </div>
+                      <div class="doc-info-ts">
+                        <span nz-icon nzType="edit" nzTheme="outline"></span>
+                        <span class="doc-info-label">Diperbarui</span>
+                        <span class="doc-info-value">{{ document()!.updated_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                      </div>
+                      @if (document()!.submitted_at) {
+                        <div class="doc-info-ts">
+                          <span nz-icon nzType="send" nzTheme="outline"></span>
+                          <span class="doc-info-label">Disubmit</span>
+                          <span class="doc-info-value">{{ document()!.submitted_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                        </div>
+                      }
+                      @if (document()!.approved_at) {
+                        <div class="doc-info-ts">
+                          <span nz-icon nzType="check-circle" nzTheme="outline"></span>
+                          <span class="doc-info-label">Disetujui</span>
+                          <span class="doc-info-value">{{ document()!.approved_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                        </div>
+                      }
+                    </div>
+
+                    @if (document()!.description) {
+                      <div class="doc-info-desc">
+                        <span class="doc-info-label">Deskripsi</span>
+                        <p class="doc-info-desc__text">{{ document()!.description }}</p>
+                      </div>
+                    }
+                  </div>
+                </nz-tab>
+
+                <!-- Tab: Komentar -->
                 <nz-tab nzTitle="Komentar">
                   @if (commentsLoading()) {
                     <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
@@ -308,7 +349,6 @@ interface Attachment {
                             </div>
                             <p class="doc-comment__content">{{ c.content }}</p>
 
-                            <!-- Replies -->
                             @if (c.replies && c.replies.length > 0) {
                               <div class="doc-comment__replies">
                                 @for (r of c.replies; track r.id) {
@@ -340,7 +380,6 @@ interface Attachment {
                         <nz-empty nzNotFoundContent="Belum ada komentar"></nz-empty>
                       }
 
-                      <!-- Add comment -->
                       <div class="doc-comment-composer">
                         <nz-avatar nzIcon="user" [nzSize]="28" style="background-color: #0284c7; font-size: 12px"></nz-avatar>
                         <div class="doc-comment-composer__input">
@@ -356,7 +395,7 @@ interface Attachment {
                   }
                 </nz-tab>
 
-                <!-- Workflow Tab -->
+                <!-- Tab: Workflow -->
                 <nz-tab nzTitle="Workflow">
                   @if (workflowLoading()) {
                     <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
@@ -408,7 +447,7 @@ interface Attachment {
                   }
                 </nz-tab>
 
-                <!-- Distribution Tab -->
+                <!-- Tab: Distribusi -->
                 <nz-tab nzTitle="Distribusi">
                   @if (distributionsLoading()) {
                     <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
@@ -447,15 +486,46 @@ interface Attachment {
             </div>
           </div>
 
-          <!-- Sidebar -->
-          <div class="doc-sidebar">
-            <!-- Workflow Status -->
-            <div class="doc-sidebar-card">
-              <div class="doc-sidebar-card__header">
-                <span nz-icon nzType="branches" nzTheme="outline"></span>
-                <span>Status Workflow</span>
+          <!-- Collapsible Side Panel -->
+          <div class="doc-side" [class.doc-side--collapsed]="sidebarCollapsed()">
+            <button class="doc-side__toggle" (click)="toggleSidebar()" nz-tooltip [nzTooltipTitle]="sidebarCollapsed() ? 'Tampilkan panel' : 'Sembunyikan panel'">
+              <span nz-icon [nzType]="sidebarCollapsed() ? 'menu-unfold' : 'menu-fold'" nzTheme="outline"></span>
+            </button>
+
+            @if (!sidebarCollapsed()) {
+              <!-- Quick Summary -->
+              <div class="doc-side__section">
+                <div class="doc-side__heading">Ringkasan</div>
+                <div class="doc-side__summary">
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Status</span>
+                    <span class="doc-status-tag doc-status-tag--sm" [attr.data-status]="document()!.status">
+                      <span class="doc-status-tag__dot"></span>
+                      {{ getStatusLabel(document()!.status) }}
+                    </span>
+                  </div>
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Versi</span>
+                    <span class="doc-side__val doc-side__val--mono">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
+                  </div>
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Prioritas</span>
+                    <span class="doc-meta-tag doc-meta-tag--sm" [attr.data-priority]="document()!.priority">{{ getPriorityLabel(document()!.priority) }}</span>
+                  </div>
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Pembuat</span>
+                    <span class="doc-side__val">{{ document()!.creator?.name || '-' }}</span>
+                  </div>
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Diperbarui</span>
+                    <span class="doc-side__val">{{ document()!.updated_at | date:'dd/MM/yy HH:mm' }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="doc-sidebar-card__body">
+
+              <!-- Workflow Mini Steps -->
+              <div class="doc-side__section">
+                <div class="doc-side__heading">Workflow</div>
                 @if (workflow()) {
                   <div class="doc-sidebar-steps">
                     @for (step of workflow()!.steps; track step.id; let last = $last) {
@@ -478,31 +548,7 @@ interface Attachment {
                   <div class="text-gray-400 text-xs text-center py-3">Workflow belum dimulai</div>
                 }
               </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="doc-sidebar-card">
-              <div class="doc-sidebar-card__header">
-                <span nz-icon nzType="thunderbolt" nzTheme="outline"></span>
-                <span>Aksi Cepat</span>
-              </div>
-              <div class="doc-sidebar-card__body">
-                <div class="doc-quick-actions">
-                  <button class="doc-quick-action" (click)="downloadDocument()">
-                    <span nz-icon nzType="download" nzTheme="outline"></span>
-                    <span>Download</span>
-                  </button>
-                  <button class="doc-quick-action">
-                    <span nz-icon nzType="printer" nzTheme="outline"></span>
-                    <span>Print</span>
-                  </button>
-                  <button class="doc-quick-action">
-                    <span nz-icon nzType="share-alt" nzTheme="outline"></span>
-                    <span>Share</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+            }
           </div>
         </div>
       } @else {
@@ -524,7 +570,6 @@ interface Attachment {
       gap: 16px;
       padding: 12px 0 14px;
       border-bottom: 1px solid #e4e4e7;
-      margin-bottom: 14px;
     }
     .doc-header__left { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
     .doc-header__back {
@@ -543,7 +588,7 @@ interface Attachment {
     .doc-header__tags { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
     .doc-header__subtitle {
       display: flex; align-items: center; gap: 6px;
-      margin-top: 3px; font-size: 12px; color: #71717a;
+      margin-top: 3px; font-size: 12px; color: #71717a; flex-wrap: wrap;
     }
     .doc-header__sep { color: #d4d4d8; }
     .doc-header__meta { font-weight: 500; }
@@ -554,6 +599,9 @@ interface Attachment {
       color: #52525b;
     }
     .doc-header__actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .doc-header__divider {
+      width: 1px; height: 20px; background: #e4e4e7;
+    }
 
     /* ===== Status & Meta Tags ===== */
     .doc-status-tag {
@@ -562,9 +610,10 @@ interface Attachment {
       font-size: 11px; font-weight: 500; line-height: 1.4;
       background: #f4f4f5; color: #52525b;
     }
+    .doc-status-tag--sm { font-size: 10px; padding: 1px 6px; gap: 4px; }
     .doc-status-tag__dot {
       width: 6px; height: 6px; border-radius: 50%;
-      background: #a1a1aa;
+      background: #a1a1aa; flex-shrink: 0;
     }
     .doc-status-tag[data-status="draft"] { background: #f4f4f5; color: #52525b; }
     .doc-status-tag[data-status="draft"] .doc-status-tag__dot { background: #a1a1aa; }
@@ -584,6 +633,7 @@ interface Attachment {
       font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .3px;
       background: #f4f4f5; color: #71717a; border: 1px solid #e4e4e7;
     }
+    .doc-meta-tag--sm { font-size: 9px; padding: 1px 5px; }
     .doc-meta-tag[data-priority="high"] { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
     .doc-meta-tag[data-priority="critical"],
     .doc-meta-tag[data-priority="urgent"] { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
@@ -598,43 +648,19 @@ interface Attachment {
       50% { opacity: .4; }
     }
 
-    /* ===== Content Grid ===== */
-    .doc-content {
+    /* ===== Body: Main + Side Panel ===== */
+    .doc-body {
       display: grid;
-      grid-template-columns: 1fr 280px;
-      gap: 14px;
+      grid-template-columns: 1fr 260px;
+      gap: 0;
+      margin-top: 14px;
       align-items: start;
+      transition: grid-template-columns .25s ease;
     }
-    .doc-main { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-
-    /* ===== Info Panel ===== */
-    .doc-info-panel {
-      background: #fff; border: 1px solid #e4e4e7; border-radius: 6px;
-      overflow: hidden;
+    .doc-body--collapsed {
+      grid-template-columns: 1fr 36px;
     }
-    .doc-info-panel__header {
-      display: flex; align-items: center; gap: 6px;
-      padding: 9px 14px; font-size: 13px; font-weight: 600; color: #27272a;
-      border-bottom: 1px solid #f4f4f5; background: #fafafa;
-    }
-    .doc-info-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      padding: 2px 0;
-    }
-    .doc-info-item {
-      display: flex; flex-direction: column; gap: 1px;
-      padding: 7px 14px;
-      border-bottom: 1px solid #fafafa;
-    }
-    .doc-info-item:nth-child(odd) { border-right: 1px solid #fafafa; }
-    .doc-info-label { font-size: 10.5px; color: #a1a1aa; text-transform: uppercase; letter-spacing: .4px; font-weight: 500; }
-    .doc-info-value { font-size: 13px; color: #27272a; }
-    .doc-info-value--mono { font-family: 'SF Mono', 'Fira Code', monospace; font-weight: 600; color: #0284c7; }
-    .doc-info-icon { font-size: 11px; color: #a1a1aa; margin-right: 2px; }
-    .doc-info-desc {
-      padding: 10px 14px; border-top: 1px solid #f4f4f5;
-    }
-    .doc-info-desc__text { margin: 3px 0 0; font-size: 13px; color: #52525b; line-height: 1.5; }
+    .doc-main { min-width: 0; }
 
     /* ===== Tabs Panel ===== */
     .doc-tabs-panel {
@@ -642,15 +668,43 @@ interface Attachment {
       overflow: hidden;
     }
     :host ::ng-deep .doc-tabs-panel .ant-tabs-nav { padding: 0 14px; margin-bottom: 0; }
-    :host ::ng-deep .doc-tabs-panel .ant-tabs-tab { font-size: 12px; padding: 9px 2px; }
-    :host ::ng-deep .doc-tabs-panel .ant-tabs-content-holder { padding: 12px 14px; }
+    :host ::ng-deep .doc-tabs-panel .ant-tabs-tab { font-size: 12px; padding: 10px 4px; }
+    :host ::ng-deep .doc-tabs-panel .ant-tabs-content-holder { padding: 14px; }
 
-    .doc-action-btn {
-      width: 26px !important; height: 26px !important; padding: 0 !important;
-      display: inline-flex !important; align-items: center; justify-content: center;
-      border-radius: 4px !important; font-size: 13px;
+    /* ===== Info Section (tab content) ===== */
+    .doc-info-section { }
+    .doc-info-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0; border: 1px solid #f4f4f5; border-radius: 6px; overflow: hidden;
     }
-    .doc-action-btn:hover { background: #f4f4f5 !important; }
+    .doc-info-item {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #f4f4f5;
+      border-right: 1px solid #f4f4f5;
+    }
+    .doc-info-item:nth-child(3n) { border-right: none; }
+    .doc-info-label { font-size: 10.5px; color: #a1a1aa; text-transform: uppercase; letter-spacing: .4px; font-weight: 500; }
+    .doc-info-value { font-size: 13px; color: #27272a; }
+    .doc-info-value--mono { font-family: 'SF Mono', 'Fira Code', monospace; font-weight: 600; color: #0284c7; }
+    .doc-info-icon { font-size: 11px; color: #a1a1aa; margin-right: 2px; }
+
+    .doc-info-timestamps {
+      display: flex; flex-wrap: wrap; gap: 16px;
+      margin-top: 14px; padding: 10px 14px;
+      background: #fafafa; border-radius: 6px; border: 1px solid #f4f4f5;
+    }
+    .doc-info-ts {
+      display: flex; align-items: center; gap: 6px; font-size: 12px; color: #71717a;
+    }
+    .doc-info-ts .doc-info-label { font-size: 11px; text-transform: none; letter-spacing: 0; margin-right: 2px; }
+    .doc-info-ts .doc-info-value { font-size: 12px; font-weight: 500; color: #3f3f46; }
+
+    .doc-info-desc {
+      margin-top: 14px; padding: 12px 14px;
+      background: #fafafa; border-radius: 6px; border: 1px solid #f4f4f5;
+    }
+    .doc-info-desc__text { margin: 4px 0 0; font-size: 13px; color: #52525b; line-height: 1.6; }
 
     /* ===== Comments ===== */
     .doc-comments { display: flex; flex-direction: column; gap: 10px; }
@@ -661,9 +715,7 @@ interface Attachment {
     .doc-comment:hover { border-color: #e4e4e7; }
     .doc-comment--resolved { opacity: .55; }
     .doc-comment__body { flex: 1; min-width: 0; }
-    .doc-comment__header {
-      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-    }
+    .doc-comment__header { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .doc-comment__author { font-size: 12px; font-weight: 600; color: #27272a; }
     .doc-comment__time { font-size: 11px; color: #a1a1aa; }
     .doc-comment__resolved-badge {
@@ -672,10 +724,7 @@ interface Attachment {
     .doc-comment__actions { margin-left: auto; display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
     .doc-comment:hover .doc-comment__actions { opacity: 1; }
     .doc-comment__content { margin: 4px 0 0; font-size: 13px; color: #3f3f46; line-height: 1.5; }
-    .doc-comment__replies {
-      margin-top: 8px; padding-left: 12px;
-      border-left: 2px solid #e4e4e7;
-    }
+    .doc-comment__replies { margin-top: 8px; padding-left: 12px; border-left: 2px solid #e4e4e7; }
     .doc-comment__reply { margin-bottom: 6px; }
     .doc-comment__reply-input { margin-top: 6px; }
     .doc-comment__reply-btn {
@@ -689,7 +738,14 @@ interface Attachment {
     }
     .doc-comment-composer__input { flex: 1; }
 
-    /* ===== Workflow Steps (main tab) ===== */
+    .doc-action-btn {
+      width: 26px !important; height: 26px !important; padding: 0 !important;
+      display: inline-flex !important; align-items: center; justify-content: center;
+      border-radius: 4px !important; font-size: 13px;
+    }
+    .doc-action-btn:hover { background: #f4f4f5 !important; }
+
+    /* ===== Workflow Steps (tab content) ===== */
     .doc-workflow-steps { padding: 4px 0; }
     .doc-wf-step { display: flex; gap: 12px; position: relative; }
     .doc-wf-step__indicator {
@@ -704,17 +760,10 @@ interface Attachment {
       position: relative; z-index: 1; transition: all .2s;
     }
     .doc-wf-step__num { font-size: 11px; }
-    .doc-wf-step__line {
-      width: 2px; flex: 1; min-height: 20px;
-      background: #e4e4e7; margin: 2px 0;
-    }
-    .doc-wf-step[data-status="completed"] .doc-wf-step__dot {
-      background: #dcfce7; border-color: #22c55e; color: #16a34a;
-    }
+    .doc-wf-step__line { width: 2px; flex: 1; min-height: 20px; background: #e4e4e7; margin: 2px 0; }
+    .doc-wf-step[data-status="completed"] .doc-wf-step__dot { background: #dcfce7; border-color: #22c55e; color: #16a34a; }
     .doc-wf-step[data-status="completed"] .doc-wf-step__line { background: #86efac; }
-    .doc-wf-step[data-status="rejected"] .doc-wf-step__dot {
-      background: #fee2e2; border-color: #ef4444; color: #dc2626;
-    }
+    .doc-wf-step[data-status="rejected"] .doc-wf-step__dot { background: #fee2e2; border-color: #ef4444; color: #dc2626; }
     .doc-wf-step[data-status="in_progress"] .doc-wf-step__dot {
       background: #dbeafe; border-color: #3b82f6; color: #2563eb;
       box-shadow: 0 0 0 3px rgba(59,130,246,.15);
@@ -737,39 +786,63 @@ interface Attachment {
     .doc-wf-action-tag[data-action="submit"] { background: #dbeafe; color: #1d4ed8; }
     .doc-wf-action-tag[data-action="review"] { background: #e0e7ff; color: #4338ca; }
 
-    /* ===== Upload Zone ===== */
-    .doc-upload-zone { margin-bottom: 12px; }
-    :host ::ng-deep .doc-upload-zone .ant-upload-drag {
-      border: 1.5px dashed #d4d4d8 !important; border-radius: 6px; background: #fafafa;
-      transition: border-color .2s, background .2s;
-    }
-    :host ::ng-deep .doc-upload-zone .ant-upload-drag:hover {
-      border-color: #0284c7 !important; background: #f0f9ff;
-    }
-    .doc-upload-zone__inner { padding: 12px 0; text-align: center; }
-    .doc-upload-zone__icon { font-size: 28px; color: #a1a1aa; }
-    .doc-upload-zone__text { font-size: 12px; color: #52525b; margin: 4px 0 0; }
-    .doc-upload-zone__hint { font-size: 11px; color: #a1a1aa; margin: 2px 0 0; }
-
-    /* ===== Sidebar ===== */
-    .doc-sidebar { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 12px; }
-    .doc-sidebar-card {
-      background: #fff; border: 1px solid #e4e4e7; border-radius: 6px;
+    /* ===== Collapsible Side Panel ===== */
+    .doc-side {
+      border-left: 1px solid #e4e4e7;
+      background: #fafafa;
+      border-radius: 0 6px 6px 0;
+      min-height: 400px;
+      position: sticky;
+      top: 12px;
+      transition: width .25s ease;
       overflow: hidden;
+      position: relative;
     }
-    .doc-sidebar-card__header {
-      display: flex; align-items: center; gap: 6px;
-      padding: 9px 14px; font-size: 12px; font-weight: 600; color: #27272a;
-      border-bottom: 1px solid #f4f4f5; background: #fafafa;
-      text-transform: uppercase; letter-spacing: .3px;
+    .doc-side--collapsed {
+      background: transparent;
+      border-left: none;
+      min-height: auto;
     }
-    .doc-sidebar-card__body { padding: 12px 14px; }
+    .doc-side__toggle {
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      border: 1px solid #e4e4e7; background: #fff;
+      color: #71717a; cursor: pointer; font-size: 14px;
+      border-radius: 6px;
+      transition: all .15s;
+      position: absolute; top: 8px; right: 8px; z-index: 2;
+    }
+    .doc-side--collapsed .doc-side__toggle {
+      position: static;
+      margin: 2px auto;
+    }
+    .doc-side__toggle:hover { background: #f4f4f5; color: #18181b; }
 
-    /* Sidebar Workflow Steps */
-    .doc-sidebar-steps { display: flex; flex-direction: column; }
-    .doc-sidebar-step {
-      display: flex; gap: 10px; position: relative;
+    .doc-side__section {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f0f0f0;
     }
+    .doc-side__section:first-of-type { padding-top: 44px; }
+    .doc-side__section:last-child { border-bottom: none; }
+    .doc-side__heading {
+      font-size: 10px; font-weight: 600; color: #a1a1aa;
+      text-transform: uppercase; letter-spacing: .5px;
+      margin-bottom: 10px;
+    }
+
+    /* Side Summary */
+    .doc-side__summary { display: flex; flex-direction: column; gap: 8px; }
+    .doc-side__row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px;
+    }
+    .doc-side__label { font-size: 11px; color: #71717a; }
+    .doc-side__val { font-size: 12px; color: #27272a; font-weight: 500; }
+    .doc-side__val--mono { font-family: 'SF Mono', 'Fira Code', monospace; color: #0284c7; }
+
+    /* Sidebar Workflow Mini Steps */
+    .doc-sidebar-steps { display: flex; flex-direction: column; }
+    .doc-sidebar-step { display: flex; gap: 10px; position: relative; }
     .doc-sidebar-step__dot {
       width: 10px; height: 10px; border-radius: 50%;
       background: #e4e4e7; border: 2px solid #d4d4d8;
@@ -779,42 +852,32 @@ interface Attachment {
       position: absolute; left: 4px; top: 14px; bottom: 0;
       width: 2px; background: #e4e4e7;
     }
-    .doc-sidebar-step[data-status="completed"] .doc-sidebar-step__dot {
-      background: #22c55e; border-color: #22c55e;
-    }
+    .doc-sidebar-step[data-status="completed"] .doc-sidebar-step__dot { background: #22c55e; border-color: #22c55e; }
     .doc-sidebar-step[data-status="completed"] .doc-sidebar-step__connector { background: #86efac; }
     .doc-sidebar-step[data-status="in_progress"] .doc-sidebar-step__dot {
       background: #3b82f6; border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59,130,246,.2);
     }
-    .doc-sidebar-step[data-status="rejected"] .doc-sidebar-step__dot {
-      background: #ef4444; border-color: #ef4444;
-    }
+    .doc-sidebar-step[data-status="rejected"] .doc-sidebar-step__dot { background: #ef4444; border-color: #ef4444; }
     .doc-sidebar-step__info { padding-bottom: 12px; min-width: 0; }
     .doc-sidebar-step__name { font-size: 12px; font-weight: 500; color: #27272a; line-height: 1.3; }
     .doc-sidebar-step__meta { font-size: 11px; color: #a1a1aa; display: block; }
     .doc-sidebar-step__time { font-size: 10px; color: #a1a1aa; display: block; }
 
-    /* Quick Actions */
-    .doc-quick-actions { display: flex; flex-direction: column; gap: 4px; }
-    .doc-quick-action {
-      display: flex; align-items: center; gap: 8px;
-      width: 100%; padding: 7px 10px; border-radius: 5px;
-      font-size: 12px; color: #52525b; background: none; border: none;
-      cursor: pointer; transition: all .15s;
-      text-align: left;
-    }
-    .doc-quick-action:hover { background: #f4f4f5; color: #18181b; }
-    .doc-quick-action span[nz-icon] { font-size: 14px; color: #71717a; }
-
     /* ===== Responsive ===== */
     @media (max-width: 768px) {
-      .doc-content { grid-template-columns: 1fr; }
-      .doc-sidebar { position: static; }
+      .doc-body { grid-template-columns: 1fr; }
+      .doc-body--collapsed { grid-template-columns: 1fr; }
+      .doc-side { display: none; }
       .doc-header { flex-direction: column; gap: 10px; }
-      .doc-header__actions { align-self: flex-start; }
+      .doc-header__actions { align-self: flex-start; flex-wrap: wrap; }
       .doc-info-grid { grid-template-columns: 1fr; }
-      .doc-info-item:nth-child(odd) { border-right: none; }
+      .doc-info-item { border-right: none !important; }
+    }
+    @media (max-width: 1024px) and (min-width: 769px) {
+      .doc-info-grid { grid-template-columns: repeat(2, 1fr); }
+      .doc-info-item:nth-child(3n) { border-right: 1px solid #f4f4f5; }
+      .doc-info-item:nth-child(2n) { border-right: none; }
     }
   `]
 })
@@ -843,6 +906,7 @@ export class DocumentDetailPage implements OnInit {
   replyContent = '';
   replyingTo = signal<string | null>(null);
   activeTab = 0;
+  sidebarCollapsed = signal(true); // default collapsed on Berkas tab
 
   documentId = '';
 
@@ -1003,11 +1067,25 @@ export class DocumentDetailPage implements OnInit {
     });
   }
 
+  // Tabs that need full width → sidebar auto-collapsed
+  private fullWidthTabs = new Set([0]); // 0 = Berkas
+
   onTabChange(index: number) {
-    // Lazy-load distributions on first visit (tab 3)
-    if (index === 3 && this.distributions().length === 0 && !this.distributionsLoading()) {
+    // Auto-collapse/expand sidebar based on tab
+    if (this.fullWidthTabs.has(index)) {
+      this.sidebarCollapsed.set(true);
+    } else {
+      this.sidebarCollapsed.set(false);
+    }
+
+    // Lazy-load distributions on first visit (tab 4)
+    if (index === 4 && this.distributions().length === 0 && !this.distributionsLoading()) {
       this.loadDistributions(this.documentId);
     }
+  }
+
+  toggleSidebar() {
+    this.sidebarCollapsed.set(!this.sidebarCollapsed());
   }
 
   loadAttachments() {

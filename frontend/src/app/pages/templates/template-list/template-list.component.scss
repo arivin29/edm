@@ -30,3 +30,13 @@ code {
   font-size: 11px;
   color: #595959;
 }
+
+.tpl-name-link {
+  color: #262626;
+  cursor: pointer;
+  transition: color 0.15s;
+
+  &:hover {
+    color: #1890ff;
+  }
+}

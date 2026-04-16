@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -16,7 +17,6 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Template } from '../template.models';
 import { TemplateFormComponent } from '../template-form/template-form.component';
-import { TemplateDetailComponent } from '../template-detail/template-detail.component';
 
 @Component({
   selector: 'app-template-list',
@@ -26,7 +26,7 @@ import { TemplateDetailComponent } from '../template-detail/template-detail.comp
     NzTableModule, NzButtonModule, NzIconModule, NzTagModule,
     NzInputModule, NzCardModule, NzDropDownModule, NzSelectModule,
     NzSpinModule, NzModalModule,
-    TemplateFormComponent, TemplateDetailComponent
+    TemplateFormComponent
   ],
   templateUrl: './template-list.component.html',
   styleUrl: './template-list.component.scss'
@@ -35,6 +35,7 @@ export class TemplateListComponent implements OnInit {
   private http = inject(HttpClient);
   private message = inject(NzMessageService);
   private modal = inject(NzModalService);
+  private router = inject(Router);
 
   templates = signal<Template[]>([]);
   documentTypes = signal<{ id: string; name: string }[]>([]);
@@ -61,10 +62,6 @@ export class TemplateListComponent implements OnInit {
   // Form drawer state
   formVisible = false;
   formEditData: Template | null = null;
-
-  // Detail drawer state
-  detailVisible = false;
-  detailTemplate: Template | null = null;
 
   ngOnInit() {
     this.loadTemplates();
@@ -122,17 +119,10 @@ export class TemplateListComponent implements OnInit {
     this.loadTemplates();
   }
 
-  // ── Detail Drawer ──
+  // ── Detail Page Navigation ──
 
   openDetail(tpl: Template) {
-    this.detailTemplate = tpl;
-    this.detailVisible = true;
-  }
-
-  onDetailClosed() {
-    this.detailVisible = false;
-    this.detailTemplate = null;
-    this.loadTemplates();
+    this.router.navigate(['/master/templates', tpl.id]);
   }
 
   // ── Actions ──
