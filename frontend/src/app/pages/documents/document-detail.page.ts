@@ -20,11 +20,10 @@ import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzListModule } from 'ng-zorro-antd/list';
-import { NzDrawerModule } from 'ng-zorro-antd/drawer';
-import { NzSelectModule } from 'ng-zorro-antd/select';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
+import { FileManagerComponent, FileNode } from '../../shared';
 
 interface DocumentDetail {
   id: string;
@@ -114,19 +113,6 @@ interface Attachment {
   uploader?: { id: string; name: string; email: string };
 }
 
-interface DocumentRelation {
-  id: string;
-  document_id: string;
-  related_document_id: string;
-  relation_type: string;
-  notes?: string;
-  created_by: string;
-  created_at: string;
-  document?: { id: string; title: string; document_number: string; status: string };
-  related_document?: { id: string; title: string; document_number: string; status: string };
-  creator?: { id: string; name: string };
-}
-
 @Component({
   selector: 'app-document-detail',
   standalone: true,
@@ -136,45 +122,46 @@ interface DocumentRelation {
     NzDescriptionsModule, NzTabsModule, NzTimelineModule,
     NzCommentModule, NzAvatarModule, NzInputModule, NzSpinModule,
     NzModalModule, NzBadgeModule, NzToolTipModule, NzTableModule, NzEmptyModule,
-    NzUploadModule, NzListModule, NzDrawerModule, NzSelectModule
+    NzUploadModule, NzListModule, FileManagerComponent
   ],
   template: `
-    @if (loading()) {
-      <div class="text-center py-16">
-        <nz-spin nzSimple></nz-spin>
-      </div>
-    } @else if (document()) {
-      <!-- Page Header -->
-      <div class="detail-header">
-        <div class="detail-header-top">
-          <a routerLink="/documents" class="back-link" nz-tooltip nzTooltipTitle="Kembali ke daftar">
-            <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
-          </a>
-          <div class="detail-header-info">
-            <div class="detail-title-row">
-              <h1 class="detail-title">{{ document()!.title }}</h1>
-              <div class="detail-tags">
-                <span class="status-badge" [attr.data-status]="document()!.status">
-                  {{ getStatusLabel(document()!.status) }}
+    <div class="doc-detail-page">
+      @if (loading()) {
+        <div class="text-center py-12">
+          <nz-spin nzSimple></nz-spin>
+        </div>
+      } @else if (document()) {
+        <!-- Page Header -->
+        <div class="doc-header">
+          <div class="doc-header__left">
+            <a routerLink="/documents" class="doc-header__back" nz-tooltip nzTooltipTitle="Kembali ke daftar">
+              <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
+            </a>
+            <div class="doc-header__info">
+              <div class="doc-header__title-row">
+                <h1 class="doc-header__title">{{ document()!.title }}</h1>
+                <div class="doc-header__tags">
+                  <span class="doc-status-tag" [attr.data-status]="document()!.status">
+                    <span class="doc-status-tag__dot"></span>
+                    {{ getStatusLabel(document()!.status) }}
+                  </span>
+                  <span class="doc-meta-tag" [attr.data-priority]="document()!.priority">{{ getPriorityLabel(document()!.priority) }}</span>
+                  <span class="doc-meta-tag">{{ getConfidentialityLabel(document()!.confidentiality) }}</span>
+                </div>
+              </div>
+              <div class="doc-header__subtitle">
+                <span class="doc-number">
+                  <span nz-icon nzType="number" nzTheme="outline"></span>
+                  {{ document()!.document_number || 'Belum ada nomor' }}
                 </span>
-                <span class="priority-badge" [attr.data-priority]="document()!.priority">
-                  {{ getPriorityLabel(document()!.priority) }}
-                </span>
-                <span class="conf-badge">
-                  <span nz-icon nzType="lock" nzTheme="outline" class="text-[10px]"></span>
-                  {{ getConfidentialityLabel(document()!.confidentiality) }}
-                </span>
+                <span class="doc-header__sep">·</span>
+                <span class="doc-header__meta">{{ document()!.document_type?.code || '' }}</span>
+                <span class="doc-header__sep">·</span>
+                <span class="doc-header__meta">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
               </div>
             </div>
-            <div class="detail-subtitle">
-              <span class="doc-number">{{ document()!.document_number || 'Belum ada nomor' }}</span>
-              <span class="dot-sep"></span>
-              <span>{{ document()!.document_type?.name }}</span>
-              <span class="dot-sep"></span>
-              <span>v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
-            </div>
           </div>
-          <div class="detail-actions">
+          <div class="doc-header__actions">
             <button nz-button nzSize="small" (click)="downloadDocument()" nz-tooltip nzTooltipTitle="Download dokumen">
               <span nz-icon nzType="download"></span> Download
             </button>
@@ -196,911 +183,638 @@ interface DocumentRelation {
             }
           </div>
         </div>
-      </div>
 
-      <!-- Content Grid -->
-      <div class="detail-content">
-        <!-- Main Column -->
-        <div class="detail-main">
-          <!-- Info Card -->
-          <div class="info-card">
-            <div class="info-card-header">
-              <span nz-icon nzType="file-text" nzTheme="outline"></span>
-              <span>Informasi Dokumen</span>
-            </div>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Tipe</span>
-                <span class="info-value">{{ document()!.document_type?.name || '-' }}</span>
+        <!-- Content Grid -->
+        <div class="doc-content">
+          <!-- Main Column -->
+          <div class="doc-main">
+            <!-- Info Panel -->
+            <div class="doc-info-panel">
+              <div class="doc-info-panel__header">
+                <span nz-icon nzType="file-text" nzTheme="outline"></span>
+                <span>Informasi Dokumen</span>
               </div>
-              <div class="info-item">
-                <span class="info-label">Kategori</span>
-                <span class="info-value">{{ document()!.category?.name || '-' }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Pembuat</span>
-                <span class="info-value">{{ document()!.creator?.name || '-' }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Versi</span>
-                <span class="info-value">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Department</span>
-                <span class="info-value">{{ document()!.department?.name || '-' }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Section</span>
-                <span class="info-value">{{ document()!.section?.name || '-' }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Perusahaan</span>
-                <span class="info-value">{{ document()!.company?.name || '-' }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Kantor</span>
-                <span class="info-value">{{ document()!.office?.name || '-' }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Template</span>
-                <span class="info-value">{{ document()!.template?.name || '-' }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Revisi</span>
-                <span class="info-value">{{ document()!.revision_count }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Dibuat</span>
-                <span class="info-value">{{ document()!.created_at | date:'dd MMM yyyy HH:mm' }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Diperbarui</span>
-                <span class="info-value">{{ document()!.updated_at | date:'dd MMM yyyy HH:mm' }}</span>
-              </div>
-              @if (document()!.submitted_at) {
-                <div class="info-item">
-                  <span class="info-label">Disubmit</span>
-                  <span class="info-value">{{ document()!.submitted_at | date:'dd MMM yyyy HH:mm' }}</span>
+              <div class="doc-info-grid">
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Tipe</span>
+                  <span class="doc-info-value">{{ document()!.document_type?.name || '-' }}</span>
                 </div>
-              }
-              @if (document()!.approved_at) {
-                <div class="info-item">
-                  <span class="info-label">Disetujui</span>
-                  <span class="info-value">{{ document()!.approved_at | date:'dd MMM yyyy HH:mm' }}</span>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Kategori</span>
+                  <span class="doc-info-value">{{ document()!.category?.name || '-' }}</span>
+                </div>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Pembuat</span>
+                  <span class="doc-info-value">
+                    <span nz-icon nzType="user" nzTheme="outline" class="doc-info-icon"></span>
+                    {{ document()!.creator?.name || '-' }}
+                  </span>
+                </div>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Versi</span>
+                  <span class="doc-info-value doc-info-value--mono">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
+                </div>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Department</span>
+                  <span class="doc-info-value">{{ document()!.department?.name || '-' }}</span>
+                </div>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Section</span>
+                  <span class="doc-info-value">{{ document()!.section?.name || '-' }}</span>
+                </div>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Perusahaan</span>
+                  <span class="doc-info-value">{{ document()!.company?.name || '-' }}</span>
+                </div>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Kantor</span>
+                  <span class="doc-info-value">{{ document()!.office?.name || '-' }}</span>
+                </div>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Template</span>
+                  <span class="doc-info-value">{{ document()!.template?.name || '-' }}</span>
+                </div>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Revisi</span>
+                  <span class="doc-info-value">{{ document()!.revision_count }}</span>
+                </div>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Dibuat</span>
+                  <span class="doc-info-value">{{ document()!.created_at | date:'dd MMM yyyy HH:mm' }}</span>
+                </div>
+                <div class="doc-info-item">
+                  <span class="doc-info-label">Diperbarui</span>
+                  <span class="doc-info-value">{{ document()!.updated_at | date:'dd MMM yyyy HH:mm' }}</span>
+                </div>
+              </div>
+              @if (document()!.description) {
+                <div class="doc-info-desc">
+                  <span class="doc-info-label">Deskripsi</span>
+                  <p class="doc-info-desc__text">{{ document()!.description }}</p>
                 </div>
               }
             </div>
-            @if (document()!.description) {
-              <div class="info-description">
-                <span class="info-label">Deskripsi</span>
-                <p class="info-desc-text">{{ document()!.description }}</p>
-              </div>
-            }
-          </div>
 
-          <!-- Tabs Card -->
-          <div class="tabs-card">
-            <nz-tabset nzSize="small" [(nzSelectedIndex)]="activeTab" (nzSelectedIndexChange)="onTabChange($event)">
-              <!-- Versions Tab -->
-              <nz-tab nzTitle="Versi">
-                @if (versionsLoading()) {
-                  <div class="text-center py-6"><nz-spin nzSimple nzSize="small"></nz-spin></div>
-                } @else {
-                  <nz-table #versionTable [nzData]="versions()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
-                    <thead>
-                      <tr>
-                        <th>Versi</th>
-                        <th>File</th>
-                        <th>Ukuran</th>
-                        <th>Catatan</th>
-                        <th>Pembuat</th>
-                        <th>Tanggal</th>
-                        <th nzWidth="50px"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (v of versionTable.data; track v.id) {
-                        <tr>
-                          <td>
-                            <span class="font-medium">v{{ v.major_version }}.{{ v.minor_version }}</span>
-                            @if (v.is_current) {
-                              <nz-tag nzColor="blue" class="ml-1">Aktif</nz-tag>
-                            }
-                          </td>
-                          <td class="text-xs text-zinc-600">{{ v.file_name || '-' }}</td>
-                          <td class="text-xs text-zinc-500">{{ formatFileSize(v.file_size) }}</td>
-                          <td class="text-xs text-zinc-600">{{ v.change_summary || 'Tidak ada catatan' }}</td>
-                          <td class="text-xs">{{ v.creator?.name || '-' }}</td>
-                          <td class="text-xs text-zinc-500">{{ v.created_at | date:'dd/MM/yy HH:mm' }}</td>
-                          <td>
-                            <button nz-button nzSize="small" nzType="link" nz-tooltip nzTooltipTitle="Download" (click)="downloadVersion(v.version_number)">
-                              <span nz-icon nzType="download"></span>
-                            </button>
-                          </td>
-                        </tr>
-                      } @empty {
-                        <tr><td colspan="7"><nz-empty nzNotFoundContent="Belum ada riwayat versi"></nz-empty></td></tr>
-                      }
-                    </tbody>
-                  </nz-table>
-                }
-              </nz-tab>
+            <!-- Tabs Panel -->
+            <div class="doc-tabs-panel">
+              <nz-tabset nzSize="small" [(nzSelectedIndex)]="activeTab" (nzSelectedIndexChange)="onTabChange($event)">
+                <!-- Berkas (File Manager) Tab -->
+                <nz-tab nzTitle="Berkas">
+                  <app-file-manager
+                    [config]="{ documentId: documentId, readonly: false, showUpload: true, showCreateFolder: true, showVersions: true }"
+                    [tree]="mockFileTree"
+                    (fileDownload)="onFmDownload($event)"
+                    (filePreview)="onFmPreview($event)"
+                    (fileDelete)="onFmDelete($event)"
+                    (folderCreate)="onFmCreateFolder($event)"
+                    (fileUpload)="onFmUpload($event)"
+                  ></app-file-manager>
+                </nz-tab>
 
-              <!-- Comments Tab -->
-              <nz-tab nzTitle="Komentar">
-                @if (commentsLoading()) {
-                  <div class="text-center py-6"><nz-spin nzSimple nzSize="small"></nz-spin></div>
-                } @else {
-                  <div class="comment-list">
-                    @for (c of comments(); track c.id) {
-                      <div class="comment-item" [class.resolved]="c.is_resolved">
-                        <div class="comment-header">
-                          <div class="comment-author">
-                            <nz-avatar nzIcon="user" [nzSize]="28" class="comment-avatar"></nz-avatar>
-                            <div>
-                              <span class="comment-name">{{ c.user?.name || 'Anonim' }}</span>
-                              <span class="comment-time">{{ formatDate(c.created_at) }}</span>
+                <!-- Comments Tab -->
+                <nz-tab nzTitle="Komentar">
+                  @if (commentsLoading()) {
+                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                  } @else {
+                    <div class="doc-comments">
+                      @for (c of comments(); track c.id) {
+                        <div class="doc-comment" [class.doc-comment--resolved]="c.is_resolved">
+                          <div class="doc-comment__avatar">
+                            <nz-avatar nzIcon="user" [nzSize]="28" [style.background-color]="c.is_resolved ? '#d4d4d8' : '#0284c7'" style="font-size: 12px"></nz-avatar>
+                          </div>
+                          <div class="doc-comment__body">
+                            <div class="doc-comment__header">
+                              <span class="doc-comment__author">{{ c.user?.name || 'Anonim' }}</span>
+                              <span class="doc-comment__time">{{ formatDate(c.created_at) }}</span>
+                              @if (c.is_resolved) {
+                                <span class="doc-comment__resolved-badge">
+                                  <span nz-icon nzType="check-circle" nzTheme="fill"></span> Terselesaikan
+                                </span>
+                              }
+                              <span class="doc-comment__actions">
+                                @if (c.is_resolved) {
+                                  <button nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Buka kembali" (click)="unresolveComment(c.id)" class="doc-action-btn">
+                                    <span nz-icon nzType="undo"></span>
+                                  </button>
+                                } @else {
+                                  <button nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Selesaikan" (click)="resolveComment(c.id)" class="doc-action-btn">
+                                    <span nz-icon nzType="check"></span>
+                                  </button>
+                                }
+                                <button nz-button nzSize="small" nzType="text" nzDanger nz-tooltip nzTooltipTitle="Hapus" (click)="deleteComment(c.id)" class="doc-action-btn">
+                                  <span nz-icon nzType="delete"></span>
+                                </button>
+                              </span>
                             </div>
-                            @if (c.is_resolved) {
-                              <span class="resolved-badge">
-                                <span nz-icon nzType="check-circle" nzTheme="fill"></span> Terselesaikan
+                            <p class="doc-comment__content">{{ c.content }}</p>
+
+                            <!-- Replies -->
+                            @if (c.replies && c.replies.length > 0) {
+                              <div class="doc-comment__replies">
+                                @for (r of c.replies; track r.id) {
+                                  <div class="doc-comment__reply">
+                                    <span class="doc-comment__author">{{ r.user?.name || 'Anonim' }}</span>
+                                    <span class="doc-comment__time">{{ formatDate(r.created_at) }}</span>
+                                    <p class="doc-comment__content">{{ r.content }}</p>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            @if (replyingTo() === c.id) {
+                              <div class="doc-comment__reply-input">
+                                <textarea nz-input [(ngModel)]="replyContent" placeholder="Tulis balasan..." [nzAutosize]="{ minRows: 1, maxRows: 3 }"></textarea>
+                                <div class="flex gap-1 mt-1">
+                                  <button nz-button nzSize="small" nzType="primary" [disabled]="!replyContent.trim()" (click)="addReply(c.id)">Balas</button>
+                                  <button nz-button nzSize="small" (click)="replyingTo.set(null)">Batal</button>
+                                </div>
+                              </div>
+                            } @else {
+                              <button nz-button nzSize="small" nzType="text" class="doc-comment__reply-btn" (click)="replyingTo.set(c.id)">
+                                <span nz-icon nzType="message" nzTheme="outline"></span> Balas
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      } @empty {
+                        <nz-empty nzNotFoundContent="Belum ada komentar"></nz-empty>
+                      }
+
+                      <!-- Add comment -->
+                      <div class="doc-comment-composer">
+                        <nz-avatar nzIcon="user" [nzSize]="28" style="background-color: #0284c7; font-size: 12px"></nz-avatar>
+                        <div class="doc-comment-composer__input">
+                          <textarea nz-input [(ngModel)]="newComment" placeholder="Tulis komentar..."
+                                    [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
+                          <button nz-button nzType="primary" nzSize="small" class="mt-2"
+                                  [disabled]="!newComment.trim()" (click)="addComment()">
+                            <span nz-icon nzType="send"></span> Kirim
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </nz-tab>
+
+                <!-- Workflow Tab -->
+                <nz-tab nzTitle="Workflow">
+                  @if (workflowLoading()) {
+                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                  } @else if (workflow()) {
+                    <div class="doc-workflow-steps">
+                      @for (step of workflow()!.steps; track step.id; let i = $index; let last = $last) {
+                        <div class="doc-wf-step" [attr.data-status]="step.status">
+                          <div class="doc-wf-step__indicator">
+                            <div class="doc-wf-step__dot">
+                              @if (step.status === 'completed') {
+                                <span nz-icon nzType="check" nzTheme="outline"></span>
+                              } @else if (step.status === 'rejected') {
+                                <span nz-icon nzType="close" nzTheme="outline"></span>
+                              } @else if (step.status === 'in_progress') {
+                                <span nz-icon nzType="loading" nzTheme="outline"></span>
+                              } @else {
+                                <span class="doc-wf-step__num">{{ i + 1 }}</span>
+                              }
+                            </div>
+                            @if (!last) {
+                              <div class="doc-wf-step__line"></div>
+                            }
+                          </div>
+                          <div class="doc-wf-step__content">
+                            <div class="doc-wf-step__name">{{ step.name }}</div>
+                            <div class="doc-wf-step__actor">
+                              <span nz-icon nzType="user" nzTheme="outline"></span>
+                              {{ step.actor?.name || 'Belum ditentukan' }}
+                            </div>
+                            @if (step.action_type) {
+                              <span class="doc-wf-action-tag" [attr.data-action]="step.action_type">
+                                {{ getActionLabel(step.action_type) }}
                               </span>
                             }
-                          </div>
-                          <div class="comment-actions">
-                            @if (c.is_resolved) {
-                              <button nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Buka kembali" (click)="unresolveComment(c.id)">
-                                <span nz-icon nzType="undo"></span>
-                              </button>
-                            } @else {
-                              <button nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Selesaikan" (click)="resolveComment(c.id)">
-                                <span nz-icon nzType="check"></span>
-                              </button>
+                            @if (step.comment) {
+                              <div class="doc-wf-step__comment">"{{ step.comment }}"</div>
                             }
-                            <button nz-button nzSize="small" nzType="text" nzDanger nz-tooltip nzTooltipTitle="Hapus" (click)="deleteComment(c.id)">
-                              <span nz-icon nzType="delete"></span>
-                            </button>
-                          </div>
-                        </div>
-                        <p class="comment-content">{{ c.content }}</p>
-
-                        @if (c.replies && c.replies.length > 0) {
-                          <div class="reply-list">
-                            @for (r of c.replies; track r.id) {
-                              <div class="reply-item">
-                                <span class="reply-name">{{ r.user?.name || 'Anonim' }}</span>
-                                <span class="reply-time">{{ formatDate(r.created_at) }}</span>
-                                <p class="reply-content">{{ r.content }}</p>
-                              </div>
-                            }
-                          </div>
-                        }
-
-                        @if (replyingTo() === c.id) {
-                          <div class="reply-input">
-                            <textarea nz-input [(ngModel)]="replyContent" placeholder="Tulis balasan..." [nzAutosize]="{ minRows: 1, maxRows: 3 }"></textarea>
-                            <div class="reply-input-actions">
-                              <button nz-button nzSize="small" nzType="primary" [disabled]="!replyContent.trim()" (click)="addReply(c.id)">Balas</button>
-                              <button nz-button nzSize="small" (click)="replyingTo.set(null)">Batal</button>
-                            </div>
-                          </div>
-                        } @else {
-                          <button class="reply-trigger" (click)="replyingTo.set(c.id)">
-                            <span nz-icon nzType="message" nzTheme="outline"></span> Balas
-                          </button>
-                        }
-                      </div>
-                    } @empty {
-                      <nz-empty nzNotFoundContent="Belum ada komentar"></nz-empty>
-                    }
-
-                    <!-- Add comment -->
-                    <div class="new-comment">
-                      <nz-avatar nzIcon="user" [nzSize]="28" class="comment-avatar"></nz-avatar>
-                      <div class="new-comment-input">
-                        <textarea nz-input [(ngModel)]="newComment" placeholder="Tulis komentar..."
-                                  [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
-                        <button nz-button nzType="primary" nzSize="small" class="mt-2"
-                                [disabled]="!newComment.trim()" (click)="addComment()">
-                          <span nz-icon nzType="send"></span> Kirim
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                }
-              </nz-tab>
-
-              <!-- Workflow Tab -->
-              <nz-tab nzTitle="Workflow">
-                @if (workflowLoading()) {
-                  <div class="text-center py-6"><nz-spin nzSimple nzSize="small"></nz-spin></div>
-                } @else if (workflow()) {
-                  <div class="workflow-steps">
-                    @for (step of workflow()!.steps; track step.id) {
-                      <div class="wf-step" [attr.data-status]="step.status">
-                        <div class="wf-step-indicator">
-                          <div class="wf-dot"></div>
-                          <div class="wf-line"></div>
-                        </div>
-                        <div class="wf-step-content">
-                          <div class="wf-step-header">
-                            <span class="wf-step-name">{{ step.name }}</span>
                             @if (step.completed_at) {
-                              <span class="wf-step-time">{{ step.completed_at | date:'dd/MM/yy HH:mm' }}</span>
+                              <div class="doc-wf-step__time">{{ step.completed_at | date:'dd MMM yyyy, HH:mm' }}</div>
                             }
                           </div>
-                          <div class="wf-step-actor">{{ step.actor?.name || 'Belum ditentukan' }}</div>
-                          @if (step.action_type) {
-                            <span class="wf-action-badge" [attr.data-action]="step.action_type">
-                              {{ getActionLabel(step.action_type) }}
-                            </span>
-                          }
-                          @if (step.comment) {
-                            <div class="wf-step-comment">"{{ step.comment }}"</div>
+                        </div>
+                      } @empty {
+                        <nz-empty nzNotFoundContent="Belum ada langkah workflow"></nz-empty>
+                      }
+                    </div>
+                  } @else {
+                    <nz-empty nzNotFoundContent="Workflow belum dimulai"></nz-empty>
+                  }
+                </nz-tab>
+
+                <!-- Distribution Tab -->
+                <nz-tab nzTitle="Distribusi">
+                  @if (distributionsLoading()) {
+                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                  } @else {
+                    <nz-table #distTable [nzData]="distributions()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
+                      <thead>
+                        <tr>
+                          <th>Penerima</th>
+                          <th>Department</th>
+                          <th nzWidth="140px">Didistribusikan</th>
+                          <th nzWidth="140px">Diterima</th>
+                          <th nzWidth="100px">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (d of distTable.data; track d.id) {
+                          <tr>
+                            <td class="text-xs">{{ d.user?.name || '-' }}</td>
+                            <td class="text-xs">{{ d.department?.name || '-' }}</td>
+                            <td class="text-xs text-gray-500">{{ d.distributed_at | date:'dd/MM/yy HH:mm' }}</td>
+                            <td class="text-xs text-gray-500">{{ d.received_at ? (d.received_at | date:'dd/MM/yy HH:mm') : '-' }}</td>
+                            <td>
+                              <nz-tag [nzColor]="d.status === 'received' ? 'green' : d.status === 'sent' ? 'blue' : 'default'">
+                                {{ getDistributionLabel(d.status) }}
+                              </nz-tag>
+                            </td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="5"><nz-empty nzNotFoundContent="Belum ada distribusi"></nz-empty></td></tr>
+                        }
+                      </tbody>
+                    </nz-table>
+                  }
+                </nz-tab>
+              </nz-tabset>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="doc-sidebar">
+            <!-- Workflow Status -->
+            <div class="doc-sidebar-card">
+              <div class="doc-sidebar-card__header">
+                <span nz-icon nzType="branches" nzTheme="outline"></span>
+                <span>Status Workflow</span>
+              </div>
+              <div class="doc-sidebar-card__body">
+                @if (workflow()) {
+                  <div class="doc-sidebar-steps">
+                    @for (step of workflow()!.steps; track step.id; let last = $last) {
+                      <div class="doc-sidebar-step" [attr.data-status]="step.status">
+                        <div class="doc-sidebar-step__dot"></div>
+                        @if (!last) {
+                          <div class="doc-sidebar-step__connector"></div>
+                        }
+                        <div class="doc-sidebar-step__info">
+                          <span class="doc-sidebar-step__name">{{ step.name }}</span>
+                          <span class="doc-sidebar-step__meta">{{ step.actor?.name || '-' }}</span>
+                          @if (step.completed_at) {
+                            <span class="doc-sidebar-step__time">{{ step.completed_at | date:'dd/MM/yy HH:mm' }}</span>
                           }
                         </div>
                       </div>
-                    } @empty {
-                      <nz-empty nzNotFoundContent="Belum ada langkah workflow"></nz-empty>
                     }
                   </div>
                 } @else {
-                  <nz-empty nzNotFoundContent="Workflow belum dimulai"></nz-empty>
-                }
-              </nz-tab>
-
-              <!-- Distribution Tab -->
-              <nz-tab nzTitle="Distribusi">
-                @if (distributionsLoading()) {
-                  <div class="text-center py-6"><nz-spin nzSimple nzSize="small"></nz-spin></div>
-                } @else {
-                  <nz-table #distTable [nzData]="distributions()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
-                    <thead>
-                      <tr>
-                        <th>Penerima</th>
-                        <th>Department</th>
-                        <th>Didistribusikan</th>
-                        <th>Diterima</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (d of distTable.data; track d.id) {
-                        <tr>
-                          <td class="text-xs">{{ d.user?.name || '-' }}</td>
-                          <td class="text-xs">{{ d.department?.name || '-' }}</td>
-                          <td class="text-xs text-zinc-500">{{ d.distributed_at | date:'dd/MM/yy HH:mm' }}</td>
-                          <td class="text-xs text-zinc-500">{{ d.received_at ? (d.received_at | date:'dd/MM/yy HH:mm') : '-' }}</td>
-                          <td>
-                            <nz-tag [nzColor]="d.status === 'received' ? 'green' : d.status === 'sent' ? 'blue' : 'default'">
-                              {{ getDistributionLabel(d.status) }}
-                            </nz-tag>
-                          </td>
-                        </tr>
-                      } @empty {
-                        <tr><td colspan="5"><nz-empty nzNotFoundContent="Belum ada distribusi"></nz-empty></td></tr>
-                      }
-                    </tbody>
-                  </nz-table>
-                }
-              </nz-tab>
-
-              <!-- Lampiran Tab -->
-              <nz-tab nzTitle="Lampiran">
-                <div class="py-3">
-                  <div class="mb-3">
-                    <nz-upload
-                      nzType="drag"
-                      [nzAction]="getAttachmentUploadUrl()"
-                      [nzHeaders]="getAuthHeaders()"
-                      nzName="file"
-                      [nzMultiple]="true"
-                      [nzShowUploadList]="false"
-                      (nzChange)="onAttachmentUpload($event)"
-                      [nzAccept]="'.pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.png,.jpg,.jpeg,.gif,.zip,.rar,.csv,.txt'"
-                    >
-                      <p class="ant-upload-drag-icon">
-                        <span nz-icon nzType="cloud-upload" style="font-size: 28px; color: #0284c7;"></span>
-                      </p>
-                      <p class="text-xs text-zinc-600">Klik atau seret file ke area ini</p>
-                      <p class="text-[11px] text-zinc-400">PDF, Word, Excel, Gambar, ZIP (maks 50MB)</p>
-                    </nz-upload>
-                  </div>
-                  @if (attachments().length > 0) {
-                    <nz-table #attachTable [nzData]="attachments()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
-                      <thead>
-                        <tr>
-                          <th>File</th>
-                          <th nzWidth="90px">Ukuran</th>
-                          <th nzWidth="110px">Diupload oleh</th>
-                          <th nzWidth="120px">Tanggal</th>
-                          <th nzWidth="70px">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (att of attachTable.data; track att.id) {
-                          <tr>
-                            <td>
-                              <div class="flex items-center gap-2">
-                                <span nz-icon [nzType]="getFileIcon(att.mime_type)" class="text-base text-sky-600"></span>
-                                <span class="text-xs">{{ att.original_name }}</span>
-                              </div>
-                            </td>
-                            <td class="text-xs text-zinc-500">{{ formatFileSize(att.file_size) }}</td>
-                            <td class="text-xs">{{ att.uploader?.name || '-' }}</td>
-                            <td class="text-xs text-zinc-500">{{ att.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
-                            <td>
-                              <button nz-button nzType="link" nzSize="small" (click)="downloadAttachment(att)" nz-tooltip nzTooltipTitle="Download">
-                                <span nz-icon nzType="download"></span>
-                              </button>
-                              <button nz-button nzType="link" nzSize="small" nzDanger (click)="deleteAttachment(att)" nz-tooltip nzTooltipTitle="Hapus">
-                                <span nz-icon nzType="delete"></span>
-                              </button>
-                            </td>
-                          </tr>
-                        }
-                      </tbody>
-                    </nz-table>
-                  } @else {
-                    <nz-empty nzNotFoundContent="Belum ada lampiran"></nz-empty>
-                  }
-                </div>
-              </nz-tab>
-
-              <!-- Relasi Tab -->
-              <nz-tab nzTitle="Relasi">
-                <div class="py-3">
-                  <div class="flex justify-between items-center mb-3">
-                    <span class="text-xs text-gray-500">Dokumen yang terkait</span>
-                    <button nz-button nzType="primary" nzSize="small" (click)="openRelationDrawer()">
-                      <span nz-icon nzType="plus"></span> Tambah Relasi
-                    </button>
-                  </div>
-
-                  @if (outboundRelations().length > 0) {
-                    <div class="text-xs font-semibold text-gray-600 mb-1">Relasi Keluar</div>
-                    <nz-table #outRelTable [nzData]="outboundRelations()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false" class="mb-3">
-                      <thead>
-                        <tr>
-                          <th>Tipe</th>
-                          <th>Dokumen Terkait</th>
-                          <th nzWidth="120px">Catatan</th>
-                          <th nzWidth="100px">Tanggal</th>
-                          <th nzWidth="50px">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (rel of outRelTable.data; track rel.id) {
-                          <tr>
-                            <td><nz-tag [nzColor]="getRelationTypeColor(rel.relation_type)">{{ getRelationTypeLabel(rel.relation_type) }}</nz-tag></td>
-                            <td>
-                              <a class="text-xs text-blue-600 cursor-pointer" [routerLink]="['/documents', rel.related_document?.id]">
-                                {{ rel.related_document?.document_number || '-' }} — {{ rel.related_document?.title || '-' }}
-                              </a>
-                            </td>
-                            <td class="text-xs text-gray-500">{{ rel.notes || '-' }}</td>
-                            <td class="text-xs text-gray-400">{{ rel.created_at | date:'dd/MM/yyyy' }}</td>
-                            <td>
-                              <button nz-button nzType="link" nzSize="small" nzDanger (click)="deleteRelation(rel.id)" nz-tooltip nzTooltipTitle="Hapus">
-                                <span nz-icon nzType="delete"></span>
-                              </button>
-                            </td>
-                          </tr>
-                        }
-                      </tbody>
-                    </nz-table>
-                  }
-
-                  @if (inboundRelations().length > 0) {
-                    <div class="text-xs font-semibold text-gray-600 mb-1">Dirujuk Oleh</div>
-                    <nz-table #inRelTable [nzData]="inboundRelations()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
-                      <thead>
-                        <tr>
-                          <th>Tipe</th>
-                          <th>Dari Dokumen</th>
-                          <th nzWidth="120px">Catatan</th>
-                          <th nzWidth="100px">Tanggal</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (rel of inRelTable.data; track rel.id) {
-                          <tr>
-                            <td><nz-tag [nzColor]="getRelationTypeColor(rel.relation_type)">{{ getRelationTypeLabel(rel.relation_type) }}</nz-tag></td>
-                            <td>
-                              <a class="text-xs text-blue-600 cursor-pointer" [routerLink]="['/documents', rel.document?.id]">
-                                {{ rel.document?.document_number || '-' }} — {{ rel.document?.title || '-' }}
-                              </a>
-                            </td>
-                            <td class="text-xs text-gray-500">{{ rel.notes || '-' }}</td>
-                            <td class="text-xs text-gray-400">{{ rel.created_at | date:'dd/MM/yyyy' }}</td>
-                          </tr>
-                        }
-                      </tbody>
-                    </nz-table>
-                  }
-
-                  @if (outboundRelations().length === 0 && inboundRelations().length === 0) {
-                    <nz-empty nzNotFoundContent="Belum ada relasi dokumen"></nz-empty>
-                  }
-                </div>
-              </nz-tab>
-            </nz-tabset>
-          </div>
-        </div>
-
-        <!-- Sidebar -->
-        <div class="detail-sidebar">
-          <!-- Workflow Status -->
-          <div class="sidebar-card">
-            <div class="sidebar-card-header">
-              <span nz-icon nzType="node-index" nzTheme="outline"></span>
-              <span>Status Workflow</span>
-            </div>
-            @if (workflow()) {
-              <div class="sidebar-wf-steps">
-                @for (step of workflow()!.steps; track step.id) {
-                  <div class="sidebar-wf-step" [attr.data-status]="step.status">
-                    <div class="sidebar-wf-dot"></div>
-                    <div class="sidebar-wf-info">
-                      <span class="sidebar-wf-name">{{ step.name }}</span>
-                      <span class="sidebar-wf-actor">{{ step.actor?.name || '-' }}</span>
-                      @if (step.completed_at) {
-                        <span class="sidebar-wf-time">{{ step.completed_at | date:'dd/MM/yy HH:mm' }}</span>
-                      }
-                    </div>
-                  </div>
+                  <div class="text-gray-400 text-xs text-center py-3">Workflow belum dimulai</div>
                 }
               </div>
-            } @else {
-              <div class="text-zinc-400 text-xs py-3">Workflow belum dimulai</div>
-            }
-          </div>
-
-          <!-- Quick Actions -->
-          <div class="sidebar-card">
-            <div class="sidebar-card-header">
-              <span nz-icon nzType="thunderbolt" nzTheme="outline"></span>
-              <span>Aksi</span>
             </div>
-            <div class="sidebar-actions">
-              <button class="sidebar-action-btn" (click)="downloadDocument()">
-                <span nz-icon nzType="download" nzTheme="outline"></span>
-                <span>Download</span>
-              </button>
-              <button class="sidebar-action-btn">
-                <span nz-icon nzType="printer" nzTheme="outline"></span>
-                <span>Print</span>
-              </button>
-              <button class="sidebar-action-btn">
-                <span nz-icon nzType="share-alt" nzTheme="outline"></span>
-                <span>Share</span>
-              </button>
+
+            <!-- Quick Actions -->
+            <div class="doc-sidebar-card">
+              <div class="doc-sidebar-card__header">
+                <span nz-icon nzType="thunderbolt" nzTheme="outline"></span>
+                <span>Aksi Cepat</span>
+              </div>
+              <div class="doc-sidebar-card__body">
+                <div class="doc-quick-actions">
+                  <button class="doc-quick-action" (click)="downloadDocument()">
+                    <span nz-icon nzType="download" nzTheme="outline"></span>
+                    <span>Download</span>
+                  </button>
+                  <button class="doc-quick-action">
+                    <span nz-icon nzType="printer" nzTheme="outline"></span>
+                    <span>Print</span>
+                  </button>
+                  <button class="doc-quick-action">
+                    <span nz-icon nzType="share-alt" nzTheme="outline"></span>
+                    <span>Share</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    } @else {
-      <div class="text-center py-16 text-zinc-400">
-        Dokumen tidak ditemukan
-      </div>
-    }
-
-    <!-- Add Relation Drawer -->
-    <nz-drawer
-      [nzVisible]="relationDrawerVisible"
-      nzTitle="Tambah Relasi Dokumen"
-      nzPlacement="right"
-      [nzWidth]="420"
-      (nzOnClose)="relationDrawerVisible = false">
-      <div *nzDrawerContent>
-        <div class="mb-3">
-          <label class="text-xs font-medium text-gray-600 block mb-1">Tipe Relasi *</label>
-          <nz-select nzSize="small" [(ngModel)]="newRelation.relation_type" class="w-full" nzPlaceHolder="Pilih tipe relasi">
-            <nz-option nzValue="references" nzLabel="Mereferensi"></nz-option>
-            <nz-option nzValue="supersedes" nzLabel="Menggantikan"></nz-option>
-            <nz-option nzValue="related_to" nzLabel="Terkait Dengan"></nz-option>
-            <nz-option nzValue="parent_child" nzLabel="Induk-Anak"></nz-option>
-          </nz-select>
+      } @else {
+        <div class="text-center py-12 text-gray-500">
+          Dokumen tidak ditemukan
         </div>
-        <div class="mb-3">
-          <label class="text-xs font-medium text-gray-600 block mb-1">Dokumen Tujuan *</label>
-          <nz-select nzSize="small" [(ngModel)]="newRelation.related_document_id" class="w-full"
-                     nzPlaceHolder="Cari dokumen..." nzShowSearch nzServerSearch
-                     (nzOnSearch)="searchDocuments($event)">
-            @for (doc of searchResults(); track doc.id) {
-              <nz-option [nzValue]="doc.id" [nzLabel]="doc.document_number + ' — ' + doc.title"></nz-option>
-            }
-          </nz-select>
-        </div>
-        <div class="mb-4">
-          <label class="text-xs font-medium text-gray-600 block mb-1">Catatan</label>
-          <textarea nz-input [(ngModel)]="newRelation.notes" nzSize="small" [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Catatan relasi (opsional)"></textarea>
-        </div>
-        <button nz-button nzType="primary" nzSize="small" [nzLoading]="savingRelation()" (click)="saveRelation()" class="w-full">
-          <span nz-icon nzType="plus"></span> Simpan Relasi
-        </button>
-      </div>
-    </nz-drawer>
+      }
+    </div>
   `,
   styles: [`
-    :host { display: block; }
+    /* ===== Page Layout ===== */
+    .doc-detail-page { padding: 0; }
 
-    /* ── Page Header ── */
-    .detail-header {
-      margin-bottom: 16px;
-    }
-    .detail-header-top {
+    /* ===== Page Header ===== */
+    .doc-header {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0 14px;
+      border-bottom: 1px solid #e4e4e7;
+      margin-bottom: 14px;
     }
-    .back-link {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
-      color: #71717a;
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      transition: all .15s;
-      flex-shrink: 0;
-      margin-top: 2px;
-      &:hover { color: #0284c7; border-color: #0284c7; background: #f0f9ff; }
+    .doc-header__left { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+    .doc-header__back {
+      display: flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 6px;
+      color: #71717a; transition: all .15s;
+      flex-shrink: 0; margin-top: 2px;
     }
-    .detail-header-info { flex: 1; min-width: 0; }
-    .detail-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .detail-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #18181b;
-      margin: 0;
-      line-height: 1.4;
+    .doc-header__back:hover { background: #f4f4f5; color: #18181b; }
+    .doc-header__info { min-width: 0; }
+    .doc-header__title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .doc-header__title {
+      font-size: 16px; font-weight: 600; color: #18181b;
+      margin: 0; line-height: 1.3;
     }
-    .detail-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .detail-subtitle {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 4px;
-      font-size: 12px;
-      color: #71717a;
+    .doc-header__tags { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .doc-header__subtitle {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 3px; font-size: 12px; color: #71717a;
     }
+    .doc-header__sep { color: #d4d4d8; }
+    .doc-header__meta { font-weight: 500; }
     .doc-number {
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 11px;
+      display: inline-flex; align-items: center; gap: 3px;
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px;
+      background: #f4f4f5; padding: 1px 6px; border-radius: 3px;
       color: #52525b;
-      background: #f4f4f5;
-      border-radius: 3px;
-      padding: 1px 6px;
     }
-    .dot-sep {
-      width: 3px;
-      height: 3px;
-      border-radius: 50%;
+    .doc-header__actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+    /* ===== Status & Meta Tags ===== */
+    .doc-status-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 8px; border-radius: 10px;
+      font-size: 11px; font-weight: 500; line-height: 1.4;
+      background: #f4f4f5; color: #52525b;
+    }
+    .doc-status-tag__dot {
+      width: 6px; height: 6px; border-radius: 50%;
       background: #a1a1aa;
-      flex-shrink: 0;
     }
-    .detail-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
+    .doc-status-tag[data-status="draft"] { background: #f4f4f5; color: #52525b; }
+    .doc-status-tag[data-status="draft"] .doc-status-tag__dot { background: #a1a1aa; }
+    .doc-status-tag[data-status="in_review"] { background: #dbeafe; color: #1d4ed8; }
+    .doc-status-tag[data-status="in_review"] .doc-status-tag__dot { background: #3b82f6; animation: pulse-dot 1.5s infinite; }
+    .doc-status-tag[data-status="approved"] { background: #dcfce7; color: #15803d; }
+    .doc-status-tag[data-status="approved"] .doc-status-tag__dot { background: #22c55e; }
+    .doc-status-tag[data-status="revision"] { background: #fef3c7; color: #b45309; }
+    .doc-status-tag[data-status="revision"] .doc-status-tag__dot { background: #f59e0b; }
+    .doc-status-tag[data-status="final"] { background: #e0e7ff; color: #4338ca; }
+    .doc-status-tag[data-status="final"] .doc-status-tag__dot { background: #6366f1; }
+    .doc-status-tag[data-status="obsolete"] { background: #fee2e2; color: #b91c1c; }
+    .doc-status-tag[data-status="obsolete"] .doc-status-tag__dot { background: #ef4444; }
+
+    .doc-meta-tag {
+      display: inline-flex; padding: 2px 7px; border-radius: 3px;
+      font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .3px;
+      background: #f4f4f5; color: #71717a; border: 1px solid #e4e4e7;
     }
+    .doc-meta-tag[data-priority="high"] { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+    .doc-meta-tag[data-priority="critical"],
+    .doc-meta-tag[data-priority="urgent"] { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+
     .btn-approve {
-      background: #16a34a !important;
-      border-color: #16a34a !important;
-      color: #fff !important;
-      &:hover { background: #15803d !important; border-color: #15803d !important; }
+      background: #16a34a !important; border-color: #16a34a !important; color: #fff !important;
+    }
+    .btn-approve:hover { background: #15803d !important; border-color: #15803d !important; }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .4; }
     }
 
-    /* ── Status / Priority / Conf Badges ── */
-    .status-badge, .priority-badge, .conf-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 500;
-      padding: 2px 8px;
-      border-radius: 10px;
-      line-height: 1.4;
-    }
-    .status-badge {
-      &[data-status="draft"]      { background: #f4f4f5; color: #52525b; }
-      &[data-status="in_review"]  { background: #dbeafe; color: #1d4ed8; }
-      &[data-status="revision"]   { background: #fef3c7; color: #92400e; }
-      &[data-status="approved"]   { background: #dcfce7; color: #166534; }
-      &[data-status="final"]      { background: #e0f2fe; color: #0369a1; }
-      &[data-status="obsolete"]   { background: #fecaca; color: #991b1b; }
-      &[data-status="archived"]   { background: #e4e4e7; color: #3f3f46; }
-    }
-    .priority-badge {
-      &[data-priority="low"]      { background: #f4f4f5; color: #71717a; }
-      &[data-priority="normal"]   { background: #f4f4f5; color: #71717a; }
-      &[data-priority="medium"]   { background: #dbeafe; color: #1d4ed8; }
-      &[data-priority="high"]     { background: #fed7aa; color: #9a3412; }
-      &[data-priority="urgent"]   { background: #fecaca; color: #991b1b; }
-      &[data-priority="critical"] { background: #fecaca; color: #991b1b; }
-    }
-    .conf-badge {
-      background: #f4f4f5;
-      color: #52525b;
-    }
-
-    /* ── Content Grid ── */
-    .detail-content {
+    /* ===== Content Grid ===== */
+    .doc-content {
       display: grid;
       grid-template-columns: 1fr 280px;
-      gap: 16px;
+      gap: 14px;
       align-items: start;
     }
-    .detail-main { min-width: 0; }
+    .doc-main { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 
-    /* ── Info Card ── */
-    .info-card {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 6px;
-      margin-bottom: 16px;
+    /* ===== Info Panel ===== */
+    .doc-info-panel {
+      background: #fff; border: 1px solid #e4e4e7; border-radius: 6px;
+      overflow: hidden;
     }
-    .info-card-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border-bottom: 1px solid #f4f4f5;
-      font-size: 12px;
-      font-weight: 600;
-      color: #27272a;
-      span[nz-icon] { font-size: 13px; color: #0284c7; }
+    .doc-info-panel__header {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 14px; font-size: 13px; font-weight: 600; color: #27272a;
+      border-bottom: 1px solid #f4f4f5; background: #fafafa;
     }
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      padding: 6px 14px 4px;
-      gap: 0;
+    .doc-info-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      padding: 2px 0;
     }
-    .info-item {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-      padding: 3px 0;
+    .doc-info-item {
+      display: flex; flex-direction: column; gap: 1px;
+      padding: 7px 14px;
+      border-bottom: 1px solid #fafafa;
     }
-    .info-label {
-      font-size: 11px;
-      font-weight: 500;
-      color: #a1a1aa;
-      white-space: nowrap;
-      min-width: 70px;
-      &::after { content: ':'; }
+    .doc-info-item:nth-child(odd) { border-right: 1px solid #fafafa; }
+    .doc-info-label { font-size: 10.5px; color: #a1a1aa; text-transform: uppercase; letter-spacing: .4px; font-weight: 500; }
+    .doc-info-value { font-size: 13px; color: #27272a; }
+    .doc-info-value--mono { font-family: 'SF Mono', 'Fira Code', monospace; font-weight: 600; color: #0284c7; }
+    .doc-info-icon { font-size: 11px; color: #a1a1aa; margin-right: 2px; }
+    .doc-info-desc {
+      padding: 10px 14px; border-top: 1px solid #f4f4f5;
     }
-    .info-value {
-      font-size: 12px;
-      color: #27272a;
-    }
-    .info-description {
-      padding: 6px 14px 8px;
-      border-top: 1px solid #f4f4f5;
-    }
-    .info-desc-text {
-      font-size: 12px;
-      color: #3f3f46;
-      margin: 2px 0 0;
-      line-height: 1.5;
-    }
+    .doc-info-desc__text { margin: 3px 0 0; font-size: 13px; color: #52525b; line-height: 1.5; }
 
-    /* ── Tabs Card ── */
-    .tabs-card {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 6px;
-      padding: 0 14px 14px;
+    /* ===== Tabs Panel ===== */
+    .doc-tabs-panel {
+      background: #fff; border: 1px solid #e4e4e7; border-radius: 6px;
+      overflow: hidden;
     }
-    :host ::ng-deep .tabs-card {
-      .ant-tabs-tab { font-size: 12px; padding: 10px 4px; }
-      .ant-tabs-nav { margin-bottom: 12px; }
-    }
+    :host ::ng-deep .doc-tabs-panel .ant-tabs-nav { padding: 0 14px; margin-bottom: 0; }
+    :host ::ng-deep .doc-tabs-panel .ant-tabs-tab { font-size: 12px; padding: 9px 2px; }
+    :host ::ng-deep .doc-tabs-panel .ant-tabs-content-holder { padding: 12px 14px; }
 
-    /* ── Comment Styles ── */
-    .comment-list { display: flex; flex-direction: column; gap: 10px; }
-    .comment-item {
-      border: 1px solid #f4f4f5;
-      border-radius: 6px;
-      padding: 10px 12px;
-      transition: border-color .15s;
-      &:hover { border-color: #e4e4e7; }
-      &.resolved { opacity: 0.55; background: #fafafa; }
+    .doc-action-btn {
+      width: 26px !important; height: 26px !important; padding: 0 !important;
+      display: inline-flex !important; align-items: center; justify-content: center;
+      border-radius: 4px !important; font-size: 13px;
     }
-    .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .comment-author { display: flex; align-items: center; gap: 8px; }
-    .comment-avatar { flex-shrink: 0; }
-    .comment-name { font-size: 12px; font-weight: 600; color: #27272a; }
-    .comment-time { font-size: 11px; color: #a1a1aa; }
-    .resolved-badge {
-      font-size: 10px;
-      color: #16a34a;
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
+    .doc-action-btn:hover { background: #f4f4f5 !important; }
+
+    /* ===== Comments ===== */
+    .doc-comments { display: flex; flex-direction: column; gap: 10px; }
+    .doc-comment {
+      display: flex; gap: 10px; padding: 10px; border-radius: 6px;
+      background: #fafafa; border: 1px solid #f4f4f5; transition: border-color .15s;
     }
-    .comment-actions { display: flex; gap: 2px; }
-    .comment-content { font-size: 12px; color: #3f3f46; margin: 0 0 0 36px; line-height: 1.5; }
-    .reply-list {
-      margin: 8px 0 0 36px;
-      padding-left: 12px;
+    .doc-comment:hover { border-color: #e4e4e7; }
+    .doc-comment--resolved { opacity: .55; }
+    .doc-comment__body { flex: 1; min-width: 0; }
+    .doc-comment__header {
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .doc-comment__author { font-size: 12px; font-weight: 600; color: #27272a; }
+    .doc-comment__time { font-size: 11px; color: #a1a1aa; }
+    .doc-comment__resolved-badge {
+      font-size: 10px; color: #16a34a; display: inline-flex; align-items: center; gap: 2px;
+    }
+    .doc-comment__actions { margin-left: auto; display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
+    .doc-comment:hover .doc-comment__actions { opacity: 1; }
+    .doc-comment__content { margin: 4px 0 0; font-size: 13px; color: #3f3f46; line-height: 1.5; }
+    .doc-comment__replies {
+      margin-top: 8px; padding-left: 12px;
       border-left: 2px solid #e4e4e7;
     }
-    .reply-item { margin-bottom: 8px; }
-    .reply-name { font-size: 11px; font-weight: 600; color: #3f3f46; }
-    .reply-time { font-size: 10px; color: #a1a1aa; margin-left: 6px; }
-    .reply-content { font-size: 12px; color: #52525b; margin: 2px 0 0; }
-    .reply-input { margin: 8px 0 0 36px; }
-    .reply-input-actions { display: flex; gap: 6px; margin-top: 6px; }
-    .reply-trigger {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 11px;
-      color: #71717a;
-      margin: 6px 0 0 36px;
-      padding: 0;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      &:hover { color: #0284c7; }
+    .doc-comment__reply { margin-bottom: 6px; }
+    .doc-comment__reply-input { margin-top: 6px; }
+    .doc-comment__reply-btn {
+      font-size: 11px !important; color: #71717a !important; padding: 2px 4px !important;
+      height: auto !important; margin-top: 4px;
     }
-    .new-comment {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid #f4f4f5;
+    .doc-comment__reply-btn:hover { color: #0284c7 !important; }
+    .doc-comment-composer {
+      display: flex; gap: 10px; padding-top: 12px;
+      margin-top: 4px; border-top: 1px solid #f4f4f5;
     }
-    .new-comment-input { flex: 1; }
+    .doc-comment-composer__input { flex: 1; }
 
-    /* ── Custom Workflow Steps (in tab) ── */
-    .workflow-steps { padding: 4px 0; }
-    .wf-step {
-      display: flex;
-      gap: 12px;
-      position: relative;
-      &:last-child .wf-line { display: none; }
+    /* ===== Workflow Steps (main tab) ===== */
+    .doc-workflow-steps { padding: 4px 0; }
+    .doc-wf-step { display: flex; gap: 12px; position: relative; }
+    .doc-wf-step__indicator {
+      display: flex; flex-direction: column; align-items: center;
+      flex-shrink: 0; width: 28px;
     }
-    .wf-step-indicator {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex-shrink: 0;
-      width: 20px;
+    .doc-wf-step__dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: #a1a1aa;
+      background: #f4f4f5; border: 2px solid #e4e4e7;
+      position: relative; z-index: 1; transition: all .2s;
     }
-    .wf-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #d4d4d8;
-      border: 2px solid #e4e4e7;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 1;
+    .doc-wf-step__num { font-size: 11px; }
+    .doc-wf-step__line {
+      width: 2px; flex: 1; min-height: 20px;
+      background: #e4e4e7; margin: 2px 0;
     }
-    .wf-line {
-      width: 2px;
-      flex: 1;
-      background: #e4e4e7;
-      margin: 2px 0;
+    .doc-wf-step[data-status="completed"] .doc-wf-step__dot {
+      background: #dcfce7; border-color: #22c55e; color: #16a34a;
     }
-    .wf-step[data-status="completed"] .wf-dot  { background: #16a34a; border-color: #bbf7d0; }
-    .wf-step[data-status="in_progress"] .wf-dot { background: #0284c7; border-color: #bae6fd; box-shadow: 0 0 0 3px rgba(2,132,199,.15); }
-    .wf-step[data-status="rejected"] .wf-dot   { background: #dc2626; border-color: #fecaca; }
-    .wf-step-content { padding-bottom: 16px; flex: 1; min-width: 0; }
-    .wf-step-header { display: flex; justify-content: space-between; align-items: center; }
-    .wf-step-name { font-size: 12px; font-weight: 600; color: #27272a; }
-    .wf-step-time { font-size: 11px; color: #a1a1aa; }
-    .wf-step-actor { font-size: 11px; color: #71717a; margin-top: 2px; }
-    .wf-action-badge {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 500;
-      padding: 1px 6px;
-      border-radius: 3px;
-      margin-top: 4px;
-      &[data-action="approve"] { background: #dcfce7; color: #166534; }
-      &[data-action="reject"]  { background: #fecaca; color: #991b1b; }
-      &[data-action="submit"]  { background: #dbeafe; color: #1d4ed8; }
-      &[data-action="review"]  { background: #e0f2fe; color: #0369a1; }
+    .doc-wf-step[data-status="completed"] .doc-wf-step__line { background: #86efac; }
+    .doc-wf-step[data-status="rejected"] .doc-wf-step__dot {
+      background: #fee2e2; border-color: #ef4444; color: #dc2626;
     }
-    .wf-step-comment {
-      font-size: 11px;
-      color: #71717a;
-      font-style: italic;
-      margin-top: 4px;
+    .doc-wf-step[data-status="in_progress"] .doc-wf-step__dot {
+      background: #dbeafe; border-color: #3b82f6; color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(59,130,246,.15);
     }
+    .doc-wf-step__content { padding-bottom: 16px; min-width: 0; }
+    .doc-wf-step__name { font-size: 13px; font-weight: 600; color: #27272a; }
+    .doc-wf-step__actor { font-size: 12px; color: #71717a; display: flex; align-items: center; gap: 3px; margin-top: 1px; }
+    .doc-wf-step__comment {
+      font-size: 12px; color: #71717a; font-style: italic;
+      margin-top: 4px; padding: 4px 8px; background: #f4f4f5; border-radius: 4px;
+    }
+    .doc-wf-step__time { font-size: 11px; color: #a1a1aa; margin-top: 2px; }
+    .doc-wf-action-tag {
+      display: inline-flex; padding: 1px 6px; border-radius: 3px;
+      font-size: 10px; font-weight: 600; margin-top: 3px;
+      text-transform: uppercase; letter-spacing: .3px;
+    }
+    .doc-wf-action-tag[data-action="approve"] { background: #dcfce7; color: #15803d; }
+    .doc-wf-action-tag[data-action="reject"] { background: #fee2e2; color: #b91c1c; }
+    .doc-wf-action-tag[data-action="submit"] { background: #dbeafe; color: #1d4ed8; }
+    .doc-wf-action-tag[data-action="review"] { background: #e0e7ff; color: #4338ca; }
 
-    /* ── Sidebar ── */
-    .detail-sidebar { position: sticky; top: 12px; }
-    .sidebar-card {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 6px;
-      margin-bottom: 12px;
+    /* ===== Upload Zone ===== */
+    .doc-upload-zone { margin-bottom: 12px; }
+    :host ::ng-deep .doc-upload-zone .ant-upload-drag {
+      border: 1.5px dashed #d4d4d8 !important; border-radius: 6px; background: #fafafa;
+      transition: border-color .2s, background .2s;
     }
-    .sidebar-card-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 10px 14px;
-      border-bottom: 1px solid #f4f4f5;
-      font-size: 13px;
-      font-weight: 600;
-      color: #27272a;
-      span[nz-icon] { font-size: 14px; color: #0284c7; }
+    :host ::ng-deep .doc-upload-zone .ant-upload-drag:hover {
+      border-color: #0284c7 !important; background: #f0f9ff;
     }
+    .doc-upload-zone__inner { padding: 12px 0; text-align: center; }
+    .doc-upload-zone__icon { font-size: 28px; color: #a1a1aa; }
+    .doc-upload-zone__text { font-size: 12px; color: #52525b; margin: 4px 0 0; }
+    .doc-upload-zone__hint { font-size: 11px; color: #a1a1aa; margin: 2px 0 0; }
 
-    /* Sidebar Workflow */
-    .sidebar-wf-steps { padding: 10px 14px; }
-    .sidebar-wf-step {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 6px 0;
-      position: relative;
-      &:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        left: 4px;
-        top: 20px;
-        bottom: -6px;
-        width: 2px;
-        background: #e4e4e7;
-      }
+    /* ===== Sidebar ===== */
+    .doc-sidebar { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 12px; }
+    .doc-sidebar-card {
+      background: #fff; border: 1px solid #e4e4e7; border-radius: 6px;
+      overflow: hidden;
     }
-    .sidebar-wf-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #d4d4d8;
-      border: 2px solid #e4e4e7;
-      flex-shrink: 0;
-      margin-top: 2px;
-      position: relative;
-      z-index: 1;
+    .doc-sidebar-card__header {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 14px; font-size: 12px; font-weight: 600; color: #27272a;
+      border-bottom: 1px solid #f4f4f5; background: #fafafa;
+      text-transform: uppercase; letter-spacing: .3px;
     }
-    .sidebar-wf-step[data-status="completed"] .sidebar-wf-dot { background: #16a34a; border-color: #bbf7d0; }
-    .sidebar-wf-step[data-status="in_progress"] .sidebar-wf-dot { background: #0284c7; border-color: #bae6fd; }
-    .sidebar-wf-step[data-status="rejected"] .sidebar-wf-dot { background: #dc2626; border-color: #fecaca; }
-    .sidebar-wf-info { display: flex; flex-direction: column; }
-    .sidebar-wf-name { font-size: 12px; font-weight: 500; color: #27272a; line-height: 1.3; }
-    .sidebar-wf-actor { font-size: 11px; color: #71717a; }
-    .sidebar-wf-time { font-size: 10px; color: #a1a1aa; }
+    .doc-sidebar-card__body { padding: 12px 14px; }
 
-    /* Sidebar Actions */
-    .sidebar-actions { padding: 6px 8px; }
-    .sidebar-action-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      padding: 8px 10px;
-      border: none;
-      background: none;
-      border-radius: 4px;
-      font-size: 12px;
-      color: #3f3f46;
-      cursor: pointer;
-      transition: all .15s;
-      span[nz-icon] { font-size: 14px; color: #71717a; }
-      &:hover {
-        background: #f4f4f5;
-        color: #0284c7;
-        span[nz-icon] { color: #0284c7; }
-      }
+    /* Sidebar Workflow Steps */
+    .doc-sidebar-steps { display: flex; flex-direction: column; }
+    .doc-sidebar-step {
+      display: flex; gap: 10px; position: relative;
     }
+    .doc-sidebar-step__dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #e4e4e7; border: 2px solid #d4d4d8;
+      flex-shrink: 0; margin-top: 4px; position: relative; z-index: 1;
+    }
+    .doc-sidebar-step__connector {
+      position: absolute; left: 4px; top: 14px; bottom: 0;
+      width: 2px; background: #e4e4e7;
+    }
+    .doc-sidebar-step[data-status="completed"] .doc-sidebar-step__dot {
+      background: #22c55e; border-color: #22c55e;
+    }
+    .doc-sidebar-step[data-status="completed"] .doc-sidebar-step__connector { background: #86efac; }
+    .doc-sidebar-step[data-status="in_progress"] .doc-sidebar-step__dot {
+      background: #3b82f6; border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,.2);
+    }
+    .doc-sidebar-step[data-status="rejected"] .doc-sidebar-step__dot {
+      background: #ef4444; border-color: #ef4444;
+    }
+    .doc-sidebar-step__info { padding-bottom: 12px; min-width: 0; }
+    .doc-sidebar-step__name { font-size: 12px; font-weight: 500; color: #27272a; line-height: 1.3; }
+    .doc-sidebar-step__meta { font-size: 11px; color: #a1a1aa; display: block; }
+    .doc-sidebar-step__time { font-size: 10px; color: #a1a1aa; display: block; }
 
-    /* ── Responsive ── */
-    @media (max-width: 900px) {
-      .detail-content { grid-template-columns: 1fr; }
-      .detail-sidebar { position: static; }
+    /* Quick Actions */
+    .doc-quick-actions { display: flex; flex-direction: column; gap: 4px; }
+    .doc-quick-action {
+      display: flex; align-items: center; gap: 8px;
+      width: 100%; padding: 7px 10px; border-radius: 5px;
+      font-size: 12px; color: #52525b; background: none; border: none;
+      cursor: pointer; transition: all .15s;
+      text-align: left;
+    }
+    .doc-quick-action:hover { background: #f4f4f5; color: #18181b; }
+    .doc-quick-action span[nz-icon] { font-size: 14px; color: #71717a; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .doc-content { grid-template-columns: 1fr; }
+      .doc-sidebar { position: static; }
+      .doc-header { flex-direction: column; gap: 10px; }
+      .doc-header__actions { align-self: flex-start; }
+      .doc-info-grid { grid-template-columns: 1fr; }
+      .doc-info-item:nth-child(odd) { border-right: none; }
     }
   `]
 })
@@ -1117,9 +831,6 @@ export class DocumentDetailPage implements OnInit {
   workflow = signal<WorkflowStatus | null>(null);
   distributions = signal<Distribution[]>([]);
   attachments = signal<Attachment[]>([]);
-  outboundRelations = signal<DocumentRelation[]>([]);
-  inboundRelations = signal<DocumentRelation[]>([]);
-  searchResults = signal<{ id: string; title: string; document_number: string }[]>([]);
 
   loading = signal(true);
   versionsLoading = signal(false);
@@ -1127,17 +838,113 @@ export class DocumentDetailPage implements OnInit {
   workflowLoading = signal(false);
   distributionsLoading = signal(false);
   uploadingAttachment = signal(false);
-  savingRelation = signal(false);
-
-  relationDrawerVisible = false;
-  newRelation = { related_document_id: '', relation_type: '', notes: '' };
 
   newComment = '';
   replyContent = '';
   replyingTo = signal<string | null>(null);
   activeTab = 0;
 
-  private documentId = '';
+  documentId = '';
+
+  // Mock file tree for Berkas tab
+  mockFileTree: FileNode[] = [
+    {
+      id: 'folder-dokumen-utama', name: 'Dokumen Utama', type: 'folder', expanded: true,
+      modifiedAt: '2026-04-10T09:00:00Z', uploadedBy: 'Admin',
+      children: [
+        {
+          id: 'file-v2', name: 'SOP-Procurement-v2.0.docx', type: 'file',
+          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          size: 2457600, version: 'v2.0', isCurrent: true,
+          uploadedBy: 'Budi Santoso', modifiedAt: '2026-04-10T09:15:00Z', createdAt: '2026-04-10T09:15:00Z',
+          description: 'Versi final setelah review tim legal dan compliance.',
+          tags: ['Final', 'Reviewed'], parentId: 'folder-dokumen-utama'
+        },
+        {
+          id: 'file-v1', name: 'SOP-Procurement-v1.0.docx', type: 'file',
+          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          size: 2150400, version: 'v1.0', isCurrent: false,
+          uploadedBy: 'Budi Santoso', modifiedAt: '2026-03-20T14:30:00Z', createdAt: '2026-03-20T14:30:00Z',
+          description: 'Draft awal dokumen SOP.', parentId: 'folder-dokumen-utama'
+        },
+        {
+          id: 'file-pdf', name: 'SOP-Procurement-v2.0.pdf', type: 'file',
+          mimeType: 'application/pdf', size: 1843200,
+          uploadedBy: 'System', modifiedAt: '2026-04-10T09:20:00Z', createdAt: '2026-04-10T09:20:00Z',
+          description: 'Versi PDF dari dokumen utama (auto-generated).', tags: ['Auto-PDF'],
+          parentId: 'folder-dokumen-utama'
+        }
+      ]
+    },
+    {
+      id: 'folder-lampiran', name: 'Lampiran', type: 'folder',
+      modifiedAt: '2026-04-12T11:00:00Z', uploadedBy: 'Admin',
+      children: [
+        {
+          id: 'folder-lampiran-legal', name: 'Dokumen Legal', type: 'folder',
+          modifiedAt: '2026-04-08T16:00:00Z', parentId: 'folder-lampiran',
+          children: [
+            {
+              id: 'file-kontrak', name: 'Kontrak-Vendor-2026.pdf', type: 'file',
+              mimeType: 'application/pdf', size: 3145728,
+              uploadedBy: 'Siti Aminah', modifiedAt: '2026-04-08T16:30:00Z', createdAt: '2026-04-08T16:30:00Z',
+              description: 'Kontrak kerjasama dengan vendor utama.', tags: ['Legal', 'Kontrak'],
+              parentId: 'folder-lampiran-legal'
+            },
+            {
+              id: 'file-nda', name: 'NDA-Signed.pdf', type: 'file',
+              mimeType: 'application/pdf', size: 524288,
+              uploadedBy: 'Siti Aminah', modifiedAt: '2026-04-05T10:00:00Z', createdAt: '2026-04-05T10:00:00Z',
+              parentId: 'folder-lampiran-legal'
+            }
+          ]
+        },
+        {
+          id: 'file-data-survey', name: 'survey-data-2026.csv', type: 'file',
+          mimeType: 'text/csv', size: 375,
+          uploadedBy: 'Rini Wulandari', modifiedAt: '2026-04-12T11:00:00Z', createdAt: '2026-04-12T11:00:00Z',
+          tags: ['Data'], parentId: 'folder-lampiran'
+        },
+        {
+          id: 'file-foto', name: 'site-photo-001.jpg', type: 'file',
+          mimeType: 'image/jpeg', size: 4194304,
+          uploadedBy: 'Andi Pratama', modifiedAt: '2026-04-11T08:45:00Z', createdAt: '2026-04-11T08:45:00Z',
+          description: 'Foto lokasi site visit tanggal 11 April.', parentId: 'folder-lampiran'
+        }
+      ]
+    },
+    {
+      id: 'folder-referensi', name: 'Referensi', type: 'folder',
+      modifiedAt: '2026-04-01T10:00:00Z', uploadedBy: 'Admin',
+      children: [
+        {
+          id: 'file-peraturan', name: 'Peraturan-OJK-2025.pdf', type: 'file',
+          mimeType: 'application/pdf', size: 5242880,
+          uploadedBy: 'Legal Team', modifiedAt: '2026-04-01T10:30:00Z', createdAt: '2026-04-01T10:30:00Z',
+          tags: ['Regulasi', 'OJK'], parentId: 'folder-referensi'
+        },
+        {
+          id: 'file-template-excel', name: 'Template-Laporan.xlsx', type: 'file',
+          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', size: 102400,
+          uploadedBy: 'Finance Team', modifiedAt: '2026-03-28T09:00:00Z', createdAt: '2026-03-28T09:00:00Z',
+          parentId: 'folder-referensi'
+        }
+      ]
+    },
+    {
+      id: 'folder-review', name: 'Catatan Review', type: 'folder',
+      modifiedAt: '2026-04-09T15:00:00Z', uploadedBy: 'Admin',
+      children: [
+        {
+          id: 'file-review-note', name: 'review-notes-budi.docx', type: 'file',
+          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          size: 51200, uploadedBy: 'Budi Santoso',
+          modifiedAt: '2026-04-09T15:20:00Z', createdAt: '2026-04-09T15:20:00Z',
+          parentId: 'folder-review'
+        }
+      ]
+    }
+  ];
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -1197,17 +1004,9 @@ export class DocumentDetailPage implements OnInit {
   }
 
   onTabChange(index: number) {
-    // Lazy-load distributions on first visit
+    // Lazy-load distributions on first visit (tab 3)
     if (index === 3 && this.distributions().length === 0 && !this.distributionsLoading()) {
       this.loadDistributions(this.documentId);
-    }
-    // Lazy-load attachments on first visit
-    if (index === 4 && this.attachments().length === 0) {
-      this.loadAttachments();
-    }
-    // Lazy-load relations on first visit
-    if (index === 5 && this.outboundRelations().length === 0 && this.inboundRelations().length === 0) {
-      this.loadRelations();
     }
   }
 
@@ -1526,86 +1325,32 @@ export class DocumentDetailPage implements OnInit {
     return labels[status] || status;
   }
 
-  // === Document Relations ===
-
-  loadRelations(): void {
-    this.http.get<any>(`${environment.apiUrl}/documents/${this.documentId}/relations`).subscribe({
-      next: (res) => {
-        this.outboundRelations.set(res.outbound || []);
-        this.inboundRelations.set(res.inbound || []);
-      },
-      error: () => {}
-    });
+  // --- File Manager Event Handlers (mockup — will be wired to API later) ---
+  onFmDownload(node: FileNode) {
+    this.message.info(`Download: ${node.name} (mockup)`);
   }
 
-  openRelationDrawer(): void {
-    this.newRelation = { related_document_id: '', relation_type: '', notes: '' };
-    this.searchResults.set([]);
-    this.relationDrawerVisible = true;
+  onFmPreview(node: FileNode) {
+    this.message.info(`Preview: ${node.name} (mockup)`);
   }
 
-  searchDocuments(term: string): void {
-    if (!term || term.length < 2) return;
-    this.http.get<any>(`${environment.apiUrl}/documents`, {
-      params: { search: term, per_page: '10' }
-    }).subscribe({
-      next: (res) => {
-        const docs = (res.data || [])
-          .filter((d: any) => d.id !== this.documentId)
-          .map((d: any) => ({ id: d.id, title: d.title, document_number: d.document_number }));
-        this.searchResults.set(docs);
-      }
-    });
-  }
-
-  saveRelation(): void {
-    if (!this.newRelation.related_document_id || !this.newRelation.relation_type) {
-      this.message.warning('Pilih tipe relasi dan dokumen tujuan');
-      return;
-    }
-    this.savingRelation.set(true);
-    this.http.post(`${environment.apiUrl}/documents/${this.documentId}/relations`, this.newRelation).subscribe({
-      next: () => {
-        this.message.success('Relasi berhasil ditambahkan');
-        this.relationDrawerVisible = false;
-        this.savingRelation.set(false);
-        this.loadRelations();
-      },
-      error: () => {
-        this.message.error('Gagal menambahkan relasi');
-        this.savingRelation.set(false);
-      }
-    });
-  }
-
-  deleteRelation(relationId: string): void {
+  onFmDelete(node: FileNode) {
     this.modal.confirm({
-      nzTitle: 'Hapus relasi ini?',
+      nzTitle: 'Hapus File?',
+      nzContent: `Yakin ingin menghapus "${node.name}"?`,
+      nzOkText: 'Hapus',
+      nzOkDanger: true,
       nzOnOk: () => {
-        this.http.delete(`${environment.apiUrl}/documents/${this.documentId}/relations/${relationId}`).subscribe({
-          next: () => {
-            this.message.success('Relasi berhasil dihapus');
-            this.loadRelations();
-          },
-          error: () => this.message.error('Gagal menghapus relasi')
-        });
+        this.message.success(`${node.name} dihapus (mockup)`);
       }
     });
   }
 
-  getRelationTypeColor(type: string): string {
-    const colors: Record<string, string> = {
-      references: 'blue', supersedes: 'orange', related_to: 'green',
-      attachment: 'purple', parent_child: 'cyan'
-    };
-    return colors[type] || 'default';
+  onFmCreateFolder(event: { parentId: string; name: string }) {
+    this.message.success(`Folder "${event.name}" dibuat di ${event.parentId} (mockup)`);
   }
 
-  getRelationTypeLabel(type: string): string {
-    const labels: Record<string, string> = {
-      references: 'Mereferensi', supersedes: 'Menggantikan',
-      related_to: 'Terkait', attachment: 'Lampiran', parent_child: 'Induk-Anak'
-    };
-    return labels[type] || type;
+  onFmUpload(event: { parentId: string; file: File }) {
+    this.message.success(`Upload ${event.file.name} ke ${event.parentId} (mockup)`);
   }
 }

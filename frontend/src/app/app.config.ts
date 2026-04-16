@@ -77,7 +77,16 @@ import {
   DesktopOutline,
   LoginOutline,
   MinusSquareOutline,
-  PlusSquareOutline
+  PlusSquareOutline,
+  FolderAddOutline,
+  FolderOpenOutline,
+  CaretDownOutline,
+  CaretRightOutline,
+  CaretUpOutline,
+  AppstoreOutline,
+  UnorderedListOutline,
+  CloudUploadOutline,
+  NumberOutline
 } from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
@@ -159,7 +168,16 @@ const icons = [
   DesktopOutline,
   LoginOutline,
   MinusSquareOutline,
-  PlusSquareOutline
+  PlusSquareOutline,
+  FolderAddOutline,
+  FolderOpenOutline,
+  CaretDownOutline,
+  CaretRightOutline,
+  CaretUpOutline,
+  AppstoreOutline,
+  UnorderedListOutline,
+  CloudUploadOutline,
+  NumberOutline
 ];
 
 export const appConfig: ApplicationConfig = {

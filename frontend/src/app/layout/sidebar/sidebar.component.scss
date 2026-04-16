@@ -1,303 +1,97 @@
-// ── Sidebar Shell ──
-$sb-bg: #111318;
-$sb-border: #1e2028;
-$sb-text: #9ca3af;
-$sb-text-hover: #e5e7eb;
-$sb-active-bg: rgba(2, 132, 199, 0.12);
-$sb-active-text: #38bdf8;
-$sb-active-border: #0284c7;
-$sb-submenu-bg: rgba(0, 0, 0, 0.15);
-
 .sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+  @apply fixed left-0 top-0 h-screen flex flex-col;
   width: var(--sidebar-width);
-  background: $sb-bg;
   z-index: var(--z-fixed);
   transition: width 0.2s ease;
-  border-right: 1px solid $sb-border;
+  background: linear-gradient(180deg, #111827 0%, #1e293b 100%);
 
   &.collapsed {
     width: var(--sidebar-collapsed-width);
-
-    .sidebar-nav ::ng-deep {
-      .ant-menu-submenu-title,
-      .ant-menu-item {
-        padding: 0 !important;
-        justify-content: center;
-      }
-    }
   }
 }
 
-// ── Header / Logo ──
 .sidebar-header {
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
+  @apply flex items-center px-3 border-b border-white/5;
   height: var(--header-height);
-  border-bottom: 1px solid $sb-border;
-  flex-shrink: 0;
 }
 
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  @apply flex items-center gap-2.5;
 }
 
 .logo-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #0284c7, #0ea5e9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  @apply w-7 h-7 rounded flex items-center justify-center;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+}
 
-  span[nz-icon] {
-    font-size: 16px;
-    color: #fff;
+.logo-text {
+  @apply flex flex-col;
+
+  .title {
+    @apply text-white font-semibold text-[13px] leading-tight;
+  }
+
+  .subtitle {
+    @apply text-[10px] text-gray-500 leading-tight;
   }
 }
 
-.logo-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.2px;
-  line-height: 1.2;
-}
-
-.logo-sub {
-  font-size: 10px;
-  color: #6b7280;
-  letter-spacing: 0.2px;
-  display: block;
-}
-
-// ── Navigation ──
 .sidebar-nav {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 8px 0;
+  @apply flex-1 overflow-y-auto py-1;
 
-  // Thin scrollbar
-  &::-webkit-scrollbar { width: 3px; }
-  &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: #2a2d35; border-radius: 3px; }
+  // Override ng-zorro menu styles
+  .ant-menu {
+    @apply bg-transparent border-none;
+    font-size: 12px !important;
+  }
 
-  // ── ng-zorro menu overrides ──
-  ::ng-deep {
-    .ant-menu {
-      background: transparent !important;
-      border-right: none !important;
-      padding: 0 8px;
+  .ant-menu-item,
+  .ant-menu-submenu-title {
+    @apply text-gray-400;
+    height: 32px !important;
+    line-height: 32px !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    font-size: 12px !important;
+
+    &:hover {
+      @apply text-gray-100;
+      background: rgba(255, 255, 255, 0.05) !important;
     }
+  }
 
-    // ── Top-level items & submenu titles ──
-    .ant-menu-item,
-    .ant-menu-submenu-title {
-      height: 34px !important;
-      line-height: 34px !important;
-      margin: 1px 0 !important;
-      padding: 0 10px !important;
-      border-radius: 6px !important;
-      color: $sb-text !important;
-      font-size: 12.5px !important;
-      font-weight: 500;
-      transition: all 0.15s ease;
+  .ant-menu-item-selected {
+    background: rgba(2, 132, 199, 0.2) !important;
+    color: #7dd3fc !important;
+    border-right: 2px solid #0ea5e9 !important;
+  }
 
-      &:hover {
-        color: $sb-text-hover !important;
-        background: rgba(255, 255, 255, 0.05) !important;
-      }
-
-      // Icon sizing
-      .anticon {
-        font-size: 15px !important;
-        margin-right: 8px;
-        vertical-align: -0.15em;
-        opacity: 0.7;
-      }
-    }
-
-    // ── Selected / Active item ──
-    .ant-menu-item-selected,
-    .ant-menu-item.ant-menu-item-selected {
-      background: $sb-active-bg !important;
-      color: $sb-active-text !important;
-      font-weight: 600;
-      position: relative;
-
-      &::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 6px;
-        bottom: 6px;
-        width: 3px;
-        border-radius: 0 3px 3px 0;
-        background: $sb-active-border;
-      }
-
-      .anticon {
-        color: $sb-active-text !important;
-        opacity: 1;
-      }
-
-      a { color: $sb-active-text !important; }
-    }
-
-    // ── Submenu (group header) ──
-    .ant-menu-submenu {
-      // Group title
-      > .ant-menu-submenu-title {
-        font-weight: 600;
-        font-size: 12px !important;
-        letter-spacing: 0.2px;
-
-        .anticon { opacity: 0.65; }
-
-        // Arrow
-        .ant-menu-submenu-arrow {
-          color: #4b5563 !important;
-          right: 10px;
-          &::before, &::after {
-            background: #4b5563 !important;
-          }
-        }
-      }
-
-      // Open state
-      &.ant-menu-submenu-open > .ant-menu-submenu-title {
-        color: $sb-text-hover !important;
-        .anticon { opacity: 0.9; }
-        .ant-menu-submenu-arrow {
-          color: #6b7280 !important;
-          &::before, &::after { background: #6b7280 !important; }
-        }
-      }
-    }
-
-    // ── Sub-menu items (children) ──
-    .ant-menu-sub.ant-menu-inline {
-      background: $sb-submenu-bg !important;
-      border-radius: 0 0 6px 6px;
-      padding: 2px 0 4px !important;
-      margin-top: -2px;
-
-      .ant-menu-item {
-        height: 30px !important;
-        line-height: 30px !important;
-        padding-left: 38px !important;
-        margin: 0 !important;
-        border-radius: 0 !important;
-        font-size: 12px !important;
-        font-weight: 400;
-        color: #8b919e !important;
-        position: relative;
-
-        // Dot indicator
-        &::after {
-          content: '';
-          position: absolute;
-          left: 22px;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 4px;
-          height: 4px;
-          border-radius: 50%;
-          background: #3f4451;
-          transition: all 0.15s;
-        }
-
-        &:hover {
-          color: $sb-text-hover !important;
-          background: rgba(255, 255, 255, 0.03) !important;
-          &::after { background: #6b7280; }
-        }
-
-        &.ant-menu-item-selected {
-          background: transparent !important;
-          color: $sb-active-text !important;
-          font-weight: 500;
-
-          &::before { display: none; }
-          &::after {
-            background: $sb-active-text;
-            width: 5px;
-            height: 5px;
-            box-shadow: 0 0 4px rgba(56, 189, 248, 0.4);
-          }
-        }
-
-        a {
-          color: inherit !important;
-          display: block;
-        }
-      }
-    }
-
-    // ── Collapsed state ──
-    .ant-menu-inline-collapsed {
-      width: var(--sidebar-collapsed-width) !important;
-      padding: 0 6px;
-
-      .ant-menu-item,
-      .ant-menu-submenu-title {
-        padding: 0 !important;
-        text-align: center;
-
-        .anticon {
-          margin: 0 !important;
-          font-size: 16px !important;
-          line-height: 34px;
-        }
-      }
-    }
+  .ant-menu-sub {
+    background: rgba(0, 0, 0, 0.15) !important;
   }
 }
 
-// ── Footer ──
 .sidebar-footer {
-  padding: 8px;
-  border-top: 1px solid $sb-border;
-  flex-shrink: 0;
+  @apply p-2 border-t border-white/5;
 }
 
 .collapse-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 7px 10px;
-  background: none;
-  border: none;
-  border-radius: 6px;
-  color: #6b7280;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s;
-
-  span[nz-icon] { font-size: 14px; }
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #9ca3af;
-  }
+  @apply w-full flex items-center gap-2 px-2.5 py-1.5;
+  @apply text-gray-500 bg-transparent border-0;
+  @apply hover:bg-white/5 hover:text-gray-300 cursor-pointer;
+  @apply transition-colors text-xs rounded;
 }
 
-// ── Responsive ──
+.collapse-text {
+  @apply text-xs;
+}
+
 @media (max-width: 1023px) {
   .sidebar {
-    transform: translateX(-100%);
-    &.open { transform: translateX(0); }
+    @apply -translate-x-full;
+
+    &.open {
+      @apply translate-x-0;
+    }
   }
 }

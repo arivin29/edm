@@ -1,0 +1,564 @@
+/* ===== File Manager ===== */
+.fm {
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* ===== Toolbar ===== */
+.fm-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+.fm-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fm-toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.fm-search {
+  width: 180px;
+}
+.fm-search input {
+  font-size: 12px !important;
+}
+
+/* ===== Breadcrumbs ===== */
+.fm-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.fm-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #52525b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.fm-breadcrumb:hover {
+  background: #f4f4f5;
+  color: #18181b;
+}
+.fm-breadcrumb--active {
+  color: #18181b;
+  font-weight: 600;
+}
+
+.fm-breadcrumb-sep {
+  font-size: 10px;
+  color: #d4d4d8;
+  display: flex;
+  align-items: center;
+}
+
+/* ===== Stats Bar ===== */
+.fm-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid #f4f4f5;
+  font-size: 11px;
+  color: #a1a1aa;
+}
+
+.fm-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.fm-stat-sep {
+  color: #d4d4d8;
+}
+
+/* ===== New Folder Input ===== */
+.fm-new-folder {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-bottom: 1px solid #f4f4f5;
+  background: #f0f9ff;
+}
+
+.fm-new-folder__icon {
+  color: #faad14;
+  font-size: 16px;
+}
+
+.fm-new-folder__input {
+  flex: 1;
+  max-width: 260px;
+}
+
+/* ===== Content Layout ===== */
+.fm-content {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  min-height: 380px;
+}
+
+.fm-content--detail-open {
+  grid-template-columns: 200px 1fr 240px;
+}
+
+/* ===== Tree Panel ===== */
+.fm-tree {
+  border-right: 1px solid #f0f0f0;
+  overflow-y: auto;
+  max-height: 440px;
+}
+
+.fm-tree__header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+.fm-tree__body {
+  padding: 4px 0;
+}
+
+.fm-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #3f3f46;
+  transition: all 0.12s;
+  border-radius: 0;
+  user-select: none;
+}
+.fm-tree-item:hover {
+  background: #f4f4f5;
+}
+.fm-tree-item--active {
+  background: #eff6ff !important;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+.fm-tree-item__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  color: #a1a1aa;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.fm-tree-item__toggle:hover {
+  color: #52525b;
+}
+
+.fm-tree-item__folder-icon {
+  font-size: 14px;
+  color: #faad14;
+  flex-shrink: 0;
+}
+
+.fm-tree-item__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fm-tree-item__count {
+  font-size: 10px;
+  color: #a1a1aa;
+  background: #f4f4f5;
+  padding: 0 5px;
+  border-radius: 8px;
+  line-height: 16px;
+  flex-shrink: 0;
+}
+
+/* ===== File List ===== */
+.fm-files {
+  overflow-y: auto;
+  max-height: 440px;
+}
+
+.fm-list {
+  width: 100%;
+}
+
+.fm-list-header {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  font-size: 11px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  user-select: none;
+}
+
+.fm-list-col {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.fm-list-header .fm-list-col {
+  cursor: pointer;
+}
+.fm-list-header .fm-list-col:hover {
+  color: #18181b;
+}
+
+.fm-list-col--name {
+  flex: 1;
+  min-width: 0;
+  gap: 6px;
+}
+.fm-list-col--size { width: 72px; flex-shrink: 0; }
+.fm-list-col--type { width: 72px; flex-shrink: 0; }
+.fm-list-col--version { width: 56px; flex-shrink: 0; }
+.fm-list-col--modified { width: 100px; flex-shrink: 0; }
+.fm-list-col--user { width: 80px; flex-shrink: 0; }
+.fm-list-col--actions { width: 80px; flex-shrink: 0; justify-content: flex-end; }
+
+.fm-sort-icon {
+  font-size: 10px;
+  color: #0284c7;
+}
+
+/* ===== List Rows ===== */
+.fm-list-row {
+  display: flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-bottom: 1px solid #fafafa;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-size: 12px;
+  color: #3f3f46;
+}
+.fm-list-row:hover {
+  background: #f9fafb;
+}
+.fm-list-row--selected {
+  background: #eff6ff !important;
+}
+.fm-list-row--folder .fm-file-name {
+  font-weight: 500;
+}
+.fm-list-row:nth-child(even) {
+  background: #fcfcfd;
+}
+.fm-list-row--selected:nth-child(even) {
+  background: #eff6ff !important;
+}
+
+.fm-file-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.fm-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fm-file-name--folder {
+  color: #18181b;
+}
+
+.fm-tag-sm {
+  font-size: 10px !important;
+  line-height: 16px !important;
+  padding: 0 4px !important;
+  margin: 0 !important;
+  margin-left: 4px !important;
+}
+
+.fm-version-badge {
+  display: inline-flex;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  line-height: 18px;
+}
+
+/* ===== Action Buttons ===== */
+.fm-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #71717a;
+  font-size: 13px;
+  transition: all 0.15s;
+  padding: 0;
+}
+.fm-action-btn:hover {
+  background: #f4f4f5;
+  color: #18181b;
+}
+.fm-action-btn--danger:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.fm-list-row .fm-list-col--actions {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.fm-list-row:hover .fm-list-col--actions {
+  opacity: 1;
+}
+
+/* ===== Empty State ===== */
+.fm-empty {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.fm-empty--grid {
+  grid-column: 1 / -1;
+}
+
+/* ===== Grid View ===== */
+.fm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  padding: 12px;
+}
+
+.fm-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  text-align: center;
+}
+.fm-grid-item:hover {
+  background: #f9fafb;
+  border-color: #f0f0f0;
+}
+.fm-grid-item--selected {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+.fm-grid-item__icon {
+  font-size: 32px;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+.fm-grid-item__name {
+  font-size: 11px;
+  color: #27272a;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  line-height: 1.3;
+}
+
+.fm-grid-item__meta {
+  font-size: 10px;
+  color: #a1a1aa;
+  margin-top: 2px;
+}
+
+.fm-grid-item__version {
+  font-size: 9px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: #0284c7;
+  background: #f0f9ff;
+  padding: 0 4px;
+  border-radius: 2px;
+  margin-top: 3px;
+}
+
+/* ===== Detail Panel ===== */
+.fm-detail {
+  border-left: 1px solid #f0f0f0;
+  overflow-y: auto;
+  max-height: 440px;
+}
+
+.fm-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+.fm-detail__title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fm-detail__body {
+  padding: 12px 10px;
+}
+
+.fm-detail__preview {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.fm-detail__icon {
+  font-size: 40px;
+}
+
+.fm-detail__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181b;
+  text-align: center;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.fm-detail__desc {
+  font-size: 11px;
+  color: #71717a;
+  text-align: center;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.fm-detail__meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid #f4f4f5;
+  margin-top: 8px;
+}
+
+.fm-detail__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 0;
+  border-bottom: 1px solid #fafafa;
+}
+
+.fm-detail__meta-label {
+  font-size: 10px;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+.fm-detail__meta-value {
+  font-size: 12px;
+  color: #27272a;
+}
+
+.fm-detail__meta-value--mono {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 10px;
+  color: #71717a;
+}
+
+.fm-detail__tags {
+  padding: 8px 0;
+  border-bottom: 1px solid #fafafa;
+}
+
+.fm-detail__tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.fm-detail__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .fm-content {
+    grid-template-columns: 1fr;
+  }
+  .fm-content--detail-open {
+    grid-template-columns: 1fr;
+  }
+  .fm-tree {
+    display: none;
+  }
+  .fm-toolbar {
+    flex-wrap: wrap;
+  }
+  .fm-search {
+    width: 140px;
+  }
+}
