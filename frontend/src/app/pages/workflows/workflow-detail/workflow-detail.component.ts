@@ -217,6 +217,44 @@ export class WorkflowDetailComponent implements OnInit {
 
   // ── Helpers ──
 
+  resolveAssigneeName(step: WorkflowStep): string {
+    switch (step.assignee_type) {
+      case 'user': {
+        const u = this.users().find(x => x.id === step.assignee_user_id);
+        return u ? u.name : '-';
+      }
+      case 'role': {
+        const r = this.roles().find(x => x.id === step.assignee_role_id);
+        return r ? r.name : '-';
+      }
+      case 'position': {
+        const p = this.positions().find(x => x.id === step.assignee_position_id);
+        return p ? p.name : '-';
+      }
+      case 'department': {
+        const d = this.departments().find(x => x.id === step.assignee_department_id);
+        return d ? d.name : '-';
+      }
+      default:
+        return '-';
+    }
+  }
+
+  resolveRejectStepName(step: WorkflowStep): string {
+    if (step.on_reject_action !== 'to_step' || !step.reject_to_step_id) return '';
+    const target = this.steps().find(s => s.id === step.reject_to_step_id);
+    return target ? `→ ${target.step_order}. ${target.name}` : '';
+  }
+
+  stepsSummary = computed(() => {
+    const steps = this.steps();
+    const counts: Record<string, number> = {};
+    for (const s of steps) {
+      counts[s.step_type] = (counts[s.step_type] || 0) + 1;
+    }
+    return counts;
+  });
+
   formatDate(dateStr: string | undefined): string {
     if (!dateStr) return '-';
     const d = new Date(dateStr);

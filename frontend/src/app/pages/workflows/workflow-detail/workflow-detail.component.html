@@ -80,6 +80,22 @@
                 <nz-tag nzColor="processing" class="!m-0">{{ steps().length }}</nz-tag>
               </span>
             </div>
+            @if (steps().length > 0) {
+              <div class="wf-info-item">
+                <span class="wf-info-label">Ringkasan</span>
+                <span class="wf-info-value">
+                  @if (stepsSummary()['approval']) {
+                    <nz-tag nzColor="green" class="!m-0">{{ stepsSummary()['approval'] }} Persetujuan</nz-tag>
+                  }
+                  @if (stepsSummary()['review']) {
+                    <nz-tag nzColor="blue" class="!m-0">{{ stepsSummary()['review'] }} Review</nz-tag>
+                  }
+                  @if (stepsSummary()['notification']) {
+                    <nz-tag nzColor="orange" class="!m-0">{{ stepsSummary()['notification'] }} Notifikasi</nz-tag>
+                  }
+                </span>
+              </div>
+            }
             <div class="wf-info-item">
               <span class="wf-info-label">Dibuat</span>
               <span class="wf-info-value">{{ formatDate(wf.created_at) }}</span>
@@ -114,9 +130,9 @@
               @for (step of steps(); track step.id; let idx = $index; let first = $first; let last = $last) {
                 <div class="step-item">
                   <div class="step-item__order">
-                    <div class="step-item__number">{{ step.step_order }}</div>
+                    <div class="step-item__number" [class]="'step-number--' + step.step_type">{{ step.step_order }}</div>
                     @if (!last) {
-                      <div class="step-item__line"></div>
+                      <div class="step-item__line" [class]="'step-line--' + step.step_type"></div>
                     }
                   </div>
                   <div class="step-item__content">
@@ -148,8 +164,12 @@
                     </div>
                     <div class="step-item__config">
                       <div class="step-config-row">
-                        <span class="step-config-label">Penerima</span>
+                        <span class="step-config-label">Tipe Penerima</span>
                         <span class="step-config-value">{{ getAssigneeTypeLabel(step.assignee_type) }}</span>
+                      </div>
+                      <div class="step-config-row">
+                        <span class="step-config-label">Penerima</span>
+                        <span class="step-config-value step-config-value--highlight">{{ resolveAssigneeName(step) }}</span>
                       </div>
                       <div class="step-config-row">
                         <span class="step-config-label">Min. Persetujuan</span>
@@ -161,7 +181,12 @@
                       </div>
                       <div class="step-config-row">
                         <span class="step-config-label">Aksi Ditolak</span>
-                        <span class="step-config-value">{{ getRejectActionLabel(step.on_reject_action) }}</span>
+                        <span class="step-config-value">
+                          {{ getRejectActionLabel(step.on_reject_action) }}
+                          @if (resolveRejectStepName(step)) {
+                            <nz-tag nzColor="red" class="!m-0">{{ resolveRejectStepName(step) }}</nz-tag>
+                          }
+                        </span>
                       </div>
                       <div class="step-config-row">
                         <span class="step-config-label">Paralel</span>

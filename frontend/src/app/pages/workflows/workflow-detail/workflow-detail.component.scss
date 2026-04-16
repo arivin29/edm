@@ -179,6 +179,16 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+
+  &.step-number--approval {
+    background: #52c41a;
+  }
+  &.step-number--review {
+    background: #1890ff;
+  }
+  &.step-number--notification {
+    background: #fa8c16;
+  }
 }
 
 .step-item__line {
@@ -186,6 +196,16 @@
   flex: 1;
   background: #e8e8e8;
   min-height: 16px;
+
+  &.step-line--approval {
+    background: #b7eb8f;
+  }
+  &.step-line--review {
+    background: #91d5ff;
+  }
+  &.step-line--notification {
+    background: #ffd591;
+  }
 }
 
 .step-item__content {
@@ -285,6 +305,11 @@
   gap: 4px;
   flex-wrap: wrap;
   justify-content: flex-end;
+
+  &--highlight {
+    font-weight: 600;
+    color: #1890ff;
+  }
 }
 
 // ── Overrides ──

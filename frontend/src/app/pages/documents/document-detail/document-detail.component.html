@@ -193,6 +193,8 @@
                       [templateName]="document()!.template!.name"
                       [metadata]="document()!.metadata || {}"
                       [documentStatus]="document()!.status"
+                      [documentId]="document()!.id"
+                      (metadataUpdated)="onMetadataUpdated($event)"
                     ></app-doc-parameters>
                   } @else {
                     <div class="tab-empty-state">

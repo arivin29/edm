@@ -556,4 +556,11 @@ export class DocumentDetailPage implements OnInit {
   onFmUpload(event: { parentId: string; file: File }) {
     this.message.success(`Upload ${event.file.name} ke ${event.parentId} (mockup)`);
   }
+
+  onMetadataUpdated(metadata: Record<string, any>) {
+    const doc = this.document();
+    if (doc) {
+      this.document.set({ ...doc, metadata });
+    }
+  }
 }

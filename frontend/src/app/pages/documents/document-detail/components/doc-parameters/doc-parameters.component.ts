@@ -1,5 +1,6 @@
-import { Component, Input, OnChanges, SimpleChanges, inject, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzTagModule } from 'ng-zorro-antd/tag';
@@ -10,6 +11,15 @@ import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzBadgeModule } from 'ng-zorro-antd/badge';
 import { NzProgressModule } from 'ng-zorro-antd/progress';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzDrawerModule } from 'ng-zorro-antd/drawer';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../../environments/environment';
 import { TemplateTag, TagGroup } from '../../../document.models';
@@ -18,20 +28,28 @@ import { TemplateTag, TagGroup } from '../../../document.models';
   selector: 'app-doc-parameters',
   standalone: true,
   imports: [
-    CommonModule, NzSpinModule, NzEmptyModule, NzTagModule,
+    CommonModule, ReactiveFormsModule,
+    NzSpinModule, NzEmptyModule, NzTagModule,
     NzToolTipModule, NzIconModule, NzDividerModule, NzCardModule,
-    NzBadgeModule, NzProgressModule, NzAlertModule
+    NzBadgeModule, NzProgressModule, NzAlertModule, NzButtonModule,
+    NzFormModule, NzInputModule, NzInputNumberModule, NzSelectModule,
+    NzDatePickerModule, NzCheckboxModule, NzDrawerModule
   ],
   templateUrl: './doc-parameters.component.html',
   styleUrls: ['./doc-parameters.component.scss']
 })
 export class DocParametersComponent implements OnChanges {
   private http = inject(HttpClient);
+  private fb = inject(FormBuilder);
+  private message = inject(NzMessageService);
 
+  @Input() documentId: string = '';
   @Input() templateId: string | null = null;
   @Input() templateName: string = '';
   @Input() metadata: Record<string, any> = {};
   @Input() documentStatus: string = '';
+
+  @Output() metadataUpdated = new EventEmitter<Record<string, any>>();
 
   loading = signal(false);
   tags = signal<TemplateTag[]>([]);
@@ -145,6 +163,96 @@ export class DocParametersComponent implements OnChanges {
       email: 'mail', url: 'link', phone: 'phone'
     };
     return icons[dataType] || 'form';
+  }
+
+  // ===== Edit Mode =====
+  editDrawerVisible = signal(false);
+  editForm!: FormGroup;
+  saving = signal(false);
+
+  openEditDrawer() {
+    this.buildEditForm();
+    this.editDrawerVisible.set(true);
+  }
+
+  closeEditDrawer() {
+    this.editDrawerVisible.set(false);
+  }
+
+  private buildEditForm() {
+    const group: Record<string, FormControl> = {};
+    for (const tag of this.visibleTags()) {
+      let val: any = this.metadata?.[tag.tag_key] ?? tag.default_value ?? '';
+
+      if (tag.data_type === 'checkbox') {
+        val = val === true || val === 'true';
+      } else if (tag.data_type === 'number') {
+        val = val !== '' && val != null ? Number(val) : null;
+      } else if (tag.data_type === 'date') {
+        val = val ? new Date(val) : null;
+      }
+
+      const validators: any[] = [];
+      if (tag.is_required) validators.push(Validators.required);
+      if (tag.min_length) validators.push(Validators.minLength(tag.min_length));
+      if (tag.max_length) validators.push(Validators.maxLength(tag.max_length));
+      if (tag.validation_regex) validators.push(Validators.pattern(tag.validation_regex));
+
+      group[tag.tag_key] = new FormControl(val, validators);
+    }
+    this.editForm = this.fb.group(group);
+  }
+
+  getFormControl(key: string): FormControl {
+    return (this.editForm?.get(key) as FormControl) || new FormControl();
+  }
+
+  getSelectOptions(tag: TemplateTag): { label: string; value: any }[] {
+    if (tag.source_type === 'static' && tag.source_config?.options) {
+      return tag.source_config.options;
+    }
+    return [];
+  }
+
+  saveMetadata() {
+    if (!this.editForm) return;
+
+    // Validate
+    if (this.editForm.invalid) {
+      Object.values(this.editForm.controls).forEach(c => {
+        c.markAsDirty();
+        c.updateValueAndValidity();
+      });
+      this.message.warning('Mohon lengkapi field yang wajib diisi');
+      return;
+    }
+
+    this.saving.set(true);
+
+    const metadata: Record<string, any> = {};
+    for (const tag of this.visibleTags()) {
+      const ctrl = this.editForm.get(tag.tag_key);
+      if (!ctrl) continue;
+      let val = ctrl.value;
+      if (tag.data_type === 'date' && val instanceof Date) {
+        val = val.toISOString().split('T')[0];
+      }
+      metadata[tag.tag_key] = val;
+    }
+
+    this.http.put(`${environment.apiUrl}/documents/${this.documentId}`, { metadata }).subscribe({
+      next: () => {
+        this.message.success('Parameter berhasil diperbarui');
+        this.metadata = { ...this.metadata, ...metadata };
+        this.metadataUpdated.emit(this.metadata);
+        this.editDrawerVisible.set(false);
+        this.saving.set(false);
+      },
+      error: () => {
+        this.message.error('Gagal menyimpan parameter');
+        this.saving.set(false);
+      }
+    });
   }
 }
 
