@@ -1,7 +1,11 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, importProvidersFrom, LOCALE_ID } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { registerLocaleData } from '@angular/common';
+import localeId from '@angular/common/locales/id';
+
+registerLocaleData(localeId);
 
 // ng-zorro
 import { provideNzIcons } from 'ng-zorro-antd/icon';
@@ -201,6 +205,7 @@ export const appConfig: ApplicationConfig = {
     ),
     // ng-zorro
     provideNzI18n(id_ID),
+    { provide: LOCALE_ID, useValue: 'id' },
     provideNzIcons(icons),
     // API Configuration
     {
