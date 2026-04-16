@@ -171,23 +171,32 @@
               <div class="fm-list-col fm-list-col--modified">{{ formatDate(node.modifiedAt) }}</div>
               <div class="fm-list-col fm-list-col--user">{{ node.uploadedBy || '-' }}</div>
               <div class="fm-list-col fm-list-col--actions fm-list-col--actions-visible">
-                @if (node.type === 'file') {
-                  <button class="fm-action-btn" nz-tooltip nzTooltipTitle="Preview" (click)="openPreview(node); $event.stopPropagation()">
-                    <span nz-icon nzType="eye" nzTheme="outline"></span>
-                  </button>
-                  <button class="fm-action-btn" nz-tooltip nzTooltipTitle="Download" (click)="onDownload(node); $event.stopPropagation()">
-                    <span nz-icon nzType="download" nzTheme="outline"></span>
-                  </button>
-                  @if (!config.readonly) {
-                    <button class="fm-action-btn fm-action-btn--danger" nz-tooltip nzTooltipTitle="Hapus" (click)="onDelete(node); $event.stopPropagation()">
-                      <span nz-icon nzType="delete" nzTheme="outline"></span>
-                    </button>
-                  }
-                } @else {
-                  <button class="fm-action-btn" nz-tooltip nzTooltipTitle="Buka" (click)="openNode(node); $event.stopPropagation()">
-                    <span nz-icon nzType="folder-open" nzTheme="outline"></span>
-                  </button>
-                }
+                <button class="fm-action-btn" nz-dropdown [nzDropdownMenu]="actionMenu" nzTrigger="click"
+                        (click)="$event.stopPropagation()">
+                  <span nz-icon nzType="more" nzTheme="outline"></span>
+                </button>
+                <nz-dropdown-menu #actionMenu="nzDropdownMenu">
+                  <ul nz-menu nzSelectable>
+                    @if (node.type === 'file') {
+                      <li nz-menu-item (click)="openPreview(node)">
+                        <span nz-icon nzType="eye" nzTheme="outline"></span> Preview
+                      </li>
+                      <li nz-menu-item (click)="onDownload(node)">
+                        <span nz-icon nzType="download" nzTheme="outline"></span> Download
+                      </li>
+                      @if (!config.readonly) {
+                        <li nz-menu-divider></li>
+                        <li nz-menu-item nzDanger (click)="onDelete(node)">
+                          <span nz-icon nzType="delete" nzTheme="outline"></span> Hapus
+                        </li>
+                      }
+                    } @else {
+                      <li nz-menu-item (click)="openNode(node)">
+                        <span nz-icon nzType="folder-open" nzTheme="outline"></span> Buka Folder
+                      </li>
+                    }
+                  </ul>
+                </nz-dropdown-menu>
               </div>
             </div>
           } @empty {
