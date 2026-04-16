@@ -841,3 +841,51 @@ func (s *WorkflowActionService) canUserActOnStep(user *types.UserContext, stepIn
 
 	return false, nil
 }
+
+// ---------------------------------------------------------------------------
+// PreviewWorkflowForCreate - Preview workflow for document creation form
+// ---------------------------------------------------------------------------
+
+func (s *WorkflowActionService) PreviewWorkflowForCreate(companyID, documentTypeID, categoryID, officeID, departmentID string) (*WorkflowStatus, error) {
+	var catPtr, offPtr, deptPtr *string
+	if categoryID != "" {
+		catPtr = &categoryID
+	}
+	if officeID != "" {
+		offPtr = &officeID
+	}
+	if departmentID != "" {
+		deptPtr = &departmentID
+	}
+
+	workflow, err := s.workflowRepo.FindForDocument(companyID, documentTypeID, catPtr, offPtr, deptPtr)
+	if err != nil {
+		return nil, err
+	}
+
+	if workflow == nil {
+		return &WorkflowStatus{
+			IsPreview: true,
+		}, nil
+	}
+
+	wfWithSteps, err := s.workflowRepo.FindByIDWithSteps(workflow.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var previewSteps []models.WorkflowStep
+	if wfWithSteps != nil && len(wfWithSteps.Steps) > 0 {
+		previewSteps = wfWithSteps.Steps
+		sort.Slice(previewSteps, func(i, j int) bool {
+			return previewSteps[i].StepOrder < previewSteps[j].StepOrder
+		})
+	}
+
+	return &WorkflowStatus{
+		IsPreview:    true,
+		PreviewSteps: previewSteps,
+		WorkflowName: workflow.Name,
+		WorkflowID:   workflow.ID,
+	}, nil
+}

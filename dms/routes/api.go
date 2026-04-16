@@ -211,6 +211,7 @@ router.Middleware(middleware.RequirePermission("document.view")).Post("/document
 router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/workflow", workflowActionController.GetWorkflowStatus)
 router.Middleware(middleware.RequirePermission("document.view")).Post("/documents/{id}/workflow/comment", workflowActionController.AddComment)
 router.Get("/workflow/pending-tasks", workflowActionController.GetPendingTasks)
+router.Get("/workflow/preview", workflowActionController.PreviewWorkflow)
 
 // Notifications (no specific permission - users see their own)
 router.Get("/notifications", notificationController.Index)

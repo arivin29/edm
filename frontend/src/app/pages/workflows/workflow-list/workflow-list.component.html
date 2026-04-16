@@ -147,58 +147,62 @@
                 </div>
 
                 <!-- Steps Section -->
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Langkah Workflow ({{ wf.steps?.length || 0 }})</div>
-                @if (wf.steps && wf.steps.length > 0) {
-                  <div class="steps-flow flex items-start gap-0 overflow-x-auto pb-2">
-                    @for (step of wf.steps; track step.id; let i = $index; let last = $last) {
-                      <div class="step-card flex-shrink-0">
-                        <div class="step-number">{{ step.step_order }}</div>
-                        <div class="step-name">{{ step.name }}</div>
-                        <div class="step-meta">
-                          <nz-tag [nzColor]="step.step_type === 'approval' ? 'blue' : step.step_type === 'review' ? 'cyan' : step.step_type === 'sign' ? 'purple' : 'default'" class="text-[9px]">
-                            {{ getStepTypeLabel(step.step_type) }}
-                          </nz-tag>
-                        </div>
-                        <div class="step-details">
-                          <div class="detail-row">
-                            <span class="label">Assignee:</span>
-                            <span class="value">{{ getAssigneeTypeLabel(step.assignee_type) }}</span>
-                          </div>
-                          @if (step.deadline_days) {
-                            <div class="detail-row">
-                              <span class="label">Deadline:</span>
-                              <span class="value">{{ step.deadline_days }} hari</span>
-                            </div>
-                          }
-                          <div class="detail-row">
-                            <span class="label">Reject:</span>
-                            <span class="value">{{ getRejectActionLabel(step.on_reject_action) }}</span>
-                          </div>
-                        </div>
-                        <div class="step-flags">
-                          @if (step.is_parallel) {
-                            <nz-tag nzColor="orange" class="text-[9px]">Parallel</nz-tag>
-                          }
-                          @if (step.can_edit) {
-                            <nz-tag class="text-[9px]">Edit</nz-tag>
-                          }
-                          @if (step.can_comment) {
-                            <nz-tag class="text-[9px]">Comment</nz-tag>
-                          }
-                          @if (step.can_delegate) {
-                            <nz-tag class="text-[9px]">Delegate</nz-tag>
-                          }
-                        </div>
-                      </div>
-                      @if (!last) {
-                        <div class="step-connector">
-                          <span nz-icon nzType="arrow-right" class="text-gray-300"></span>
-                        </div>
-                      }
-                    }
-                  </div>
+                @if (expandLoading().has(wf.id)) {
+                  <div class="text-center py-3"><nz-spin nzSimple nzSize="small"></nz-spin></div>
                 } @else {
-                  <div class="text-xs text-gray-400 italic">Belum ada langkah workflow</div>
+                  <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Langkah Workflow ({{ expandSteps().get(wf.id)?.length || 0 }})</div>
+                  @if (expandSteps().get(wf.id)?.length) {
+                    <div class="steps-flow flex items-start gap-0 overflow-x-auto pb-2">
+                      @for (step of expandSteps().get(wf.id)!; track step.id; let i = $index; let last = $last) {
+                        <div class="step-card flex-shrink-0">
+                          <div class="step-number">{{ step.step_order }}</div>
+                          <div class="step-name">{{ step.name }}</div>
+                          <div class="step-meta">
+                            <nz-tag [nzColor]="step.step_type === 'approval' ? 'blue' : step.step_type === 'review' ? 'cyan' : step.step_type === 'sign' ? 'purple' : 'default'" class="text-[9px]">
+                              {{ getStepTypeLabel(step.step_type) }}
+                            </nz-tag>
+                          </div>
+                          <div class="step-details">
+                            <div class="detail-row">
+                              <span class="label">Assignee:</span>
+                              <span class="value">{{ getAssigneeTypeLabel(step.assignee_type) }}</span>
+                            </div>
+                            @if (step.deadline_days) {
+                              <div class="detail-row">
+                                <span class="label">Deadline:</span>
+                                <span class="value">{{ step.deadline_days }} hari</span>
+                              </div>
+                            }
+                            <div class="detail-row">
+                              <span class="label">Reject:</span>
+                              <span class="value">{{ getRejectActionLabel(step.on_reject_action) }}</span>
+                            </div>
+                          </div>
+                          <div class="step-flags">
+                            @if (step.is_parallel) {
+                              <nz-tag nzColor="orange" class="text-[9px]">Parallel</nz-tag>
+                            }
+                            @if (step.can_edit) {
+                              <nz-tag class="text-[9px]">Edit</nz-tag>
+                            }
+                            @if (step.can_comment) {
+                              <nz-tag class="text-[9px]">Comment</nz-tag>
+                            }
+                            @if (step.can_delegate) {
+                              <nz-tag class="text-[9px]">Delegate</nz-tag>
+                            }
+                          </div>
+                        </div>
+                        @if (!last) {
+                          <div class="step-connector">
+                            <span nz-icon nzType="arrow-right" class="text-gray-300"></span>
+                          </div>
+                        }
+                      }
+                    </div>
+                  } @else {
+                    <div class="text-xs text-gray-400 italic">Belum ada langkah workflow</div>
+                  }
                 }
               </div>
             </tr>

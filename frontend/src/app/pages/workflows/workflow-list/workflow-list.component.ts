@@ -17,7 +17,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 import { environment } from '../../../../environments/environment';
-import { Workflow, DropdownItem } from '../workflow.models';
+import { Workflow, WorkflowStep, DropdownItem } from '../workflow.models';
 import { WorkflowFormComponent } from '../workflow-form/workflow-form.component';
 
 @Component({
@@ -53,6 +53,8 @@ export class WorkflowListComponent implements OnInit {
 
   // Expand state
   expandSet = signal<Set<string>>(new Set());
+  expandSteps = signal<Map<string, WorkflowStep[]>>(new Map());
+  expandLoading = signal<Set<string>>(new Set());
 
   activeCount = computed(() => this.workflows().filter(w => w.is_active).length);
   inactiveCount = computed(() => this.workflows().filter(w => !w.is_active).length);
@@ -184,6 +186,22 @@ export class WorkflowListComponent implements OnInit {
       }
       return next;
     });
+
+    // Load steps if expanding and not yet loaded
+    if (checked && !this.expandSteps().has(id)) {
+      this.expandLoading.update(s => { const n = new Set(s); n.add(id); return n; });
+      this.http.get<any>(`${environment.apiUrl}/workflows/${id}/steps`).subscribe({
+        next: (res) => {
+          const steps: WorkflowStep[] = res.data || [];
+          this.expandSteps.update(m => { const n = new Map(m); n.set(id, steps); return n; });
+          this.expandLoading.update(s => { const n = new Set(s); n.delete(id); return n; });
+        },
+        error: () => {
+          this.expandSteps.update(m => { const n = new Map(m); n.set(id, []); return n; });
+          this.expandLoading.update(s => { const n = new Set(s); n.delete(id); return n; });
+        }
+      });
+    }
   }
 
   getStepTypeLabel(type: string): string {

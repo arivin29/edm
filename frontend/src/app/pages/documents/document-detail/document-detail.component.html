@@ -82,74 +82,64 @@
                 <nz-tab nzTitle="Informasi">
                   <div class="doc-info-section">
 
-                    <!-- Approval Flow Horizontal -->
-                    <div class="approval-flow">
-                      <div class="approval-flow__header">
-                        <span nz-icon nzType="node-index" nzTheme="outline"></span>
-                        <span>Alur Persetujuan</span>
+                    <!-- Approval Flow -->
+                    <div class="wf-flow">
+                      <div class="wf-flow__top">
+                        <div class="wf-flow__title">
+                          <span nz-icon nzType="node-index" nzTheme="outline"></span>
+                          Alur Persetujuan
+                        </div>
                         @if (workflow()?.is_preview) {
-                          <nz-tag nzColor="gold" style="margin-left:8px;font-size:10px;">Rencana</nz-tag>
+                          <div class="wf-flow__badge wf-flow__badge--plan">
+                            <span nz-icon nzType="info-circle" nzTheme="outline"></span>
+                            <span>{{ workflow()!.workflow_name }} — akan dijalankan saat submit</span>
+                          </div>
                         }
                       </div>
+
                       @if (workflowLoading()) {
                         <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
                       } @else if (workflow()?.is_preview && workflow()?.preview_steps?.length) {
-                        <!-- Preview: matched workflow template steps -->
-                        <div class="approval-flow__badge-preview">
-                          <span nz-icon nzType="info-circle" nzTheme="outline"></span>
-                          Workflow: <strong>{{ workflow()!.workflow_name }}</strong> — akan dijalankan saat submit
-                        </div>
-                        <div class="approval-flow__steps">
+                        <div class="wf-flow__track">
                           @for (step of workflow()!.preview_steps!; track step.id; let i = $index; let last = $last) {
-                            <div class="approval-flow__step" data-status="preview">
-                              <div class="approval-flow__node">
-                                <div class="approval-flow__circle">
-                                  <span class="approval-flow__num">{{ i + 1 }}</span>
-                                </div>
-                                <div class="approval-flow__label">{{ step.name }}</div>
-                                <div class="approval-flow__actor">{{ step.step_type === 'approval' ? 'Persetujuan' : 'Review' }}</div>
-                                @if (step.deadline_days) {
-                                  <div class="approval-flow__date">Tenggat: {{ step.deadline_days }} hari</div>
-                                }
+                            <div class="wf-step" data-status="preview">
+                              <div class="wf-step__dot">{{ i + 1 }}</div>
+                              @if (!last) { <div class="wf-step__line" data-status="preview"></div> }
+                              <div class="wf-step__info">
+                                <span class="wf-step__name">{{ step.name }}</span>
+                                <span class="wf-step__type">{{ step.step_type === 'approval' ? 'Persetujuan' : step.step_type }}</span>
                               </div>
-                              @if (!last) {
-                                <div class="approval-flow__connector" data-status="preview"></div>
-                              }
                             </div>
                           }
                         </div>
                       } @else if (workflow()?.steps?.length) {
-                        <div class="approval-flow__steps">
+                        <div class="wf-flow__track">
                           @for (step of workflow()!.steps; track step.id; let i = $index; let last = $last) {
-                            <div class="approval-flow__step" [attr.data-status]="step.status">
-                              <div class="approval-flow__node">
-                                <div class="approval-flow__circle">
-                                  @if (step.status === 'completed') {
-                                    <span nz-icon nzType="check" nzTheme="outline"></span>
-                                  } @else if (step.status === 'rejected') {
-                                    <span nz-icon nzType="close" nzTheme="outline"></span>
-                                  } @else if (step.status === 'in_progress') {
-                                    <span nz-icon nzType="loading" nzTheme="outline"></span>
-                                  } @else {
-                                    <span class="approval-flow__num">{{ i + 1 }}</span>
-                                  }
-                                </div>
-                                <div class="approval-flow__label">{{ step.name }}</div>
-                                <div class="approval-flow__actor">{{ step.actor?.name || '-' }}</div>
-                                @if (step.completed_at) {
-                                  <div class="approval-flow__date">{{ step.completed_at | date:'dd/MM/yy' }}</div>
-                                } @else if (step.status === 'in_progress') {
-                                  <div class="approval-flow__date approval-flow__date--active">Menunggu</div>
+                            <div class="wf-step" [attr.data-status]="step.status">
+                              <div class="wf-step__dot">
+                                @if (step.status === 'completed') {
+                                  <span nz-icon nzType="check" nzTheme="outline"></span>
+                                } @else if (step.status === 'rejected') {
+                                  <span nz-icon nzType="close" nzTheme="outline"></span>
+                                } @else {
+                                  {{ i + 1 }}
                                 }
                               </div>
-                              @if (!last) {
-                                <div class="approval-flow__connector" [attr.data-status]="step.status"></div>
-                              }
+                              @if (!last) { <div class="wf-step__line" [attr.data-status]="step.status"></div> }
+                              <div class="wf-step__info">
+                                <span class="wf-step__name">{{ step.name }}</span>
+                                <span class="wf-step__type">{{ step.actor?.name || '-' }}</span>
+                                @if (step.completed_at) {
+                                  <span class="wf-step__date">{{ step.completed_at | date:'dd/MM/yy' }}</span>
+                                } @else if (step.status === 'in_progress') {
+                                  <span class="wf-step__date wf-step__date--active">Menunggu</span>
+                                }
+                              </div>
                             </div>
                           }
                         </div>
                       } @else {
-                        <div class="text-gray-400 text-xs text-center py-3">Tidak ada workflow yang cocok untuk dokumen ini</div>
+                        <div class="text-gray-400 text-xs py-2">Tidak ada workflow untuk dokumen ini</div>
                       }
                     </div>
 

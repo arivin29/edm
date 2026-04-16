@@ -149,6 +149,38 @@ func (c *WorkflowActionController) GetPendingTasks(ctx http.Context) http.Respon
 }
 
 // ---------------------------------------------------------------------------
+// GET /workflow/preview?document_type_id=X&category_id=Y&office_id=Z&department_id=W
+// Preview which workflow will be used (for document create form)
+// ---------------------------------------------------------------------------
+
+func (c *WorkflowActionController) PreviewWorkflow(ctx http.Context) http.Response {
+	user := types.GetCurrentUser(ctx)
+	if user == nil {
+		return forbiddenResponse(ctx)
+	}
+
+	documentTypeID := ctx.Request().Query("document_type_id", "")
+	if documentTypeID == "" {
+		return badRequestError(ctx, "document_type_id is required")
+	}
+
+	categoryID := ctx.Request().Query("category_id", "")
+	officeID := ctx.Request().Query("office_id", "")
+	departmentID := ctx.Request().Query("department_id", "")
+
+	preview, err := c.actionService.PreviewWorkflowForCreate(
+		user.CompanyID, documentTypeID, categoryID, officeID, departmentID,
+	)
+	if err != nil {
+		return serverError(ctx, "Failed to preview workflow")
+	}
+
+	return ctx.Response().Success().Json(http.Json{
+		"data": preview,
+	})
+}
+
+// ---------------------------------------------------------------------------
 // POST /documents/{id}/comment - Add comment to current workflow step
 // ---------------------------------------------------------------------------
 

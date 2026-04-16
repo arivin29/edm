@@ -136,3 +136,35 @@
     @media (max-width: 640px) {
       .meta-grid { grid-template-columns: 1fr; }
     }
+
+    /* Workflow Preview */
+    .wf-preview-card { margin-top: 12px; }
+    .wf-preview-header {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: #27272a;
+      margin-bottom: 10px;
+    }
+    .wf-preview-info {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: #52c41a;
+      background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 6px;
+      padding: 6px 10px; margin-bottom: 12px;
+    }
+    .wf-preview-steps { padding-left: 4px; }
+    .wf-preview-step {
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .wf-preview-step__num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #fef9c3; border: 1.5px dashed #facc15;
+      color: #a16207; font-size: 11px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .wf-preview-step__body { min-width: 0; padding-bottom: 4px; }
+    .wf-preview-step__name { font-size: 12px; font-weight: 600; color: #27272a; }
+    .wf-preview-step__meta { font-size: 11px; color: #71717a; }
+    .wf-preview-step__line {
+      width: 1.5px; height: 12px; margin-left: 10px;
+      background: repeating-linear-gradient(to bottom, #facc15 0 3px, transparent 3px 6px);
+    }

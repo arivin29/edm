@@ -129,9 +129,51 @@
                 </nz-form-item>
               </form>
             </nz-card>
-          }
 
-          <!-- STEP 2: Informasi Dokumen -->
+            <!-- Workflow Preview -->
+            @if (workflowPreviewLoading()) {
+              <nz-card nzSize="small" class="wf-preview-card">
+                <div class="text-center py-3"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+              </nz-card>
+            } @else if (workflowPreview()?.preview_steps?.length) {
+              <nz-card nzSize="small" class="wf-preview-card">
+                <div class="wf-preview-header">
+                  <span nz-icon nzType="node-index" nzTheme="outline"></span>
+                  <span>Alur Persetujuan</span>
+                  <nz-tag nzColor="gold" style="margin-left:6px;font-size:10px;">Rencana</nz-tag>
+                </div>
+                <div class="wf-preview-info">
+                  <span nz-icon nzType="check-circle" nzTheme="twotone" [nzTwotoneColor]="'#52c41a'"></span>
+                  Workflow <strong>{{ workflowPreview()!.workflow_name }}</strong> akan digunakan
+                </div>
+                <div class="wf-preview-steps">
+                  @for (step of workflowPreview()!.preview_steps!; track step.id; let i = $index; let last = $last) {
+                    <div class="wf-preview-step">
+                      <div class="wf-preview-step__num">{{ i + 1 }}</div>
+                      <div class="wf-preview-step__body">
+                        <div class="wf-preview-step__name">{{ step.name }}</div>
+                        <div class="wf-preview-step__meta">
+                          {{ getAssigneeLabel(step) }}
+                          @if (step.deadline_days) {
+                            · Tenggat {{ step.deadline_days }} hari
+                          }
+                        </div>
+                      </div>
+                    </div>
+                    @if (!last) { <div class="wf-preview-step__line"></div> }
+                  }
+                </div>
+              </nz-card>
+            } @else if (workflowPreview() && !workflowPreview()?.preview_steps?.length) {
+              <nz-alert
+                nzType="warning"
+                nzShowIcon
+                nzMessage="Tidak ada workflow yang cocok"
+                nzDescription="Belum ada workflow yang dikonfigurasi untuk kombinasi tipe dokumen, kategori, kantor, dan departemen ini. Dokumen tetap bisa dibuat sebagai draft, namun tidak bisa disubmit untuk persetujuan."
+                class="wf-preview-card">
+              </nz-alert>
+            }
+          }
           @if (currentStep() === 2) {
             <nz-card nzSize="small" nzTitle="Informasi Dokumen">
               <form nz-form [formGroup]="form" nzLayout="vertical">
@@ -452,6 +494,43 @@
                     }
                   }
                 </div>
+              }
+
+              <!-- Workflow Preview in Review -->
+              <nz-divider></nz-divider>
+              <div class="review-section-header">
+                <span class="review-section-title">Alur Persetujuan</span>
+              </div>
+              @if (workflowPreviewLoading()) {
+                <div class="text-center py-3"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+              } @else if (workflowPreview()?.preview_steps?.length) {
+                <div class="wf-preview-info" style="margin-bottom:12px;">
+                  <span nz-icon nzType="check-circle" nzTheme="twotone" [nzTwotoneColor]="'#52c41a'"></span>
+                  Workflow <strong>{{ workflowPreview()!.workflow_name }}</strong> — {{ workflowPreview()!.preview_steps!.length }} langkah
+                </div>
+                <div class="wf-preview-steps">
+                  @for (step of workflowPreview()!.preview_steps!; track step.id; let i = $index; let last = $last) {
+                    <div class="wf-preview-step">
+                      <div class="wf-preview-step__num">{{ i + 1 }}</div>
+                      <div class="wf-preview-step__body">
+                        <div class="wf-preview-step__name">{{ step.name }}</div>
+                        <div class="wf-preview-step__meta">
+                          {{ getAssigneeLabel(step) }}
+                          @if (step.deadline_days) {
+                            · Tenggat {{ step.deadline_days }} hari
+                          }
+                        </div>
+                      </div>
+                    </div>
+                    @if (!last) { <div class="wf-preview-step__line"></div> }
+                  }
+                </div>
+              } @else {
+                <nz-alert
+                  nzType="warning"
+                  nzShowIcon
+                  nzMessage="Tidak ada workflow yang cocok untuk kombinasi ini. Dokumen bisa disimpan sebagai draft.">
+                </nz-alert>
               }
             </nz-card>
           }

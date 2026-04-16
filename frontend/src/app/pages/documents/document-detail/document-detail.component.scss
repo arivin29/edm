@@ -113,156 +113,165 @@
     /* ===== Info Section (tab content) ===== */
     .doc-info-section { }
 
-    /* ===== Approval Flow (Horizontal) ===== */
-    .approval-flow {
+    /* ===== Workflow Flow (Clean Stepper) ===== */
+    .wf-flow {
       margin-bottom: 16px;
-      background: #fafafa;
-      border: 1px solid #f0f0f0;
+      background: #fff;
+      border: 1px solid #e5e7eb;
       border-radius: 8px;
-      padding: 14px 16px;
+      padding: 12px 16px;
     }
-    .approval-flow__header {
+
+    .wf-flow__top {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #52525b;
-      margin-bottom: 14px;
-      text-transform: uppercase;
-      letter-spacing: .3px;
+      justify-content: space-between;
+      margin-bottom: 12px;
     }
-    .approval-flow__steps {
+
+    .wf-flow__title {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .wf-flow__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+
+      &--plan {
+        color: #92400e;
+        background: #fef3c7;
+      }
+    }
+
+    .wf-flow__track {
       display: flex;
       align-items: flex-start;
       overflow-x: auto;
-      padding-bottom: 4px;
       gap: 0;
+      padding-bottom: 2px;
     }
-    .approval-flow__step {
+
+    .wf-step {
       display: flex;
       align-items: flex-start;
       flex-shrink: 0;
+      position: relative;
     }
-    .approval-flow__node {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-width: 80px;
-      max-width: 110px;
-      text-align: center;
-    }
-    .approval-flow__circle {
-      width: 36px;
-      height: 36px;
+
+    .wf-step__dot {
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: #a1a1aa;
-      background: #f4f4f5;
-      border: 2.5px solid #d4d4d8;
-      transition: all .2s;
-      flex-shrink: 0;
-    }
-    .approval-flow__num { font-size: 12px; }
-    .approval-flow__label {
       font-size: 11px;
       font-weight: 600;
-      color: #3f3f46;
-      margin-top: 6px;
+      color: #9ca3af;
+      background: #f3f4f6;
+      border: 2px solid #d1d5db;
+      flex-shrink: 0;
+      transition: all .2s;
+      position: relative;
+      z-index: 1;
+    }
+
+    .wf-step__line {
+      width: 32px;
+      height: 2px;
+      background: #e5e7eb;
+      margin-top: 12px;
+      flex-shrink: 0;
+    }
+
+    .wf-step__info {
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 90px;
+      text-align: center;
+
+      /* Place info to the right of dot, not under it */
+      left: 13px;
+    }
+
+    .wf-step__name {
+      font-size: 10px;
+      font-weight: 600;
+      color: #374151;
       line-height: 1.3;
       word-break: break-word;
     }
-    .approval-flow__actor {
-      font-size: 10px;
-      color: #71717a;
-      margin-top: 2px;
-      line-height: 1.2;
-    }
-    .approval-flow__date {
-      font-size: 10px;
-      color: #a1a1aa;
-      margin-top: 2px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-    }
-    .approval-flow__date--active {
-      color: #2563eb;
-      font-weight: 500;
-      font-family: inherit;
-    }
-    .approval-flow__connector {
-      width: 40px;
-      height: 2px;
-      background: #d4d4d8;
-      margin-top: 17px;
-      flex-shrink: 0;
-      position: relative;
-    }
-    .approval-flow__connector::after {
-      content: '';
-      position: absolute;
-      right: -1px;
-      top: -3px;
-      width: 0;
-      height: 0;
-      border-top: 4px solid transparent;
-      border-bottom: 4px solid transparent;
-      border-left: 5px solid #d4d4d8;
+
+    .wf-step__type {
+      font-size: 9px;
+      color: #9ca3af;
+      line-height: 1.3;
     }
 
-    /* Approval flow status colors */
-    .approval-flow__step[data-status="completed"] .approval-flow__circle {
+    .wf-step__date {
+      font-size: 9px;
+      color: #9ca3af;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+
+      &--active {
+        color: #3b82f6;
+        font-weight: 500;
+        font-family: inherit;
+      }
+    }
+
+    /* Status: completed */
+    .wf-step[data-status="completed"] .wf-step__dot {
       background: #dcfce7;
       border-color: #22c55e;
       color: #16a34a;
     }
-    .approval-flow__step[data-status="completed"] + .approval-flow__step .approval-flow__connector,
-    .approval-flow__step[data-status="completed"] .approval-flow__connector {
+    .wf-step[data-status="completed"] .wf-step__line {
       background: #86efac;
     }
-    .approval-flow__step[data-status="completed"] .approval-flow__connector::after {
-      border-left-color: #86efac;
-    }
-    .approval-flow__step[data-status="in_progress"] .approval-flow__circle {
+
+    /* Status: in_progress */
+    .wf-step[data-status="in_progress"] .wf-step__dot {
       background: #dbeafe;
       border-color: #3b82f6;
       color: #2563eb;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, .12);
-      animation: pulse-approval 2s infinite;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
     }
-    .approval-flow__step[data-status="rejected"] .approval-flow__circle {
+
+    /* Status: rejected */
+    .wf-step[data-status="rejected"] .wf-step__dot {
       background: #fee2e2;
       border-color: #ef4444;
       color: #dc2626;
     }
-    /* Preview state */
-    .approval-flow__step[data-status="preview"] .approval-flow__circle {
-      background: #fef9c3;
-      border-color: #facc15;
-      color: #a16207;
+
+    /* Status: preview (planned) */
+    .wf-step[data-status="preview"] .wf-step__dot {
       border-style: dashed;
+      border-color: #d1d5db;
+      color: #9ca3af;
+      background: #f9fafb;
     }
-    .approval-flow__step[data-status="preview"] .approval-flow__connector {
-      background: repeating-linear-gradient(90deg, #facc15 0 6px, transparent 6px 12px);
-    }
-    .approval-flow__badge-preview {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: #a16207;
-      background: #fef9c3;
-      border: 1px solid #fde68a;
-      border-radius: 6px;
-      padding: 6px 10px;
-      margin-bottom: 12px;
-    }
-    @keyframes pulse-approval {
-      0%, 100% { box-shadow: 0 0 0 4px rgba(59, 130, 246, .12); }
-      50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, .06); }
+    .wf-step[data-status="preview"] .wf-step__line {
+      background: repeating-linear-gradient(90deg, #d1d5db 0 4px, transparent 4px 8px);
+      height: 1px;
     }
 
     /* ===== Stat Cards ===== */

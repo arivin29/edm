@@ -26,10 +26,11 @@ import { NzProgressModule } from 'ng-zorro-antd/progress';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, of, Subject, Subscription } from 'rxjs';
-import { debounceTime, map, catchError } from 'rxjs/operators';
+import { debounceTime, map, catchError, switchMap, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import {
-  DropdownItem, TemplateItem, TemplateTag, TagGroup, DraftData, DRAFT_KEY
+  DropdownItem, TemplateItem, TemplateTag, TagGroup, DraftData, DRAFT_KEY,
+  WorkflowStatus, WorkflowTemplateStep
 } from '../document.models';
 
 function parseSourceConfig(cfg: any): any {
@@ -85,6 +86,9 @@ export class DocumentFormPage implements OnInit, OnDestroy {
   sections = signal<DropdownItem[]>([]);
   allTemplates = signal<TemplateItem[]>([]);
   templateTags = signal<TemplateTag[]>([]);
+  workflowPreview = signal<WorkflowStatus | null>(null);
+  workflowPreviewLoading = signal(false);
+  private workflowLookup$ = new Subject<void>();
   apiOptions = new Map<string, { label: string; value: any }[]>();
   apiLoading = new Map<string, boolean>();
 
@@ -145,6 +149,7 @@ export class DocumentFormPage implements OnInit, OnDestroy {
           }
         }
         this.triggerAutoSave();
+        this.triggerWorkflowLookup();
       })
     );
 
@@ -158,6 +163,17 @@ export class DocumentFormPage implements OnInit, OnDestroy {
         }
         this.triggerAutoSave();
       })
+    );
+
+    // Also trigger workflow lookup when org fields change
+    for (const field of ['category_id', 'office_id', 'department_id']) {
+      this.subscriptions.push(
+        this.form.get(field)!.valueChanges.subscribe(() => this.triggerWorkflowLookup())
+      );
+    }
+
+    this.subscriptions.push(
+      this.workflowLookup$.pipe(debounceTime(500)).subscribe(() => this.loadWorkflowPreview())
     );
 
     this.subscriptions.push(
@@ -532,6 +548,46 @@ export class DocumentFormPage implements OnInit, OnDestroy {
       if (match) return match.label;
     }
     return String(val);
+  }
+
+  private triggerWorkflowLookup() {
+    this.workflowLookup$.next();
+  }
+
+  private loadWorkflowPreview() {
+    const docTypeId = this.form.get('document_type_id')!.value;
+    if (!docTypeId) {
+      this.workflowPreview.set(null);
+      return;
+    }
+
+    const params: string[] = [`document_type_id=${docTypeId}`];
+    const catId = this.form.get('category_id')!.value;
+    const offId = this.form.get('office_id')!.value;
+    const deptId = this.form.get('department_id')!.value;
+    if (catId) params.push(`category_id=${catId}`);
+    if (offId) params.push(`office_id=${offId}`);
+    if (deptId) params.push(`department_id=${deptId}`);
+
+    this.workflowPreviewLoading.set(true);
+    this.http.get<any>(`${environment.apiUrl}/workflow/preview?${params.join('&')}`).subscribe({
+      next: (res) => {
+        this.workflowPreview.set(res.data || null);
+        this.workflowPreviewLoading.set(false);
+      },
+      error: () => {
+        this.workflowPreview.set(null);
+        this.workflowPreviewLoading.set(false);
+      }
+    });
+  }
+
+  getAssigneeLabel(step: WorkflowTemplateStep): string {
+    if (step.assignee_type === 'role') return 'Berdasarkan Role';
+    if (step.assignee_type === 'user') return 'Pengguna Tertentu';
+    if (step.assignee_type === 'position') return 'Berdasarkan Posisi';
+    if (step.assignee_type === 'department') return 'Berdasarkan Departemen';
+    return step.assignee_type;
   }
 
   onSubmit(asDraft = false) {
