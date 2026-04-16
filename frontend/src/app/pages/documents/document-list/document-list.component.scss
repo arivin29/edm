@@ -3,3 +3,146 @@
 :host ::ng-deep .ant-table-small .ant-table-tbody > tr:nth-child(even) { background: #fafbfc; }
 :host ::ng-deep .ant-tag { font-size: 10px; padding: 0 4px; line-height: 18px; }
 :host ::ng-deep .ant-card-body { padding: 12px; }
+
+// Expand row
+:host ::ng-deep .ant-table-expanded-row > td { padding: 0 !important; background: #f8fafc !important; }
+:host ::ng-deep .ant-table-expanded-row:hover > td { background: #f8fafc !important; }
+
+.expand-row-content { padding: 0; }
+
+.expand-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 16px;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.expand-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0;
+  padding: 0;
+}
+
+.expand-section {
+  padding: 14px 16px;
+  border-right: 1px solid #f0f0f0;
+
+  &:last-child { border-right: none; }
+}
+
+.expand-section__title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #3f3f46;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f0f0f0;
+
+  .anticon { font-size: 12px; color: #71717a; }
+}
+
+.expand-fields { display: flex; flex-direction: column; gap: 6px; }
+
+.expand-field {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.expand-field__label {
+  font-size: 10px;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.expand-field__value {
+  font-size: 12px;
+  color: #27272a;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+// Workflow steps in expand
+.expand-workflow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.expand-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.expand-step__icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  margin-top: 1px;
+  color: #d4d4d8;
+}
+
+.expand-step[data-status="approved"] .expand-step__icon,
+.expand-step[data-status="completed"] .expand-step__icon { color: #22c55e; }
+.expand-step[data-status="rejected"] .expand-step__icon { color: #ef4444; }
+.expand-step[data-status="active"] .expand-step__icon,
+.expand-step[data-status="in_progress"] .expand-step__icon { color: #3b82f6; }
+
+.expand-step__spin {
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.expand-step__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.expand-step__name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #27272a;
+}
+
+.expand-step__meta {
+  font-size: 10px;
+  color: #a1a1aa;
+}
+
+.expand-empty {
+  font-size: 12px;
+  color: #a1a1aa;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+.expand-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+@media (max-width: 1024px) {
+  .expand-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .expand-section {
+    border-bottom: 1px solid #f0f0f0;
+    &:nth-child(2n) { border-right: none; }
+  }
+}

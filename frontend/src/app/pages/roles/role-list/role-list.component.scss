@@ -1,0 +1,130 @@
+// Stats bar
+.role-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.role-stat {
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &__value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #262626;
+    line-height: 1;
+
+    &--blue { color: #1890ff; }
+    &--green { color: #52c41a; }
+    &--purple { color: #722ed1; }
+  }
+
+  &__label {
+    font-size: 11px;
+    color: #8c8c8c;
+  }
+}
+
+// Table enhancements
+::ng-deep .ant-card-body {
+  padding: 0 !important;
+}
+
+::ng-deep .ant-table-small .ant-table-thead > tr > th {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+::ng-deep .ant-table-small .ant-table-tbody > tr > td {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+::ng-deep .ant-tag {
+  font-size: 11px;
+}
+
+.role-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.perm-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+// Expand row
+.expand-cell {
+  padding: 0 !important;
+}
+
+.expand-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fafafa;
+}
+
+.expand-module {
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #f5f7fa;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &__name {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex: 1;
+  }
+
+  &__perms {
+    padding: 6px 12px;
+  }
+}
+
+.expand-perm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 11px;
+  border-bottom: 1px solid #fafafa;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__name {
+    font-weight: 500;
+    color: #262626;
+  }
+
+  &__desc {
+    color: #8c8c8c;
+    font-size: 10px;
+  }
+}

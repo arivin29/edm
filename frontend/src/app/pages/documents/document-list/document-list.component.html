@@ -98,6 +98,7 @@
     </ng-template>
       <thead>
         <tr>
+          <th nzWidth="30px"></th>
           <th nzWidth="140px">No. Dokumen</th>
           <th>Judul</th>
           <th nzWidth="110px">Tipe</th>
@@ -112,6 +113,7 @@
       <tbody>
         @for (doc of docTable.data; track doc.id) {
           <tr>
+            <td [nzExpand]="expandSet.has(doc.id)" (nzExpandChange)="onExpandChange(doc, $event)"></td>
             <td>
               <a [routerLink]="['/documents', doc.id]" class="text-blue-600 font-mono text-[11px] hover:underline">
                 {{ doc.document_number || '-' }}
@@ -177,9 +179,169 @@
               </nz-dropdown-menu>
             </td>
           </tr>
+
+          <!-- Expanded Row -->
+          <tr [nzExpand]="expandSet.has(doc.id)">
+            <td colspan="10" class="expand-row-content">
+              @if (expandLoading.has(doc.id)) {
+                <div class="expand-loading">
+                  <nz-spin nzSimple nzSize="small"></nz-spin>
+                  <span>Memuat detail...</span>
+                </div>
+              } @else {
+                @let detail = expandData.get(doc.id);
+                @if (detail) {
+                  <div class="expand-grid">
+                    <!-- Info Dokumen -->
+                    <div class="expand-section">
+                      <div class="expand-section__title">
+                        <span nz-icon nzType="info-circle" nzTheme="outline"></span>
+                        Informasi Dokumen
+                      </div>
+                      <div class="expand-fields">
+                        <div class="expand-field">
+                          <span class="expand-field__label">Deskripsi</span>
+                          <span class="expand-field__value">{{ detail.description || '-' }}</span>
+                        </div>
+                        <div class="expand-field">
+                          <span class="expand-field__label">Tipe</span>
+                          <span class="expand-field__value">{{ detail.document_type?.name || '-' }}</span>
+                        </div>
+                        <div class="expand-field">
+                          <span class="expand-field__label">Kategori</span>
+                          <span class="expand-field__value">{{ detail.category?.name || '-' }}</span>
+                        </div>
+                        <div class="expand-field">
+                          <span class="expand-field__label">Kerahasiaan</span>
+                          <span class="expand-field__value">{{ getConfidentialityLabel(detail.confidentiality) }}</span>
+                        </div>
+                        <div class="expand-field">
+                          <span class="expand-field__label">Versi</span>
+                          <span class="expand-field__value">v{{ detail.major_version }}.{{ detail.minor_version }} (Revisi {{ detail.revision_count }})</span>
+                        </div>
+                        <div class="expand-field">
+                          <span class="expand-field__label">Template</span>
+                          <span class="expand-field__value">{{ detail.template?.name || '-' }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Organisasi -->
+                    <div class="expand-section">
+                      <div class="expand-section__title">
+                        <span nz-icon nzType="apartment" nzTheme="outline"></span>
+                        Organisasi
+                      </div>
+                      <div class="expand-fields">
+                        <div class="expand-field">
+                          <span class="expand-field__label">Perusahaan</span>
+                          <span class="expand-field__value">{{ detail.company?.name || '-' }}</span>
+                        </div>
+                        <div class="expand-field">
+                          <span class="expand-field__label">Kantor</span>
+                          <span class="expand-field__value">{{ detail.office?.name || '-' }}</span>
+                        </div>
+                        <div class="expand-field">
+                          <span class="expand-field__label">Departemen</span>
+                          <span class="expand-field__value">{{ detail.department?.name || '-' }}</span>
+                        </div>
+                        <div class="expand-field">
+                          <span class="expand-field__label">Seksi</span>
+                          <span class="expand-field__value">{{ detail.section?.name || '-' }}</span>
+                        </div>
+                        <div class="expand-field">
+                          <span class="expand-field__label">Pembuat</span>
+                          <span class="expand-field__value">{{ detail.creator?.name || '-' }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Workflow -->
+                    <div class="expand-section">
+                      <div class="expand-section__title">
+                        <span nz-icon nzType="branches" nzTheme="outline"></span>
+                        Status Workflow
+                      </div>
+                      @if (expandWorkflow.get(doc.id)?.length) {
+                        <div class="expand-workflow">
+                          @for (step of expandWorkflow.get(doc.id); track step.id) {
+                            <div class="expand-step" [attr.data-status]="step.status">
+                              <div class="expand-step__icon">
+                                @if (step.status === 'approved' || step.status === 'completed') {
+                                  <span nz-icon nzType="check-circle" nzTheme="fill"></span>
+                                } @else if (step.status === 'rejected') {
+                                  <span nz-icon nzType="close-circle" nzTheme="fill"></span>
+                                } @else if (step.status === 'active' || step.status === 'in_progress') {
+                                  <span nz-icon nzType="sync" nzTheme="outline" class="expand-step__spin"></span>
+                                } @else {
+                                  <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+                                }
+                              </div>
+                              <div class="expand-step__info">
+                                <span class="expand-step__name">{{ step.name }}</span>
+                                <span class="expand-step__meta">
+                                  {{ getStepActionLabel(step.action_type) }}
+                                  @if (step.actor) {
+                                    · {{ step.actor.name }}
+                                  }
+                                  @if (step.completed_at) {
+                                    · {{ formatDate(step.completed_at) }}
+                                  }
+                                </span>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      } @else {
+                        <div class="expand-empty">Belum ada workflow</div>
+                      }
+                    </div>
+
+                    <!-- Tanggal & Aksi -->
+                    <div class="expand-section">
+                      <div class="expand-section__title">
+                        <span nz-icon nzType="calendar" nzTheme="outline"></span>
+                        Riwayat
+                      </div>
+                      <div class="expand-fields">
+                        <div class="expand-field">
+                          <span class="expand-field__label">Dibuat</span>
+                          <span class="expand-field__value">{{ detail.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                        </div>
+                        <div class="expand-field">
+                          <span class="expand-field__label">Diubah</span>
+                          <span class="expand-field__value">{{ detail.updated_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                        </div>
+                        @if (detail.submitted_at) {
+                          <div class="expand-field">
+                            <span class="expand-field__label">Disubmit</span>
+                            <span class="expand-field__value">{{ detail.submitted_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                          </div>
+                        }
+                        @if (detail.approved_at) {
+                          <div class="expand-field">
+                            <span class="expand-field__label">Disetujui</span>
+                            <span class="expand-field__value">{{ detail.approved_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                          </div>
+                        }
+                      </div>
+                      <div class="expand-actions">
+                        <a nz-button nzType="primary" nzSize="small" [routerLink]="['/documents', doc.id]">
+                          <span nz-icon nzType="eye"></span> Lihat Detail
+                        </a>
+                        <a nz-button nzSize="small" nzType="default" [routerLink]="['/documents', doc.id, 'edit']">
+                          <span nz-icon nzType="edit"></span> Edit
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                }
+              }
+            </td>
+          </tr>
         } @empty {
           <tr>
-            <td colspan="9" class="text-center text-gray-400 py-8">
+            <td colspan="10" class="text-center text-gray-400 py-8">
               <span nz-icon nzType="inbox" class="text-3xl text-gray-300 mb-2 block"></span>
               Tidak ada dokumen ditemukan
             </td>

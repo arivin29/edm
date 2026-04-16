@@ -204,7 +204,12 @@ export class DocumentDetailPage implements OnInit {
     this.loading.set(true);
     this.http.get<any>(`${environment.apiUrl}/documents/${id}`).subscribe({
       next: (res) => {
-        this.document.set(res.data);
+        const doc = res.data;
+        // Normalize metadata: backend may return JSON string for JSONB fields
+        if (doc && typeof doc.metadata === 'string') {
+          try { doc.metadata = JSON.parse(doc.metadata); } catch { doc.metadata = {}; }
+        }
+        this.document.set(doc);
         this.loading.set(false);
       },
       error: () => {

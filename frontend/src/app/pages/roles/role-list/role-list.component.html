@@ -1,0 +1,135 @@
+<div class="p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h1 class="text-lg font-semibold m-0">Role & Permission</h1>
+      <p class="text-gray-500 text-xs m-0">Kelola role dan hak akses</p>
+    </div>
+    <button nz-button nzType="primary" nzSize="small" (click)="openDrawer()">
+      <span nz-icon nzType="plus"></span>
+      Tambah Role
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="role-stats">
+    <div class="role-stat">
+      <span class="role-stat__value">{{ roles().length }}</span>
+      <span class="role-stat__label">Total Role</span>
+    </div>
+    <div class="role-stat">
+      <span class="role-stat__value role-stat__value--blue">{{ systemCount }}</span>
+      <span class="role-stat__label">System</span>
+    </div>
+    <div class="role-stat">
+      <span class="role-stat__value role-stat__value--green">{{ customCount }}</span>
+      <span class="role-stat__label">Custom</span>
+    </div>
+    <div class="role-stat">
+      <span class="role-stat__value role-stat__value--purple">{{ permissions().length }}</span>
+      <span class="role-stat__label">Permissions</span>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <nz-card nzSize="small">
+    <nz-table #roleTable [nzData]="roles()" [nzLoading]="loading()"
+              nzSize="small" [nzPageSize]="15" [nzShowPagination]="roles().length > 15">
+      <thead>
+        <tr>
+          <th nzWidth="40px"></th>
+          <th nzWidth="180px">Role</th>
+          <th>Deskripsi</th>
+          <th nzWidth="120px" nzAlign="center">Permission</th>
+          <th nzWidth="80px" nzAlign="center">User</th>
+          <th nzWidth="80px" nzAlign="center">Tipe</th>
+          <th nzWidth="90px" nzAlign="center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (role of roleTable.data; track role.id) {
+          <tr [nzExpand]="expandSet.has(role.id)">
+            <td [nzExpand]="expandSet.has(role.id)" (nzExpandChange)="onExpandChange(role.id, $event)"></td>
+            <td>
+              <div class="role-name">
+                <span nz-icon [nzType]="role.is_system ? 'lock' : 'team'"
+                      [class.text-blue-400]="role.is_system"
+                      [class.text-green-400]="!role.is_system"></span>
+                <strong>{{ role.name }}</strong>
+              </div>
+            </td>
+            <td class="text-gray-500 text-xs">{{ role.description || '-' }}</td>
+            <td nzAlign="center">
+              <nz-tag nzColor="processing" class="!m-0">{{ role.permissions?.length || 0 }}</nz-tag>
+            </td>
+            <td nzAlign="center">
+              <nz-tag nzColor="default" class="!m-0">{{ role.user_count || 0 }}</nz-tag>
+            </td>
+            <td nzAlign="center">
+              <nz-tag [nzColor]="role.is_system ? 'blue' : 'green'" class="!m-0">
+                {{ role.is_system ? 'System' : 'Custom' }}
+              </nz-tag>
+            </td>
+            <td nzAlign="center">
+              <button nz-button nzType="text" nzSize="small"
+                      nz-tooltip="Edit" (click)="openDrawer(role)" [disabled]="role.is_system">
+                <span nz-icon nzType="edit"></span>
+              </button>
+              <button nz-button nzType="text" nzSize="small" nzDanger
+                      nz-tooltip="Hapus" (click)="deleteRole(role)" [disabled]="role.is_system">
+                <span nz-icon nzType="delete"></span>
+              </button>
+            </td>
+          </tr>
+          <tr [nzExpand]="expandSet.has(role.id)">
+            <td colspan="7" class="expand-cell">
+              <div class="expand-content">
+                @if (role.permissions && role.permissions.length > 0) {
+                  @for (module of getPermModules(role); track module) {
+                    <div class="expand-module">
+                      <div class="expand-module__header">
+                        <span nz-icon nzType="folder" class="text-blue-400"></span>
+                        <span class="expand-module__name">{{ module }}</span>
+                        <nz-tag nzColor="blue" class="!m-0">{{ getPermsByModule(role, module).length }}</nz-tag>
+                      </div>
+                      <div class="expand-module__perms">
+                        @for (perm of getPermsByModule(role, module); track perm.id) {
+                          <div class="expand-perm">
+                            <span nz-icon nzType="check-circle" nzTheme="fill" class="text-green-400"></span>
+                            <span class="expand-perm__name">{{ perm.name }}</span>
+                            @if (perm.description) {
+                              <span class="expand-perm__desc">— {{ perm.description }}</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                } @else {
+                  <div class="text-gray-400 text-xs py-2">
+                    <span nz-icon nzType="info-circle"></span> Role ini belum memiliki permission
+                  </div>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="text-center text-gray-500 py-8">
+              Tidak ada role ditemukan
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </nz-card>
+</div>
+
+<!-- Role Form Drawer -->
+<app-role-form
+  [visible]="drawerVisible"
+  [editRole]="editRole"
+  [permissions]="permissions()"
+  (closed)="closeDrawer()"
+  (saved)="onFormSaved()">
+</app-role-form>

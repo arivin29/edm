@@ -47,7 +47,9 @@
 }
 
 .sidebar-nav {
-  @apply flex-1 overflow-y-auto;
+  @apply flex-1;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 6px 0;
 
   // Scrollbar
@@ -59,6 +61,7 @@
   .ant-menu {
     @apply bg-transparent border-none;
     font-size: 12px !important;
+    overflow: hidden !important;
   }
 
   .ant-menu-item,
@@ -76,7 +79,23 @@
       font-size: 15px !important;
       color: rgba(148, 163, 184, 0.6);
       margin-right: 10px !important;
+      vertical-align: -0.15em;
       transition: color 0.15s;
+    }
+
+    a {
+      color: inherit !important;
+      display: flex !important;
+      align-items: center;
+      padding: 0 !important;
+      margin: 0 !important;
+      height: 100%;
+
+      .anticon {
+        font-size: 15px !important;
+        color: rgba(148, 163, 184, 0.6);
+        margin-right: 10px !important;
+      }
     }
 
     &:hover {

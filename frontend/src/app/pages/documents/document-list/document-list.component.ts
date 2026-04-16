@@ -16,7 +16,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { DocumentItem, getStatusColor, getStatusLabel, getPriorityColor, getPriorityLabel, formatDate } from '../document.models';
+import { DocumentItem, DocumentDetail, WorkflowStep, getStatusColor, getStatusLabel, getPriorityColor, getPriorityLabel, formatDate } from '../document.models';
 
 @Component({
   selector: 'app-document-list',
@@ -61,6 +61,12 @@ export class DocumentListPage implements OnInit {
   getPriorityColor = getPriorityColor;
   getPriorityLabel = getPriorityLabel;
   formatDate = formatDate;
+
+  // Expand row state
+  expandSet = new Set<string>();
+  expandData = new Map<string, DocumentDetail>();
+  expandWorkflow = new Map<string, WorkflowStep[]>();
+  expandLoading = new Set<string>();
 
   ngOnInit() {
     this.loadDocumentTypes();
@@ -175,5 +181,50 @@ export class DocumentListPage implements OnInit {
         });
       }
     });
+  }
+
+  onExpandChange(doc: DocumentItem, expanded: boolean) {
+    if (expanded) {
+      this.expandSet.add(doc.id);
+      if (!this.expandData.has(doc.id)) {
+        this.loadExpandDetail(doc.id);
+      }
+    } else {
+      this.expandSet.delete(doc.id);
+    }
+  }
+
+  private loadExpandDetail(docId: string) {
+    this.expandLoading.add(docId);
+
+    this.http.get<any>(`${environment.apiUrl}/documents/${docId}`).subscribe({
+      next: (res) => {
+        this.expandData.set(docId, res.data || res);
+        this.expandLoading.delete(docId);
+      },
+      error: () => this.expandLoading.delete(docId)
+    });
+
+    this.http.get<any>(`${environment.apiUrl}/documents/${docId}/workflow`).subscribe({
+      next: (res) => {
+        const steps = res.data?.steps || res.steps || res.data || [];
+        this.expandWorkflow.set(docId, steps);
+      },
+      error: () => this.expandWorkflow.set(docId, [])
+    });
+  }
+
+  getConfidentialityLabel(value: string): string {
+    const labels: Record<string, string> = {
+      public: 'Publik', internal: 'Internal', confidential: 'Rahasia', secret: 'Sangat Rahasia'
+    };
+    return labels[value] || value || '-';
+  }
+
+  getStepActionLabel(action: string): string {
+    const labels: Record<string, string> = {
+      review: 'Review', approve: 'Approval', sign: 'Tanda Tangan', acknowledge: 'Acknowledge'
+    };
+    return labels[action] || action || '';
   }
 }

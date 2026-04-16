@@ -1,0 +1,87 @@
+<nz-drawer [nzVisible]="visible" [nzTitle]="drawerTitle"
+           nzPlacement="right" nzWidth="420px" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    @if (drawerLoading()) {
+      <div class="text-center py-12"><nz-spin nzSimple></nz-spin></div>
+    } @else {
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label nzRequired>Nama Lengkap</nz-form-label>
+          <nz-form-control nzErrorTip="Nama wajib diisi">
+            <input nz-input nzSize="small" formControlName="name" placeholder="Nama lengkap" />
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label nzRequired>Email</nz-form-label>
+          <nz-form-control nzErrorTip="Email wajib diisi">
+            <input nz-input nzSize="small" formControlName="email" type="email" placeholder="Email" />
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzRequired]="!isEdit">Password</nz-form-label>
+          <nz-form-control [nzErrorTip]="isEdit ? '' : 'Password wajib diisi'">
+            <input nz-input nzSize="small" formControlName="password" type="password"
+                   [placeholder]="isEdit ? 'Kosongkan jika tidak diubah' : 'Password'" />
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label>Telepon</nz-form-label>
+          <nz-form-control>
+            <input nz-input nzSize="small" formControlName="phone" placeholder="Nomor telepon" />
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label>Department</nz-form-label>
+          <nz-form-control>
+            <nz-select nzSize="small" formControlName="department_id" nzPlaceHolder="Pilih department" nzAllowClear nzShowSearch>
+              @for (dept of departments; track dept.id) {
+                <nz-option [nzValue]="dept.id" [nzLabel]="dept.name"></nz-option>
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label>Section</nz-form-label>
+          <nz-form-control>
+            <nz-select nzSize="small" formControlName="section_id" nzPlaceHolder="Pilih section" nzAllowClear nzShowSearch>
+              @for (sec of sections; track sec.id) {
+                <nz-option [nzValue]="sec.id" [nzLabel]="sec.name"></nz-option>
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label>Jabatan</nz-form-label>
+          <nz-form-control>
+            <nz-select nzSize="small" formControlName="position_id" nzPlaceHolder="Pilih jabatan" nzAllowClear nzShowSearch>
+              @for (pos of positions; track pos.id) {
+                <nz-option [nzValue]="pos.id" [nzLabel]="pos.name"></nz-option>
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label nzRequired>Role</nz-form-label>
+          <nz-form-control nzErrorTip="Minimal 1 role harus dipilih">
+            <nz-select nzSize="small" formControlName="role_ids" nzMode="multiple" nzPlaceHolder="Pilih role" nzShowSearch>
+              @for (role of roleOptions; track role.id) {
+                <nz-option [nzValue]="role.id" [nzLabel]="role.name"></nz-option>
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label>Status</nz-form-label>
+          <nz-form-control>
+            <nz-switch formControlName="is_active" nzCheckedChildren="Aktif" nzUnCheckedChildren="Nonaktif"></nz-switch>
+          </nz-form-control>
+        </nz-form-item>
+        <div class="mt-4">
+          <button nz-button nzType="primary" nzSize="small" nzBlock [nzLoading]="saving()" (click)="save()">
+            Simpan
+          </button>
+        </div>
+      </form>
+    }
+  </ng-container>
+</nz-drawer>

@@ -1,6 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzTagModule } from 'ng-zorro-antd/tag';
@@ -12,36 +11,35 @@ import { NzBadgeModule } from 'ng-zorro-antd/badge';
 import { NzProgressModule } from 'ng-zorro-antd/progress';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { NzFormModule } from 'ng-zorro-antd/form';
-import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
-import { NzSelectModule } from 'ng-zorro-antd/select';
-import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
-import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
-import { NzDrawerModule } from 'ng-zorro-antd/drawer';
-import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../../environments/environment';
 import { TemplateTag, TagGroup } from '../../../document.models';
+import { DocParamEditComponent } from '../doc-param-edit/doc-param-edit.component';
+
+/** Safely parse source_config */
+function parseSourceConfig(cfg: any): any {
+  if (!cfg) return {};
+  if (typeof cfg === 'string') {
+    try { return JSON.parse(cfg); } catch { return {}; }
+  }
+  return cfg;
+}
 
 @Component({
   selector: 'app-doc-parameters',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule,
+    CommonModule,
     NzSpinModule, NzEmptyModule, NzTagModule,
     NzToolTipModule, NzIconModule, NzDividerModule, NzCardModule,
     NzBadgeModule, NzProgressModule, NzAlertModule, NzButtonModule,
-    NzFormModule, NzInputModule, NzInputNumberModule, NzSelectModule,
-    NzDatePickerModule, NzCheckboxModule, NzDrawerModule
+    DocParamEditComponent
   ],
   templateUrl: './doc-parameters.component.html',
   styleUrls: ['./doc-parameters.component.scss']
 })
 export class DocParametersComponent implements OnChanges {
   private http = inject(HttpClient);
-  private fb = inject(FormBuilder);
-  private message = inject(NzMessageService);
 
   @Input() documentId: string = '';
   @Input() templateId: string | null = null;
@@ -53,6 +51,9 @@ export class DocParametersComponent implements OnChanges {
 
   loading = signal(false);
   tags = signal<TemplateTag[]>([]);
+
+  /** Track which group is currently being edited (only one at a time) */
+  editingGroup = signal<string | null>(null);
 
   /** Visible (non-hidden, non-skipped) tags */
   visibleTags = computed(() =>
@@ -80,17 +81,14 @@ export class DocParametersComponent implements OnChanges {
     return groups;
   });
 
-  /** Stats: filled vs total */
   filledCount = computed(() => {
-    const visible = this.visibleTags();
-    return visible.filter(t => {
+    return this.visibleTags().filter(t => {
       const val = this.metadata?.[t.tag_key];
       return val != null && val !== '';
     }).length;
   });
 
   totalCount = computed(() => this.visibleTags().length);
-
   requiredCount = computed(() => this.visibleTags().filter(t => t.is_required).length);
 
   requiredFilledCount = computed(() => {
@@ -119,7 +117,12 @@ export class DocParametersComponent implements OnChanges {
     this.loading.set(true);
     this.http.get<any>(`${environment.apiUrl}/templates/${templateId}/tags`).subscribe({
       next: (res) => {
-        this.tags.set(res.data || []);
+        const rawTags: TemplateTag[] = res.data || [];
+        // Normalize source_config from string to object
+        for (const tag of rawTags) {
+          tag.source_config = parseSourceConfig(tag.source_config);
+        }
+        this.tags.set(rawTags);
         this.loading.set(false);
       },
       error: () => {
@@ -128,6 +131,8 @@ export class DocParametersComponent implements OnChanges {
       }
     });
   }
+
+  // ===== Display helpers =====
 
   getDisplayValue(tag: TemplateTag): string {
     const val = this.metadata?.[tag.tag_key];
@@ -139,11 +144,15 @@ export class DocParametersComponent implements OnChanges {
         return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
       } catch { return String(val); }
     }
-    if (tag.data_type === 'select' && tag.source_config?.options) {
-      const opt = tag.source_config.options.find((o: any) => o.value === val);
-      return opt?.label || String(val);
+    if (tag.data_type === 'select') {
+      const cfg = tag.source_config;
+      if (cfg?.options) {
+        const opt = cfg.options.find((o: any) => o.value === val);
+        if (opt) return opt.label;
+      }
+      // For api-sourced selects, show value (label resolved by apiLabelCache)
+      return this.getApiLabel(tag, val) || String(val);
     }
-    if (tag.data_type === 'number') return String(val);
     return String(val);
   }
 
@@ -165,94 +174,65 @@ export class DocParametersComponent implements OnChanges {
     return icons[dataType] || 'form';
   }
 
-  // ===== Edit Mode =====
-  editDrawerVisible = signal(false);
-  editForm!: FormGroup;
-  saving = signal(false);
+  // ===== API label resolution for display mode =====
 
-  openEditDrawer() {
-    this.buildEditForm();
-    this.editDrawerVisible.set(true);
-  }
+  private apiLabelCache = new Map<string, Map<any, string>>();
 
-  closeEditDrawer() {
-    this.editDrawerVisible.set(false);
-  }
+  private getApiLabel(tag: TemplateTag, val: any): string {
+    const cache = this.apiLabelCache.get(tag.tag_key);
+    if (cache?.has(val)) return cache.get(val)!;
 
-  private buildEditForm() {
-    const group: Record<string, FormControl> = {};
-    for (const tag of this.visibleTags()) {
-      let val: any = this.metadata?.[tag.tag_key] ?? tag.default_value ?? '';
-
-      if (tag.data_type === 'checkbox') {
-        val = val === true || val === 'true';
-      } else if (tag.data_type === 'number') {
-        val = val !== '' && val != null ? Number(val) : null;
-      } else if (tag.data_type === 'date') {
-        val = val ? new Date(val) : null;
+    // Lazy-load API options for display if not cached
+    if (tag.source_type === 'api' && !this.apiLabelCache.has(tag.tag_key)) {
+      this.apiLabelCache.set(tag.tag_key, new Map());
+      const cfg = tag.source_config;
+      if (cfg?.endpoint) {
+        const url = cfg.endpoint.startsWith('http')
+          ? cfg.endpoint
+          : `${environment.apiUrl}${cfg.endpoint}`;
+        this.http.get<any>(url).subscribe(res => {
+          const items = res.data || res || [];
+          const labelField = cfg.label_field || 'name';
+          const valueField = cfg.value_field || 'id';
+          const map = new Map<any, string>();
+          for (const item of (Array.isArray(items) ? items : [])) {
+            map.set(item[valueField], item[labelField]);
+          }
+          this.apiLabelCache.set(tag.tag_key, map);
+        });
       }
-
-      const validators: any[] = [];
-      if (tag.is_required) validators.push(Validators.required);
-      if (tag.min_length) validators.push(Validators.minLength(tag.min_length));
-      if (tag.max_length) validators.push(Validators.maxLength(tag.max_length));
-      if (tag.validation_regex) validators.push(Validators.pattern(tag.validation_regex));
-
-      group[tag.tag_key] = new FormControl(val, validators);
     }
-    this.editForm = this.fb.group(group);
+    return '';
   }
 
-  getFormControl(key: string): FormControl {
-    return (this.editForm?.get(key) as FormControl) || new FormControl();
+  // ===== Per-group editing =====
+
+  startEditing(groupName: string) {
+    this.editingGroup.set(groupName);
   }
 
-  getSelectOptions(tag: TemplateTag): { label: string; value: any }[] {
-    if (tag.source_type === 'static' && tag.source_config?.options) {
-      return tag.source_config.options;
-    }
-    return [];
+  isEditing(groupName: string): boolean {
+    return this.editingGroup() === groupName;
   }
 
-  saveMetadata() {
-    if (!this.editForm) return;
+  onGroupSaved(mergedMetadata: Record<string, any>) {
+    this.metadata = { ...mergedMetadata };
+    this.editingGroup.set(null);
+    // Clear api label cache so labels refresh
+    this.apiLabelCache.clear();
+    this.metadataUpdated.emit(this.metadata);
+  }
 
-    // Validate
-    if (this.editForm.invalid) {
-      Object.values(this.editForm.controls).forEach(c => {
-        c.markAsDirty();
-        c.updateValueAndValidity();
-      });
-      this.message.warning('Mohon lengkapi field yang wajib diisi');
-      return;
-    }
+  onGroupCancelled() {
+    this.editingGroup.set(null);
+  }
 
-    this.saving.set(true);
-
-    const metadata: Record<string, any> = {};
-    for (const tag of this.visibleTags()) {
-      const ctrl = this.editForm.get(tag.tag_key);
-      if (!ctrl) continue;
-      let val = ctrl.value;
-      if (tag.data_type === 'date' && val instanceof Date) {
-        val = val.toISOString().split('T')[0];
-      }
-      metadata[tag.tag_key] = val;
-    }
-
-    this.http.put(`${environment.apiUrl}/documents/${this.documentId}`, { metadata }).subscribe({
-      next: () => {
-        this.message.success('Parameter berhasil diperbarui');
-        this.metadata = { ...this.metadata, ...metadata };
-        this.metadataUpdated.emit(this.metadata);
-        this.editDrawerVisible.set(false);
-        this.saving.set(false);
-      },
-      error: () => {
-        this.message.error('Gagal menyimpan parameter');
-        this.saving.set(false);
-      }
-    });
+  /** Count filled fields in a group */
+  getGroupFilledCount(tags: TemplateTag[]): number {
+    return tags.filter(t => {
+      const val = this.metadata?.[t.tag_key];
+      return val != null && val !== '';
+    }).length;
   }
 }
 

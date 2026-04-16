@@ -214,53 +214,23 @@
   .ant-divider-vertical { height: 28px; margin: 0; }
   .ant-card-head { padding: 0 12px; min-height: 34px; }
   .ant-card-head-title { padding: 6px 0; font-size: 12px; }
+  .ant-card-extra { padding: 4px 0; }
   .ant-card-body { padding: 6px 10px 10px; }
   .ant-tag { font-size: 11px; line-height: 20px; padding: 0 6px; }
   .ant-empty { padding: 24px 0; }
   .ant-empty-description { font-size: 12px; }
   .ant-alert { font-size: 12px; padding: 6px 12px; }
   .ant-progress-inner { width: 36px !important; height: 36px !important; }
-
-  // Edit drawer overrides
-  .ant-drawer-body { padding: 16px; }
-  .ant-drawer-footer { padding: 10px 16px; }
-  .ant-form-item { margin-bottom: 14px; }
-  .ant-form-item-label { padding: 0 0 4px; }
-  .ant-form-item-label > label { font-size: 12px; height: auto; }
-  .ant-divider { margin: 12px 0; }
 }
 
-/* ===== Edit Drawer ===== */
-.edit-group-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #475569;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-
-  span[nz-icon] { font-size: 13px; color: #1890ff; }
-}
-
-.edit-help-icon {
+.params-group-edit-btn {
   font-size: 11px;
-  color: #bbb;
-  cursor: help;
+  padding: 0 4px;
+}
+
+.params-field__readonly-tag {
+  font-size: 9px;
   margin-left: 4px;
-}
-
-.edit-field-desc {
-  font-size: 10px;
-  color: #94a3b8;
-  margin-top: 2px;
-  line-height: 1.4;
-}
-
-.edit-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
 }
 
 @media (max-width: 640px) {

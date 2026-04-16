@@ -1,0 +1,83 @@
+.param-edit {
+  padding: 8px 0;
+}
+
+.param-edit__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+}
+
+.param-edit__field {
+  &.col-full {
+    grid-column: 1 / -1;
+  }
+}
+
+.param-edit__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.param-edit__help {
+  font-size: 11px;
+  color: #94a3b8;
+  cursor: help;
+}
+
+.param-edit__readonly {
+  padding: 6px 0;
+}
+
+.param-edit__readonly-value {
+  font-size: 13px;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px dashed #e2e8f0;
+}
+
+.param-edit__suffix {
+  color: #94a3b8;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.param-edit__desc {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.param-edit__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* ng-zorro overrides */
+:host ::ng-deep {
+  .ant-form-item { margin-bottom: 10px; }
+  .ant-form-item-label { padding: 0 0 2px; }
+  .ant-form-item-label > label { font-size: 12px; height: auto; }
+  .ant-input, .ant-select-selector { font-size: 12px !important; }
+  .ant-input-number { font-size: 12px; }
+  .ant-select { font-size: 12px; }
+  .ant-picker { width: 100%; }
+}
+
+@media (max-width: 640px) {
+  .param-edit__grid {
+    grid-template-columns: 1fr;
+  }
+}

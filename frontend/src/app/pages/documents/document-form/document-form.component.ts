@@ -461,7 +461,7 @@ export class DocumentFormPage implements OnInit, OnDestroy {
 
     const data: any = {
       ...this.form.value,
-      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+      metadata: Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : undefined,
       status: asDraft ? 'draft' : undefined
     };
 

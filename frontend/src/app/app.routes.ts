@@ -68,7 +68,7 @@ export const routes: Routes = [
       {
         path: 'users',
         loadComponent: () =>
-          import('./pages/users/user-list.page').then(m => m.UserListPage),
+          import('./pages/users/user-list/user-list.component').then(m => m.UserListPage),
         title: 'Pengguna - DMS'
       },
       // Organization
@@ -130,7 +130,7 @@ export const routes: Routes = [
           {
             path: '',
             loadComponent: () =>
-              import('./pages/roles/role-list.page').then(m => m.RoleListPage),
+              import('./pages/roles/role-list/role-list.component').then(m => m.RoleListPage),
             title: 'Role - DMS'
           }
         ]

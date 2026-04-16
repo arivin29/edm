@@ -1,0 +1,101 @@
+<div class="p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h1 class="text-lg font-semibold m-0">Pengguna</h1>
+      <p class="text-gray-500 text-xs m-0">Kelola pengguna sistem</p>
+    </div>
+    <button nz-button nzType="primary" nzSize="small" (click)="openDrawer()">
+      <span nz-icon nzType="plus"></span>
+      Tambah User
+    </button>
+  </div>
+
+  <!-- Search -->
+  <nz-card nzSize="small" class="mb-3">
+    <nz-input-group nzSize="small" [nzPrefix]="prefixIcon" class="w-64">
+      <input nz-input placeholder="Cari user..." [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
+    </nz-input-group>
+    <ng-template #prefixIcon><span nz-icon nzType="search"></span></ng-template>
+  </nz-card>
+
+  <!-- Table -->
+  <nz-card nzSize="small">
+    <nz-table #userTable [nzData]="users()" [nzLoading]="loading()"
+              nzSize="small" [nzPageSize]="15">
+      <thead>
+        <tr>
+          <th nzWidth="250px">Nama</th>
+          <th>Email</th>
+          <th nzWidth="120px">Department</th>
+          <th nzWidth="120px">Jabatan</th>
+          <th nzWidth="150px">Role</th>
+          <th nzWidth="70px">Status</th>
+          <th nzWidth="70px">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of userTable.data; track user.id) {
+          <tr>
+            <td>
+              <div class="flex items-center gap-2">
+                <nz-avatar [nzSrc]="user.avatar" nzIcon="user" nzSize="small"></nz-avatar>
+                <span>{{ user.name }}</span>
+              </div>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.department_name || '-' }}</td>
+            <td>{{ user.position_name || '-' }}</td>
+            <td>
+              @for (role of user.roles; track role.name) {
+                <nz-tag>{{ role.name }}</nz-tag>
+              }
+            </td>
+            <td>
+              <nz-tag [nzColor]="user.is_active ? 'success' : 'default'">
+                {{ user.is_active ? 'Aktif' : 'Nonaktif' }}
+              </nz-tag>
+            </td>
+            <td>
+              <a nz-dropdown [nzDropdownMenu]="actionMenu" nzTrigger="click">
+                <span nz-icon nzType="more" class="cursor-pointer"></span>
+              </a>
+              <nz-dropdown-menu #actionMenu="nzDropdownMenu">
+                <ul nz-menu nzSelectable>
+                  <li nz-menu-item (click)="openDrawer(user)">
+                    <span nz-icon nzType="edit"></span> Edit
+                  </li>
+                  <li nz-menu-item (click)="toggleStatus(user)">
+                    <span nz-icon [nzType]="user.is_active ? 'close' : 'check'"></span>
+                    {{ user.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                  </li>
+                  <li nz-menu-item nzDanger (click)="deleteUser(user)">
+                    <span nz-icon nzType="delete"></span> Hapus
+                  </li>
+                </ul>
+              </nz-dropdown-menu>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="text-center text-gray-500 py-8">
+              Tidak ada user ditemukan
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </nz-card>
+</div>
+
+<!-- User Form Drawer -->
+<app-user-form
+  [visible]="drawerVisible"
+  [editUser]="editUser"
+  [departments]="departments()"
+  [sections]="sections()"
+  [positions]="positions()"
+  [roleOptions]="roleOptions()"
+  (closed)="closeDrawer()"
+  (saved)="onFormSaved()">
+</app-user-form>

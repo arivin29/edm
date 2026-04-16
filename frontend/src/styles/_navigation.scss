@@ -3,9 +3,9 @@
 // Covers: menu, dropdown, breadcrumb
 // ============================================
 
-// ── Menu (Sidebar) ──────────────────────────────────────────
+// ── Menu (Non-sidebar, e.g. dropdowns, context menus) ───────
 
-.ant-menu {
+.ant-menu:not(.ant-menu-dark) {
   font-size: 13px !important;
 
   .ant-menu-item {

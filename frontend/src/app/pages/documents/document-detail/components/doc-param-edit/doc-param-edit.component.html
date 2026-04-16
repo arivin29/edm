@@ -1,0 +1,127 @@
+<div class="param-edit">
+  <div class="param-edit__grid">
+    @for (tag of tags; track tag.tag_key) {
+      @if (!tag.is_hidden) {
+        <div class="param-edit__field" [ngClass]="getColSpan(tag)">
+          @if (tag.is_readonly) {
+            <!-- Readonly: show value only -->
+            <div class="param-edit__readonly">
+              <label class="param-edit__label">
+                {{ tag.label }}
+                @if (tag.help_text) {
+                  <span nz-icon nzType="question-circle" nzTheme="outline"
+                        nz-tooltip [nzTooltipTitle]="tag.help_text"
+                        class="param-edit__help"></span>
+                }
+              </label>
+              <div class="param-edit__readonly-value">
+                {{ metadata[tag.tag_key] || tag.default_value || '-' }}
+                @if (tag.suffix) {
+                  <span class="param-edit__suffix">{{ tag.suffix }}</span>
+                }
+              </div>
+            </div>
+          } @else {
+            <nz-form-item>
+              <nz-form-label [nzRequired]="tag.is_required" [nzFor]="tag.tag_key">
+                {{ tag.label }}
+                @if (tag.help_text) {
+                  <span nz-icon nzType="question-circle" nzTheme="outline"
+                        nz-tooltip [nzTooltipTitle]="tag.help_text"
+                        class="param-edit__help"></span>
+                }
+              </nz-form-label>
+              <nz-form-control [nzErrorTip]="tag.validation_message || 'Field ini wajib diisi'">
+                @switch (tag.data_type) {
+                  @case ('textarea') {
+                    <textarea nz-input [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key"
+                              [placeholder]="tag.placeholder_text || 'Masukkan ' + tag.label"
+                              rows="3"></textarea>
+                  }
+                  @case ('number') {
+                    <nz-input-group [nzSuffix]="tag.suffix || ''">
+                      <nz-input-number [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key"
+                                       [nzMin]="tag.min_value ?? -999999999"
+                                       [nzMax]="tag.max_value ?? 999999999"
+                                       [nzPlaceHolder]="tag.placeholder_text || '0'"
+                                       style="width: 100%"></nz-input-number>
+                    </nz-input-group>
+                  }
+                  @case ('date') {
+                    <nz-date-picker [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key"
+                                    nzFormat="dd/MM/yyyy"
+                                    [nzPlaceHolder]="tag.placeholder_text || 'Pilih tanggal'"
+                                    style="width: 100%"></nz-date-picker>
+                  }
+                  @case ('checkbox') {
+                    <label nz-checkbox [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key">
+                      {{ tag.placeholder_text || tag.label }}
+                    </label>
+                  }
+                  @case ('select') {
+                    @if (isApiLoading(tag)) {
+                      <nz-spin nzSimple nzSize="small"></nz-spin>
+                    } @else {
+                      <nz-select [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key"
+                                 [nzPlaceHolder]="tag.placeholder_text || 'Pilih ' + tag.label"
+                                 nzAllowClear nzShowSearch>
+                        @for (opt of getSelectOptions(tag); track opt.value) {
+                          <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+                        }
+                      </nz-select>
+                    }
+                  }
+                  @case ('email') {
+                    <nz-input-group nzPrefixIcon="mail">
+                      <input nz-input [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key"
+                             type="email"
+                             [placeholder]="tag.placeholder_text || 'Masukkan email'" />
+                    </nz-input-group>
+                  }
+                  @case ('url') {
+                    <nz-input-group nzPrefixIcon="link">
+                      <input nz-input [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key"
+                             type="url"
+                             [placeholder]="tag.placeholder_text || 'Masukkan URL'" />
+                    </nz-input-group>
+                  }
+                  @case ('phone') {
+                    <nz-input-group nzPrefixIcon="phone">
+                      <input nz-input [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key"
+                             [placeholder]="tag.placeholder_text || 'Masukkan nomor telepon'" />
+                    </nz-input-group>
+                  }
+                  @default {
+                    @if (tag.suffix) {
+                      <nz-input-group [nzSuffix]="tag.suffix">
+                        <input nz-input [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key"
+                               [placeholder]="tag.placeholder_text || 'Masukkan ' + tag.label" />
+                      </nz-input-group>
+                    } @else {
+                      <input nz-input [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key"
+                             [placeholder]="tag.placeholder_text || 'Masukkan ' + tag.label" />
+                    }
+                  }
+                }
+              </nz-form-control>
+              @if (tag.description) {
+                <div class="param-edit__desc">{{ tag.description }}</div>
+              }
+            </nz-form-item>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <div class="param-edit__actions">
+    <button nz-button nzType="default" nzSize="small" (click)="onCancel()">
+      <span nz-icon nzType="close" nzTheme="outline"></span>
+      Batal
+    </button>
+    <button nz-button nzType="primary" nzSize="small" [nzLoading]="saving()" (click)="onSave()">
+      <span nz-icon nzType="check" nzTheme="outline"></span>
+      Simpan
+    </button>
+  </div>
+</div>
