@@ -2,7 +2,7 @@
   <div class="param-edit__grid">
     @for (tag of tags; track tag.tag_key) {
       @if (!tag.is_hidden) {
-        <div class="param-edit__field" [ngClass]="getColSpan(tag)">
+        <div class="param-edit__field" [ngStyle]="getGridStyle(tag)">
           @if (tag.is_readonly) {
             <!-- Readonly: show value only -->
             <div class="param-edit__readonly">
@@ -22,16 +22,19 @@
               </div>
             </div>
           } @else {
-            <nz-form-item>
-              <nz-form-label [nzRequired]="tag.is_required" [nzFor]="tag.tag_key">
+            <div class="param-edit__form-field">
+              <label class="param-edit__label" [attr.for]="tag.tag_key">
                 {{ tag.label }}
+                @if (tag.is_required) {
+                  <span class="param-edit__required">*</span>
+                }
                 @if (tag.help_text) {
                   <span nz-icon nzType="question-circle" nzTheme="outline"
                         nz-tooltip [nzTooltipTitle]="tag.help_text"
                         class="param-edit__help"></span>
                 }
-              </nz-form-label>
-              <nz-form-control [nzErrorTip]="tag.validation_message || 'Field ini wajib diisi'">
+              </label>
+              <div class="param-edit__control">
                 @switch (tag.data_type) {
                   @case ('textarea') {
                     <textarea nz-input [formControl]="getControl(tag.tag_key)" [id]="tag.tag_key"
@@ -103,11 +106,14 @@
                     }
                   }
                 }
-              </nz-form-control>
+              </div>
               @if (tag.description) {
                 <div class="param-edit__desc">{{ tag.description }}</div>
               }
-            </nz-form-item>
+              @if (getControl(tag.tag_key).invalid && getControl(tag.tag_key).dirty) {
+                <div class="param-edit__error">{{ tag.validation_message || 'Field ini wajib diisi' }}</div>
+              }
+            </div>
           }
         </div>
       }

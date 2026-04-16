@@ -29,6 +29,12 @@ type WorkflowStatus struct {
 	CanApprove  bool                           `json:"can_approve"`
 	CanReject   bool                           `json:"can_reject"`
 	CanDelegate bool                           `json:"can_delegate"`
+
+	// Preview: matched workflow template (shown when no active instance)
+	IsPreview      bool                  `json:"is_preview"`
+	PreviewSteps   []models.WorkflowStep `json:"preview_steps,omitempty"`
+	WorkflowName   string                `json:"workflow_name,omitempty"`
+	WorkflowID     string                `json:"workflow_id,omitempty"`
 }
 
 type WorkflowActionService struct {
@@ -221,11 +227,12 @@ func (s *WorkflowActionService) ProcessAction(documentID, actionType string, ctx
 
 	// Create action record
 	action := &models.WorkflowAction{
-		StepInstanceID: stepInstance.ID,
-		ActorID:        user.ID,
-		ActionType:     actionType,
-		IsPublic:       true,
-		CreatedAt:      time.Now(),
+		WorkflowInstanceID: stepInstance.WorkflowInstanceID,
+		StepInstanceID:     stepInstance.ID,
+		ActorID:            user.ID,
+		ActionType:         actionType,
+		IsPublic:           true,
+		CreatedAt:          time.Now(),
 	}
 	if comment != "" {
 		action.Comment = &comment
@@ -523,11 +530,12 @@ func (s *WorkflowActionService) Delegate(documentID string, ctx http.Context) (*
 
 	// Create action record
 	action := &models.WorkflowAction{
-		StepInstanceID: stepInstance.ID,
-		ActorID:        user.ID,
-		ActionType:     "delegate",
-		IsPublic:       true,
-		CreatedAt:      now,
+		WorkflowInstanceID: stepInstance.WorkflowInstanceID,
+		StepInstanceID:     stepInstance.ID,
+		ActorID:            user.ID,
+		ActionType:         "delegate",
+		IsPublic:           true,
+		CreatedAt:          now,
 	}
 	comment := "Delegated to user: " + delegateUser.Name
 	if reason != "" {
@@ -558,6 +566,35 @@ func (s *WorkflowActionService) GetWorkflowStatus(documentID string, ctx http.Co
 		return nil, err
 	}
 	if instance == nil {
+		// No active instance — try to find matching workflow template for preview
+		doc, docErr := s.docRepo.FindByIDWithRelations(documentID)
+		if docErr == nil && doc != nil {
+			workflow, wfErr := s.workflowRepo.FindForDocument(
+				doc.CompanyID,
+				doc.DocumentTypeID,
+				&doc.CategoryID,
+				&doc.OfficeID,
+				&doc.DepartmentID,
+			)
+			if wfErr == nil && workflow != nil {
+				wfWithSteps, _ := s.workflowRepo.FindByIDWithSteps(workflow.ID)
+				if wfWithSteps != nil && len(wfWithSteps.Steps) > 0 {
+					sort.Slice(wfWithSteps.Steps, func(i, j int) bool {
+						return wfWithSteps.Steps[i].StepOrder < wfWithSteps.Steps[j].StepOrder
+					})
+					return &WorkflowStatus{
+						IsPreview:    true,
+						PreviewSteps: wfWithSteps.Steps,
+						WorkflowName: wfWithSteps.Name,
+						WorkflowID:   wfWithSteps.ID,
+						CanApprove:   false,
+						CanReject:    false,
+						CanDelegate:  false,
+					}, nil
+				}
+			}
+		}
+
 		return &WorkflowStatus{
 			Instance:    nil,
 			CurrentStep: nil,
@@ -717,12 +754,13 @@ func (s *WorkflowActionService) AddComment(documentID string, ctx http.Context) 
 
 	// Create action record
 	action := &models.WorkflowAction{
-		StepInstanceID: stepInstance.ID,
-		ActorID:        user.ID,
-		ActionType:     "comment",
-		Comment:        &comment,
-		IsPublic:       isPublic,
-		CreatedAt:      time.Now(),
+		WorkflowInstanceID: stepInstance.WorkflowInstanceID,
+		StepInstanceID:     stepInstance.ID,
+		ActorID:            user.ID,
+		ActionType:         "comment",
+		Comment:            &comment,
+		IsPublic:           isPublic,
+		CreatedAt:          time.Now(),
 	}
 
 	if err := s.instanceRepo.CreateAction(action); err != nil {
@@ -739,6 +777,11 @@ func (s *WorkflowActionService) AddComment(documentID string, ctx http.Context) 
 func (s *WorkflowActionService) canUserActOnStep(user *types.UserContext, stepInstance *models.WorkflowStepInstance) (bool, error) {
 	if stepInstance == nil || stepInstance.Step == nil {
 		return false, nil
+	}
+
+	// Super admin can act on any step
+	if user.HasRole("super_admin") {
+		return true, nil
 	}
 
 	step := stepInstance.Step

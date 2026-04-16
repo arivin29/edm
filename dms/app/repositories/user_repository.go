@@ -32,9 +32,12 @@ func (r *userRepository) FindByEmail(email string) (*models.User, error) {
 	var user models.User
 	if err := facades.Orm().Query().
 		Model(&models.User{}).
-		Where("email", email).
+		Where("email = ?", email).
 		First(&user); err != nil {
 		return nil, err
+	}
+	if user.ID == "" {
+		return nil, nil
 	}
 	return &user, nil
 }
@@ -84,6 +87,9 @@ func (r *userRepository) FindByEmployeeID(employeeID string) (*models.User, erro
 		Where("employee_id = ?", employeeID).
 		First(&user); err != nil {
 		return nil, err
+	}
+	if user.ID == "" {
+		return nil, nil
 	}
 	return &user, nil
 }

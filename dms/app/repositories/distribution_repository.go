@@ -172,11 +172,8 @@ func (r *distributionRepository) FindByIDWithRelations(id string) (*models.Docum
 		With("Distributor").
 		With("Recipient").
 		With("Receiver").
-		With("Acknowledgements", func(q any) {
-			if query, ok := q.(interface{ With(string, ...func(any)) any }); ok {
-				query.With("User")
-			}
-		}).
+		With("Acknowledgements").
+		With("Acknowledgements.User").
 		Where("id = ?", id).
 		First(&dist); err != nil {
 		return nil, err

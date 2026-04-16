@@ -58,6 +58,7 @@
                 [nzPageSize]="15" [nzFrontPagination]="true" nzShowSizeChanger>
         <thead>
           <tr>
+            <th nzWidth="30px"></th>
             <th nzWidth="180px">Nama Workflow</th>
             <th nzWidth="140px">Tipe Dokumen</th>
             <th nzWidth="120px">Kategori</th>
@@ -71,6 +72,8 @@
         <tbody>
           @for (wf of tbl.data; track wf.id) {
             <tr>
+              <td [nzExpand]="expandSet().has(wf.id)"
+                  (nzExpandChange)="onExpandChange(wf.id, $event)"></td>
               <td>
                 <a class="wf-name-link" (click)="openDetail(wf)">
                   <div class="flex items-center gap-2">
@@ -113,9 +116,95 @@
                 </button>
               </td>
             </tr>
+            <!-- Expanded Row -->
+            <tr [nzExpand]="expandSet().has(wf.id)">
+              <div class="expand-detail p-3">
+                <!-- Info Section -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Informasi Workflow</div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                      <div class="text-gray-500">Perusahaan</div>
+                      <div class="font-medium">{{ wf.company?.name || '-' }}</div>
+                      <div class="text-gray-500">Tipe Dokumen</div>
+                      <div class="font-medium">{{ wf.document_type?.name || '-' }}</div>
+                      <div class="text-gray-500">Kategori</div>
+                      <div class="font-medium">{{ wf.category?.name || '-' }}</div>
+                      <div class="text-gray-500">Departemen</div>
+                      <div class="font-medium">{{ wf.department?.name || '-' }}</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Deskripsi</div>
+                    <p class="text-xs text-gray-600 m-0">{{ wf.description || 'Tidak ada deskripsi' }}</p>
+                    <div class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                      <div class="text-gray-500">Dibuat</div>
+                      <div class="font-medium">{{ formatDate(wf.created_at) }}</div>
+                      <div class="text-gray-500">Diperbarui</div>
+                      <div class="font-medium">{{ formatDate(wf.updated_at) }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Steps Section -->
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Langkah Workflow ({{ wf.steps?.length || 0 }})</div>
+                @if (wf.steps && wf.steps.length > 0) {
+                  <div class="steps-flow flex items-start gap-0 overflow-x-auto pb-2">
+                    @for (step of wf.steps; track step.id; let i = $index; let last = $last) {
+                      <div class="step-card flex-shrink-0">
+                        <div class="step-number">{{ step.step_order }}</div>
+                        <div class="step-name">{{ step.name }}</div>
+                        <div class="step-meta">
+                          <nz-tag [nzColor]="step.step_type === 'approval' ? 'blue' : step.step_type === 'review' ? 'cyan' : step.step_type === 'sign' ? 'purple' : 'default'" class="text-[9px]">
+                            {{ getStepTypeLabel(step.step_type) }}
+                          </nz-tag>
+                        </div>
+                        <div class="step-details">
+                          <div class="detail-row">
+                            <span class="label">Assignee:</span>
+                            <span class="value">{{ getAssigneeTypeLabel(step.assignee_type) }}</span>
+                          </div>
+                          @if (step.deadline_days) {
+                            <div class="detail-row">
+                              <span class="label">Deadline:</span>
+                              <span class="value">{{ step.deadline_days }} hari</span>
+                            </div>
+                          }
+                          <div class="detail-row">
+                            <span class="label">Reject:</span>
+                            <span class="value">{{ getRejectActionLabel(step.on_reject_action) }}</span>
+                          </div>
+                        </div>
+                        <div class="step-flags">
+                          @if (step.is_parallel) {
+                            <nz-tag nzColor="orange" class="text-[9px]">Parallel</nz-tag>
+                          }
+                          @if (step.can_edit) {
+                            <nz-tag class="text-[9px]">Edit</nz-tag>
+                          }
+                          @if (step.can_comment) {
+                            <nz-tag class="text-[9px]">Comment</nz-tag>
+                          }
+                          @if (step.can_delegate) {
+                            <nz-tag class="text-[9px]">Delegate</nz-tag>
+                          }
+                        </div>
+                      </div>
+                      @if (!last) {
+                        <div class="step-connector">
+                          <span nz-icon nzType="arrow-right" class="text-gray-300"></span>
+                        </div>
+                      }
+                    }
+                  </div>
+                } @else {
+                  <div class="text-xs text-gray-400 italic">Belum ada langkah workflow</div>
+                }
+              </div>
+            </tr>
           } @empty {
             <tr>
-              <td colspan="8" class="text-center text-gray-400 py-8">
+              <td colspan="9" class="text-center text-gray-400 py-8">
                 <span nz-icon nzType="inbox" class="text-3xl text-gray-300 mb-2 block"></span>
                 Belum ada data workflow
               </td>

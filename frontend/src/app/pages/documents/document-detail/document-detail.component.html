@@ -87,9 +87,37 @@
                       <div class="approval-flow__header">
                         <span nz-icon nzType="node-index" nzTheme="outline"></span>
                         <span>Alur Persetujuan</span>
+                        @if (workflow()?.is_preview) {
+                          <nz-tag nzColor="gold" style="margin-left:8px;font-size:10px;">Rencana</nz-tag>
+                        }
                       </div>
                       @if (workflowLoading()) {
                         <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                      } @else if (workflow()?.is_preview && workflow()?.preview_steps?.length) {
+                        <!-- Preview: matched workflow template steps -->
+                        <div class="approval-flow__badge-preview">
+                          <span nz-icon nzType="info-circle" nzTheme="outline"></span>
+                          Workflow: <strong>{{ workflow()!.workflow_name }}</strong> — akan dijalankan saat submit
+                        </div>
+                        <div class="approval-flow__steps">
+                          @for (step of workflow()!.preview_steps!; track step.id; let i = $index; let last = $last) {
+                            <div class="approval-flow__step" data-status="preview">
+                              <div class="approval-flow__node">
+                                <div class="approval-flow__circle">
+                                  <span class="approval-flow__num">{{ i + 1 }}</span>
+                                </div>
+                                <div class="approval-flow__label">{{ step.name }}</div>
+                                <div class="approval-flow__actor">{{ step.step_type === 'approval' ? 'Persetujuan' : 'Review' }}</div>
+                                @if (step.deadline_days) {
+                                  <div class="approval-flow__date">Tenggat: {{ step.deadline_days }} hari</div>
+                                }
+                              </div>
+                              @if (!last) {
+                                <div class="approval-flow__connector" data-status="preview"></div>
+                              }
+                            </div>
+                          }
+                        </div>
                       } @else if (workflow()?.steps?.length) {
                         <div class="approval-flow__steps">
                           @for (step of workflow()!.steps; track step.id; let i = $index; let last = $last) {
@@ -121,7 +149,7 @@
                           }
                         </div>
                       } @else {
-                        <div class="text-gray-400 text-xs text-center py-3">Workflow belum dimulai</div>
+                        <div class="text-gray-400 text-xs text-center py-3">Tidak ada workflow yang cocok untuk dokumen ini</div>
                       }
                     </div>
 
@@ -396,7 +424,49 @@
                 <nz-tab nzTitle="Workflow">
                   @if (workflowLoading()) {
                     <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
-                  } @else if (workflow()) {
+                  } @else if (workflow()?.is_preview && workflow()?.preview_steps?.length) {
+                    <!-- Preview mode for draft documents -->
+                    <nz-alert
+                      nzType="info"
+                      nzShowIcon
+                      nzMessage="Rencana Alur Persetujuan"
+                      [nzDescription]="'Workflow &quot;' + workflow()!.workflow_name + '&quot; akan dijalankan saat dokumen disubmit.'"
+                      style="margin-bottom:16px;">
+                    </nz-alert>
+                    <div class="doc-workflow-steps">
+                      @for (step of workflow()!.preview_steps!; track step.id; let i = $index; let last = $last) {
+                        <div class="doc-wf-step" data-status="preview">
+                          <div class="doc-wf-step__indicator">
+                            <div class="doc-wf-step__dot">
+                              <span class="doc-wf-step__num">{{ i + 1 }}</span>
+                            </div>
+                            @if (!last) {
+                              <div class="doc-wf-step__line"></div>
+                            }
+                          </div>
+                          <div class="doc-wf-step__content">
+                            <div class="doc-wf-step__name">{{ step.name }}</div>
+                            <div class="doc-wf-step__actor">
+                              <span nz-icon nzType="team" nzTheme="outline"></span>
+                              {{ step.assignee_type === 'role' ? 'Berdasarkan Role' : step.assignee_type === 'user' ? 'Pengguna Tertentu' : 'Berdasarkan Posisi' }}
+                            </div>
+                            <nz-tag [nzColor]="step.step_type === 'approval' ? 'blue' : 'cyan'">
+                              {{ step.step_type === 'approval' ? 'Persetujuan' : 'Review' }}
+                            </nz-tag>
+                            @if (step.deadline_days) {
+                              <nz-tag nzColor="orange">Tenggat {{ step.deadline_days }} hari</nz-tag>
+                            }
+                            @if (step.can_delegate) {
+                              <nz-tag nzColor="geekblue">Bisa Didelegasikan</nz-tag>
+                            }
+                            @if (step.instructions) {
+                              <div class="doc-wf-step__comment">{{ step.instructions }}</div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  } @else if (workflow()?.steps?.length) {
                     <div class="doc-workflow-steps">
                       @for (step of workflow()!.steps; track step.id; let i = $index; let last = $last) {
                         <div class="doc-wf-step" [attr.data-status]="step.status">
@@ -435,12 +505,10 @@
                             }
                           </div>
                         </div>
-                      } @empty {
-                        <nz-empty nzNotFoundContent="Belum ada langkah workflow"></nz-empty>
                       }
                     </div>
                   } @else {
-                    <nz-empty nzNotFoundContent="Workflow belum dimulai"></nz-empty>
+                    <nz-empty nzNotFoundContent="Tidak ada workflow yang cocok untuk dokumen ini"></nz-empty>
                   }
                 </nz-tab>
 

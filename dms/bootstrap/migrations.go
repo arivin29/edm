@@ -26,5 +26,6 @@ func Migrations() []schema.Migration {
 		&migrations.M20250414000015SeedAdminUser{},
 		&migrations.M20250414000016AddFulltextSearch{},
 		&migrations.M20250414000017AddDocumentRelationsIndexes{},
+		&migrations.M20250416000018FixWorkflowStepInstancesDeadline{},
 	}
 }

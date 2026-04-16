@@ -69,16 +69,8 @@ func (r *commentRepository) List(documentID string, filters map[string]any) ([]m
 	if err := q.
 		With("User").
 		With("Resolver").
-		With("Replies", func(rq any) {
-			// Load replies with their users
-			if query, ok := rq.(interface {
-				With(string, ...func(any)) any
-				Order(string) any
-			}); ok {
-				query.With("User")
-				query.Order("created_at asc")
-			}
-		}).
+		With("Replies").
+		With("Replies.User").
 		Order("created_at desc").
 		Get(&comments); err != nil {
 		return nil, err

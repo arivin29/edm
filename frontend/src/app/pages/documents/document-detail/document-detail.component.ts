@@ -18,6 +18,7 @@ import { NzBadgeModule } from 'ng-zorro-antd/badge';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzListModule } from 'ng-zorro-antd/list';
 import { HttpClient } from '@angular/common/http';
@@ -27,7 +28,7 @@ import { FileManagerComponent, FileNode } from './components/file-manager/file-m
 import { DocParametersComponent } from './components/doc-parameters/doc-parameters.component';
 import { DocPreviewComponent, PreviewFile } from './components/doc-preview/doc-preview.component';
 import {
-  DocumentDetail, DocumentVersion, Comment, WorkflowStep, WorkflowStatus,
+  DocumentDetail, DocumentVersion, Comment, WorkflowStep, WorkflowStatus, WorkflowStepInstance, WorkflowTemplateStep,
   Distribution, Attachment,
   getStatusColor, getStatusLabel, getPriorityColor, getPriorityLabel,
   getConfidentialityLabel, formatDate, formatFileSize, getFileIcon
@@ -42,7 +43,7 @@ import {
     NzDescriptionsModule, NzTabsModule, NzTimelineModule,
     NzCommentModule, NzAvatarModule, NzInputModule, NzSpinModule,
     NzModalModule, NzBadgeModule, NzToolTipModule, NzTableModule, NzEmptyModule,
-    NzUploadModule, NzListModule, FileManagerComponent, DocParametersComponent, DocPreviewComponent
+    NzUploadModule, NzListModule, NzAlertModule, FileManagerComponent, DocParametersComponent, DocPreviewComponent
   ],
   templateUrl: './document-detail.component.html',
   styleUrls: ['./document-detail.component.scss']

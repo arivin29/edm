@@ -33,3 +33,80 @@
     color: #1890ff;
   }
 }
+
+// Expand detail
+.expand-detail {
+  background: #f8fafc;
+
+  .steps-flow {
+    .step-card {
+      width: 160px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px;
+      position: relative;
+
+      .step-number {
+        position: absolute;
+        top: -8px;
+        left: -8px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #1890ff;
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .step-name {
+        font-size: 11px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 4px;
+        padding-left: 10px;
+      }
+
+      .step-meta {
+        margin-bottom: 6px;
+      }
+
+      .step-details {
+        .detail-row {
+          display: flex;
+          gap: 4px;
+          font-size: 10px;
+          line-height: 1.6;
+
+          .label {
+            color: #9ca3af;
+            flex-shrink: 0;
+          }
+          .value {
+            color: #4b5563;
+            font-weight: 500;
+          }
+        }
+      }
+
+      .step-flags {
+        margin-top: 6px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px;
+      }
+    }
+
+    .step-connector {
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      padding-top: 16px;
+      font-size: 16px;
+    }
+  }
+}

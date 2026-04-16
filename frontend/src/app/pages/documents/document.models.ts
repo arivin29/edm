@@ -79,8 +79,52 @@ export interface WorkflowStep {
 }
 
 export interface WorkflowStatus {
-  steps: WorkflowStep[];
-  actions: string[];
+  instance: any | null;
+  current_step: WorkflowStepInstance | null;
+  steps: WorkflowStepInstance[];
+  can_approve: boolean;
+  can_reject: boolean;
+  can_delegate: boolean;
+  is_preview: boolean;
+  preview_steps?: WorkflowTemplateStep[];
+  workflow_name?: string;
+  workflow_id?: string;
+}
+
+export interface WorkflowStepInstance {
+  id: string;
+  workflow_step_id: string;
+  step_order: number;
+  status: string; // pending, active, approved, rejected
+  deadline?: string;
+  required_approvals: number;
+  current_approvals: number;
+  name?: string;
+  actor?: { id: string; name: string };
+  action_type?: string;
+  comment?: string;
+  step?: WorkflowTemplateStep;
+  actions?: any[];
+  activated_at?: string;
+  completed_at?: string;
+}
+
+export interface WorkflowTemplateStep {
+  id: string;
+  workflow_id: string;
+  step_order: number;
+  name: string;
+  step_type: string;
+  assignee_type: string;
+  assignee_user_id?: string;
+  assignee_role_id?: string;
+  assignee_position_id?: string;
+  assignee_department_id?: string;
+  assignee_section_id?: string;
+  required_approvals: number;
+  can_delegate: boolean;
+  instructions?: string;
+  deadline_days?: number;
 }
 
 export interface Distribution {

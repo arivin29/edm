@@ -37,21 +37,22 @@ type WorkflowStepInstance struct {
 	// Relations
 	WorkflowInstance *WorkflowInstance `json:"workflow_instance,omitempty"`
 	Step             *WorkflowStep     `gorm:"foreignKey:WorkflowStepID" json:"step,omitempty"`
-	Actions          []WorkflowAction  `gorm:"foreignKey:StepInstanceID" json:"actions,omitempty"`
+	Actions          []WorkflowAction  `gorm:"foreignKey:StepInstanceID;references:ID" json:"actions,omitempty"`
 }
 
 func (WorkflowStepInstance) TableName() string { return "workflow_step_instances" }
 
 // WorkflowAction represents an action taken on a workflow step
 type WorkflowAction struct {
-	ID             string    `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
-	StepInstanceID string    `gorm:"type:uuid;not null" json:"step_instance_id"`
-	ActorID        string    `gorm:"type:uuid;not null" json:"actor_id"`
-	ActionType     string    `gorm:"size:50;not null" json:"action_type"` // approve, reject, delegate, comment
-	Comment        *string   `json:"comment"`
-	IsPublic       bool      `gorm:"default:true" json:"is_public"`
-	SignatureImage *string   `json:"signature_image"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID                 string    `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
+	WorkflowInstanceID string    `gorm:"type:uuid;not null" json:"workflow_instance_id"`
+	StepInstanceID     string    `gorm:"type:uuid;not null;column:workflow_step_instance_id" json:"step_instance_id"`
+	ActorID            string    `gorm:"type:uuid;not null;column:user_id" json:"actor_id"`
+	ActionType         string    `gorm:"size:50;not null;column:action" json:"action_type"` // approve, reject, delegate, comment
+	Comment            *string   `json:"comment"`
+	IsPublic           bool      `gorm:"default:true;column:is_comment_public" json:"is_public"`
+	SignatureImage     *string   `gorm:"column:signature_path" json:"signature_image"`
+	CreatedAt          time.Time `json:"created_at"`
 
 	// Relations
 	Actor        *User                 `gorm:"foreignKey:ActorID" json:"actor,omitempty"`

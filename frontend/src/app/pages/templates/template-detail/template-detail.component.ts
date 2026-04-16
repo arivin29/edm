@@ -8,6 +8,7 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
+import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
@@ -34,7 +35,7 @@ interface TagGroup {
   imports: [
     CommonModule, FormsModule, RouterLink,
     NzButtonModule, NzIconModule, NzTagModule, NzSpinModule,
-    NzToolTipModule, NzDrawerModule, NzFormModule, NzInputModule,
+    NzToolTipModule, NzDrawerModule, NzTabsModule, NzFormModule, NzInputModule,
     NzInputNumberModule, NzSelectModule, NzCheckboxModule,
     NzSliderModule, NzDividerModule, NzModalModule, NzEmptyModule,
     TemplateFormComponent

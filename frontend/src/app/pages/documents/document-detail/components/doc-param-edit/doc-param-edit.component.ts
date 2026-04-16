@@ -216,9 +216,17 @@ export class DocParamEditComponent implements OnInit {
     this.cancelled.emit();
   }
 
-  /** Get col-span CSS class for grid layout */
-  getColSpan(tag: TemplateTag): string {
-    if (tag.col_span >= 2 || tag.data_type === 'textarea') return 'col-full';
-    return '';
+  /** Get col-span CSS class for grid layout (24-column grid) */
+  getColSpan(tag: TemplateTag): Record<string, boolean> {
+    const span = tag.col_span || (tag.data_type === 'textarea' ? 24 : 12);
+    return {
+      [`col-span-${span}`]: true
+    };
+  }
+
+  /** Get grid-column style for tag */
+  getGridStyle(tag: TemplateTag): Record<string, string> {
+    const span = tag.col_span || (tag.data_type === 'textarea' ? 24 : 12);
+    return { 'grid-column': `span ${span}` };
   }
 }

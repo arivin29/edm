@@ -51,6 +51,9 @@ export class WorkflowListComponent implements OnInit {
   categories = signal<DropdownItem[]>([]);
   departments = signal<DropdownItem[]>([]);
 
+  // Expand state
+  expandSet = signal<Set<string>>(new Set());
+
   activeCount = computed(() => this.workflows().filter(w => w.is_active).length);
   inactiveCount = computed(() => this.workflows().filter(w => !w.is_active).length);
 
@@ -170,6 +173,48 @@ export class WorkflowListComponent implements OnInit {
   }
 
   applyFilter() {}
+
+  onExpandChange(id: string, checked: boolean) {
+    this.expandSet.update(set => {
+      const next = new Set(set);
+      if (checked) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  }
+
+  getStepTypeLabel(type: string): string {
+    const map: Record<string, string> = {
+      approval: 'Approval',
+      review: 'Review',
+      sign: 'Tanda Tangan',
+      acknowledge: 'Acknowledge',
+      input: 'Input',
+    };
+    return map[type] || type;
+  }
+
+  getAssigneeTypeLabel(type: string): string {
+    const map: Record<string, string> = {
+      user: 'User',
+      role: 'Role',
+      position: 'Jabatan',
+      department: 'Departemen',
+    };
+    return map[type] || type;
+  }
+
+  getRejectActionLabel(action: string): string {
+    const map: Record<string, string> = {
+      reject: 'Tolak',
+      restart: 'Mulai Ulang',
+      goto_step: 'Ke Step Tertentu',
+    };
+    return map[action] || action;
+  }
 
   formatDate(dateStr: string): string {
     if (!dateStr) return '-';

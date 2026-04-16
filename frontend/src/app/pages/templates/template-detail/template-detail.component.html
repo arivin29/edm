@@ -109,56 +109,151 @@
             </button>
           </div>
 
-          @if (tagsLoading()) {
-            <div class="text-center py-6">
-              <nz-spin nzSimple nzSize="small"></nz-spin>
-            </div>
-          } @else if (tagGroups().length === 0) {
-            <nz-empty nzNotFoundContent="Belum ada parameter. Klik 'Tambah Parameter' untuk menambahkan."></nz-empty>
-          } @else {
-            @for (group of tagGroups(); track group.name) {
-              <div class="tag-group">
-                <div class="tag-group__header">
-                  <span nz-icon nzType="folder" class="tag-group__icon"></span>
-                  {{ group.name }}
-                  <span class="tag-group__count">{{ group.tags.length }}</span>
-                </div>
-                <div class="tag-group__body">
-                  @for (tag of group.tags; track tag.id) {
-                    <div class="tag-item">
-                      <div class="tag-item__main">
-                        <code class="tag-item__key">${{ '{' + tag.tag_key + '}' }}</code>
-                        <span class="tag-item__label">{{ tag.label }}</span>
+          <nz-tabset nzSize="small" [nzAnimated]="false" class="param-tabs">
+            <!-- Tab 1: Pengaturan -->
+            <nz-tab nzTitle="Pengaturan">
+              <ng-template nz-tab>
+                @if (tagsLoading()) {
+                  <div class="text-center py-6">
+                    <nz-spin nzSimple nzSize="small"></nz-spin>
+                  </div>
+                } @else if (tagGroups().length === 0) {
+                  <nz-empty nzNotFoundContent="Belum ada parameter. Klik 'Tambah Parameter' untuk menambahkan."></nz-empty>
+                } @else {
+                  @for (group of tagGroups(); track group.name) {
+                    <div class="tag-group">
+                      <div class="tag-group__header">
+                        <span nz-icon nzType="folder" class="tag-group__icon"></span>
+                        {{ group.name }}
+                        <span class="tag-group__count">{{ group.tags.length }}</span>
                       </div>
-                      <div class="tag-item__meta">
-                        <nz-tag class="m-0">{{ tag.data_type }}</nz-tag>
-                        <nz-tag class="m-0" [nzColor]="tag.source_type === 'static' ? 'default' : 'blue'">{{ tag.source_type }}</nz-tag>
-                        @if (tag.is_required) {
-                          <nz-tag nzColor="red" class="m-0">wajib</nz-tag>
+                      <div class="tag-group__body">
+                        @for (tag of group.tags; track tag.id) {
+                          <div class="tag-item">
+                            <div class="tag-item__main">
+                              <code class="tag-item__key">${{ '{' + tag.tag_key + '}' }}</code>
+                              <span class="tag-item__label">{{ tag.label }}</span>
+                            </div>
+                            <div class="tag-item__meta">
+                              <nz-tag class="m-0">{{ tag.data_type }}</nz-tag>
+                              <nz-tag class="m-0" [nzColor]="tag.source_type === 'static' ? 'default' : 'blue'">{{ tag.source_type }}</nz-tag>
+                              @if (tag.is_required) {
+                                <nz-tag nzColor="red" class="m-0">wajib</nz-tag>
+                              }
+                              @if (tag.is_readonly) {
+                                <nz-tag nzColor="orange" class="m-0">readonly</nz-tag>
+                              }
+                              @if (tag.is_hidden) {
+                                <nz-tag class="m-0">hidden</nz-tag>
+                              }
+                            </div>
+                            <div class="tag-item__actions">
+                              <button nz-button nzType="text" nzSize="small" (click)="openTagForm(tag)"
+                                      nz-tooltip nzTooltipTitle="Edit">
+                                <span nz-icon nzType="edit"></span>
+                              </button>
+                              <button nz-button nzType="text" nzSize="small" nzDanger (click)="deleteTag(tag)"
+                                      nz-tooltip nzTooltipTitle="Hapus">
+                                <span nz-icon nzType="delete"></span>
+                              </button>
+                            </div>
+                          </div>
                         }
-                        @if (tag.is_readonly) {
-                          <nz-tag nzColor="orange" class="m-0">readonly</nz-tag>
-                        }
-                        @if (tag.is_hidden) {
-                          <nz-tag class="m-0">hidden</nz-tag>
-                        }
-                      </div>
-                      <div class="tag-item__actions">
-                        <button nz-button nzType="text" nzSize="small" (click)="openTagForm(tag)"
-                                nz-tooltip nzTooltipTitle="Edit">
-                          <span nz-icon nzType="edit"></span>
-                        </button>
-                        <button nz-button nzType="text" nzSize="small" nzDanger (click)="deleteTag(tag)"
-                                nz-tooltip nzTooltipTitle="Hapus">
-                          <span nz-icon nzType="delete"></span>
-                        </button>
                       </div>
                     </div>
                   }
-                </div>
-              </div>
-            }
-          }
+                }
+              </ng-template>
+            </nz-tab>
+
+            <!-- Tab 2: Preview Form -->
+            <nz-tab>
+              <ng-template #previewTabTitle>
+                <span nz-icon nzType="eye"></span> Preview Form
+              </ng-template>
+              <ng-template nz-tab>
+                @if (tagsLoading()) {
+                  <div class="text-center py-6"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                } @else if (tagGroups().length === 0) {
+                  <nz-empty nzNotFoundContent="Belum ada parameter untuk dipreview."></nz-empty>
+                } @else {
+                  <div class="preview-hint">
+                    <span nz-icon nzType="info-circle" class="text-blue-400"></span>
+                    Tampilan ini merepresentasikan form yang akan diisi pengguna saat membuat dokumen.
+                  </div>
+                  @for (group of tagGroups(); track group.name) {
+                    <div class="preview-group">
+                      <div class="preview-group__header">
+                        <span nz-icon nzType="folder-open" class="text-blue-500"></span>
+                        {{ group.name }}
+                      </div>
+                      <div class="preview-group__grid">
+                        @for (tag of group.tags; track tag.id) {
+                          @if (!tag.is_hidden) {
+                            <div class="preview-field" [ngStyle]="{'grid-column': 'span ' + (tag.col_span || 12)}">
+                              <label class="preview-field__label">
+                                {{ tag.label }}
+                                @if (tag.is_required) {
+                                  <span class="preview-field__required">*</span>
+                                }
+                                @if (tag.is_readonly) {
+                                  <span class="preview-field__badge preview-field__badge--readonly">readonly</span>
+                                }
+                              </label>
+                              @if (tag.is_readonly) {
+                                <div class="preview-field__mock preview-field__mock--readonly">
+                                  {{ tag.default_value || '—' }}
+                                </div>
+                              } @else {
+                                @switch (tag.data_type) {
+                                  @case ('textarea') {
+                                    <div class="preview-field__mock preview-field__mock--textarea">
+                                      {{ tag.placeholder_text || 'Masukkan ' + tag.label + '…' }}
+                                    </div>
+                                  }
+                                  @case ('select') {
+                                    <div class="preview-field__mock preview-field__mock--select">
+                                      <span>{{ tag.placeholder_text || 'Pilih ' + tag.label }}</span>
+                                      <span nz-icon nzType="down" class="preview-field__select-arrow"></span>
+                                    </div>
+                                  }
+                                  @case ('date') {
+                                    <div class="preview-field__mock preview-field__mock--date">
+                                      <span>{{ tag.placeholder_text || 'Pilih tanggal' }}</span>
+                                      <span nz-icon nzType="calendar"></span>
+                                    </div>
+                                  }
+                                  @case ('checkbox') {
+                                    <div class="preview-field__mock preview-field__mock--check">
+                                      <span class="preview-field__checkbox"></span>
+                                      <span>{{ tag.placeholder_text || tag.label }}</span>
+                                    </div>
+                                  }
+                                  @case ('number') {
+                                    <div class="preview-field__mock">
+                                      {{ tag.placeholder_text || '0' }}
+                                    </div>
+                                  }
+                                  @default {
+                                    <div class="preview-field__mock">
+                                      {{ tag.placeholder_text || 'Masukkan ' + tag.label }}
+                                    </div>
+                                  }
+                                }
+                              }
+                              @if (tag.description) {
+                                <div class="preview-field__desc">{{ tag.description }}</div>
+                              }
+                            </div>
+                          }
+                        }
+                      </div>
+                    </div>
+                  }
+                }
+              </ng-template>
+            </nz-tab>
+          </nz-tabset>
         </div>
       </div>
     </div>

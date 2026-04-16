@@ -81,9 +81,7 @@ func (r *workflowInstanceRepository) FindInstanceWithSteps(id string) (*models.W
 	if err := facades.Orm().Query().
 		With("Document").
 		With("Workflow").
-		With("Steps", func(q any) {
-			// We need to sort steps after retrieval
-		}).
+		With("Steps").
 		With("Steps.Step").
 		With("Steps.Actions").
 		With("Steps.Actions.Actor").
