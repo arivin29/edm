@@ -182,6 +182,17 @@
                         <p class="doc-info-desc__text">{{ document()!.description }}</p>
                       </div>
                     }
+
+                    <!-- Parameter Template -->
+                    @if (document()!.template?.id) {
+                      <div class="doc-info-params">
+                        <div class="doc-info-params__title">Parameter Template</div>
+                        <app-doc-parameters
+                          [templateId]="document()!.template!.id"
+                          [metadata]="document()!.metadata || {}"
+                        ></app-doc-parameters>
+                      </div>
+                    }
                   </div>
                 </nz-tab>
 
@@ -430,4 +441,10 @@
         </div>
       }
     </div>
-  `,
+
+    <!-- Preview Drawer -->
+    <app-doc-preview
+      [file]="previewFile()"
+      (closed)="previewFile.set(null)"
+      (download)="onFmDownload($event)"
+    ></app-doc-preview>

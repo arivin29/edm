@@ -138,9 +138,20 @@ export const routes: Routes = [
       // Workflows
       {
         path: 'workflows',
-        loadComponent: () =>
-          import('./pages/workflows/workflow-list.page').then(m => m.WorkflowListPage),
-        title: 'Workflow - DMS'
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/workflows/workflow-list/workflow-list.component').then(m => m.WorkflowListComponent),
+            title: 'Workflow - DMS'
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./pages/workflows/workflow-detail/workflow-detail.component').then(m => m.WorkflowDetailComponent),
+            title: 'Detail Workflow - DMS'
+          }
+        ]
       },
       // Document Numbering
       {

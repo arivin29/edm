@@ -1,0 +1,209 @@
+<nz-spin [nzSpinning]="loading()">
+  @if (workflow(); as wf) {
+    <div class="wf-detail">
+      <!-- Header -->
+      <div class="wf-header">
+        <div class="wf-header__left">
+          <a class="wf-back" (click)="goBack()">
+            <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
+          </a>
+          <div class="wf-header__info">
+            <div class="wf-header__title-row">
+              <h2 class="wf-title">{{ wf.name }}</h2>
+              <nz-tag [nzColor]="wf.is_active ? 'success' : 'default'">
+                {{ wf.is_active ? 'Aktif' : 'Nonaktif' }}
+              </nz-tag>
+            </div>
+            <div class="wf-header__meta">
+              @if (wf.document_type) {
+                <nz-tag nzColor="blue" class="!m-0">{{ wf.document_type.code || wf.document_type.name }}</nz-tag>
+              }
+              @if (wf.category?.name) {
+                <span class="wf-sep">·</span>
+                <span>{{ wf.category?.name }}</span>
+              }
+              @if (wf.department?.name) {
+                <span class="wf-sep">·</span>
+                <span>{{ wf.department?.name }}</span>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="wf-header__actions">
+          <button nz-button nzSize="small" (click)="openEditForm()">
+            <span nz-icon nzType="edit"></span> Edit
+          </button>
+        </div>
+      </div>
+
+      <!-- Content Grid -->
+      <div class="wf-content">
+        <!-- Left: Info Panel -->
+        <div class="wf-panel wf-info">
+          <div class="wf-panel__header">
+            <span class="wf-panel__title">
+              <span nz-icon nzType="info-circle"></span> Informasi
+            </span>
+          </div>
+          <div class="wf-info-grid">
+            <div class="wf-info-item">
+              <span class="wf-info-label">Perusahaan</span>
+              <span class="wf-info-value">{{ wf.company?.name || '-' }}</span>
+            </div>
+            <div class="wf-info-item">
+              <span class="wf-info-label">Tipe Dokumen</span>
+              <span class="wf-info-value">
+                @if (wf.document_type) {
+                  <nz-tag nzColor="blue" class="!m-0">{{ wf.document_type.name }}</nz-tag>
+                } @else { - }
+              </span>
+            </div>
+            <div class="wf-info-item">
+              <span class="wf-info-label">Kategori</span>
+              <span class="wf-info-value">{{ wf.category?.name || '-' }}</span>
+            </div>
+            <div class="wf-info-item">
+              <span class="wf-info-label">Departemen</span>
+              <span class="wf-info-value">{{ wf.department?.name || '-' }}</span>
+            </div>
+            <div class="wf-info-item">
+              <span class="wf-info-label">Status</span>
+              <span class="wf-info-value">
+                <nz-tag [nzColor]="wf.is_active ? 'success' : 'default'" class="!m-0">
+                  {{ wf.is_active ? 'Aktif' : 'Nonaktif' }}
+                </nz-tag>
+              </span>
+            </div>
+            <div class="wf-info-item">
+              <span class="wf-info-label">Total Langkah</span>
+              <span class="wf-info-value">
+                <nz-tag nzColor="processing" class="!m-0">{{ steps().length }}</nz-tag>
+              </span>
+            </div>
+            <div class="wf-info-item">
+              <span class="wf-info-label">Dibuat</span>
+              <span class="wf-info-value">{{ formatDate(wf.created_at) }}</span>
+            </div>
+            <div class="wf-info-item">
+              <span class="wf-info-label">Diperbarui</span>
+              <span class="wf-info-value">{{ formatDate(wf.updated_at) }}</span>
+            </div>
+          </div>
+          @if (wf.description) {
+            <div class="wf-desc">
+              <div class="wf-info-label">Deskripsi</div>
+              <div class="wf-desc__text">{{ wf.description }}</div>
+            </div>
+          }
+        </div>
+
+        <!-- Right: Steps Panel -->
+        <div class="wf-panel wf-steps">
+          <div class="wf-panel__header">
+            <span class="wf-panel__title">
+              <span nz-icon nzType="ordered-list"></span> Langkah Workflow
+              <nz-tag nzColor="processing" class="!m-0 !ml-1">{{ steps().length }}</nz-tag>
+            </span>
+            <button nz-button nzType="primary" nzSize="small" (click)="openStepForm()">
+              <span nz-icon nzType="plus"></span> Tambah
+            </button>
+          </div>
+
+          <nz-spin [nzSpinning]="loadingSteps()">
+            <div class="wf-steps__body">
+              @for (step of steps(); track step.id; let idx = $index; let first = $first; let last = $last) {
+                <div class="step-item">
+                  <div class="step-item__order">
+                    <div class="step-item__number">{{ step.step_order }}</div>
+                    @if (!last) {
+                      <div class="step-item__line"></div>
+                    }
+                  </div>
+                  <div class="step-item__content">
+                    <div class="step-item__header">
+                      <div class="step-item__main">
+                        <strong class="step-item__name">{{ step.name }}</strong>
+                        <nz-tag [nzColor]="getStepTypeColor(step.step_type)" class="!m-0">
+                          {{ getStepTypeLabel(step.step_type) }}
+                        </nz-tag>
+                      </div>
+                      <div class="step-item__actions">
+                        <button nz-button nzType="text" nzSize="small" [disabled]="first"
+                                nz-tooltip="Naik" (click)="moveStep(idx, -1)">
+                          <span nz-icon nzType="up"></span>
+                        </button>
+                        <button nz-button nzType="text" nzSize="small" [disabled]="last"
+                                nz-tooltip="Turun" (click)="moveStep(idx, 1)">
+                          <span nz-icon nzType="down"></span>
+                        </button>
+                        <button nz-button nzType="text" nzSize="small"
+                                nz-tooltip="Edit" (click)="openStepForm(step)">
+                          <span nz-icon nzType="edit"></span>
+                        </button>
+                        <button nz-button nzType="text" nzSize="small" nzDanger
+                                nz-tooltip="Hapus" (click)="confirmDeleteStep(step)">
+                          <span nz-icon nzType="delete"></span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="step-item__meta">
+                      <span>{{ getAssigneeTypeLabel(step.assignee_type) }}</span>
+                      @if (step.deadline_days) {
+                        <span class="step-sep">·</span>
+                        <span>Batas {{ step.deadline_days }} hari</span>
+                      }
+                      @if (step.is_parallel) {
+                        <span class="step-sep">·</span>
+                        <nz-tag nzColor="purple" class="!m-0">Paralel</nz-tag>
+                      }
+                      @if (step.required_approvals > 1) {
+                        <span class="step-sep">·</span>
+                        <span>Min. {{ step.required_approvals }} persetujuan</span>
+                      }
+                    </div>
+                    @if (step.instructions) {
+                      <div class="step-item__instructions">{{ step.instructions }}</div>
+                    }
+                    <div class="step-item__badges">
+                      @if (step.can_edit) { <nz-tag class="!m-0">Edit</nz-tag> }
+                      @if (step.can_comment) { <nz-tag class="!m-0">Komentar</nz-tag> }
+                      @if (step.can_delegate) { <nz-tag class="!m-0">Delegasi</nz-tag> }
+                    </div>
+                  </div>
+                </div>
+              } @empty {
+                <nz-empty nzNotFoundContent="Belum ada langkah. Klik 'Tambah' untuk memulai."></nz-empty>
+              }
+            </div>
+          </nz-spin>
+        </div>
+      </div>
+    </div>
+  }
+</nz-spin>
+
+<!-- Edit Workflow Drawer -->
+<app-workflow-form
+  [visible]="editFormVisible"
+  [editData]="workflow()"
+  [companies]="companies()"
+  [documentTypes]="documentTypes()"
+  [categories]="categories()"
+  [departments]="departments()"
+  (closed)="onEditFormClosed()"
+  (saved)="onEditFormSaved()">
+</app-workflow-form>
+
+<!-- Step Form Drawer -->
+<app-workflow-step-form
+  [visible]="stepFormVisible"
+  [workflowId]="workflow()?.id || ''"
+  [editData]="stepEditData"
+  [existingSteps]="steps()"
+  [users]="users()"
+  [roles]="roles()"
+  [positions]="positions()"
+  [departments]="departments()"
+  (closed)="onStepFormClosed()"
+  (saved)="onStepFormSaved()">
+</app-workflow-step-form>

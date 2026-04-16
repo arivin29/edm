@@ -1,0 +1,157 @@
+<nz-drawer [nzVisible]="visible" [nzTitle]="drawerTitle" nzPlacement="right"
+           nzWidth="480" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <nz-spin [nzSpinning]="saving()">
+      <form nz-form nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label nzRequired>Nama Langkah</nz-form-label>
+          <nz-form-control>
+            <input nz-input nzSize="small" [(ngModel)]="formData.name" name="stepName"
+                   placeholder="Nama langkah" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <div class="grid grid-cols-2 gap-x-3">
+          <nz-form-item>
+            <nz-form-label nzRequired>Tipe</nz-form-label>
+            <nz-form-control>
+              <nz-select nzSize="small" [(ngModel)]="formData.step_type" name="stepType"
+                         nzPlaceHolder="Pilih tipe">
+                <nz-option nzValue="approval" nzLabel="Persetujuan"></nz-option>
+                <nz-option nzValue="review" nzLabel="Review"></nz-option>
+                <nz-option nzValue="notification" nzLabel="Notifikasi"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>Tipe Penerima</nz-form-label>
+            <nz-form-control>
+              <nz-select nzSize="small" [(ngModel)]="formData.assignee_type" name="assigneeType"
+                         nzPlaceHolder="Pilih tipe penerima"
+                         (ngModelChange)="onAssigneeTypeChange()">
+                <nz-option nzValue="user" nzLabel="Pengguna"></nz-option>
+                <nz-option nzValue="role" nzLabel="Role"></nz-option>
+                <nz-option nzValue="position" nzLabel="Jabatan"></nz-option>
+                <nz-option nzValue="department" nzLabel="Departemen"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>Penerima</nz-form-label>
+          <nz-form-control>
+            @switch (formData.assignee_type) {
+              @case ('user') {
+                <nz-select nzSize="small" [(ngModel)]="formData.assignee_user_id" name="assigneeUser"
+                           nzPlaceHolder="Pilih pengguna" nzShowSearch nzAllowClear>
+                  @for (u of users; track u.id) {
+                    <nz-option [nzValue]="u.id" [nzLabel]="u.name + (u.email ? ' (' + u.email + ')' : '')"></nz-option>
+                  }
+                </nz-select>
+              }
+              @case ('role') {
+                <nz-select nzSize="small" [(ngModel)]="formData.assignee_role_id" name="assigneeRole"
+                           nzPlaceHolder="Pilih role" nzShowSearch nzAllowClear>
+                  @for (r of roles; track r.id) {
+                    <nz-option [nzValue]="r.id" [nzLabel]="r.name"></nz-option>
+                  }
+                </nz-select>
+              }
+              @case ('position') {
+                <nz-select nzSize="small" [(ngModel)]="formData.assignee_position_id" name="assigneePos"
+                           nzPlaceHolder="Pilih jabatan" nzShowSearch nzAllowClear>
+                  @for (p of positions; track p.id) {
+                    <nz-option [nzValue]="p.id" [nzLabel]="p.name"></nz-option>
+                  }
+                </nz-select>
+              }
+              @case ('department') {
+                <nz-select nzSize="small" [(ngModel)]="formData.assignee_department_id" name="assigneeDept"
+                           nzPlaceHolder="Pilih departemen" nzShowSearch nzAllowClear>
+                  @for (d of departments; track d.id) {
+                    <nz-option [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
+                  }
+                </nz-select>
+              }
+              @default {
+                <nz-select nzSize="small" nzDisabled nzPlaceHolder="Pilih tipe penerima terlebih dahulu"></nz-select>
+              }
+            }
+          </nz-form-control>
+        </nz-form-item>
+
+        <div class="grid grid-cols-2 gap-x-3">
+          <nz-form-item>
+            <nz-form-label>Min. Persetujuan</nz-form-label>
+            <nz-form-control>
+              <nz-input-number nzSize="small" [(ngModel)]="formData.required_approvals"
+                               name="reqApprovals" [nzMin]="1" [nzMax]="99" class="w-full">
+              </nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Batas Hari</nz-form-label>
+            <nz-form-control>
+              <nz-input-number nzSize="small" [(ngModel)]="formData.deadline_days"
+                               name="deadlineDays" [nzMin]="0" [nzMax]="365"
+                               nzPlaceHolder="Opsional" class="w-full">
+              </nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+
+        <nz-form-item>
+          <nz-form-label>Aksi Saat Ditolak</nz-form-label>
+          <nz-form-control>
+            <nz-select nzSize="small" [(ngModel)]="formData.on_reject_action" name="rejectAction"
+                       nzPlaceHolder="Pilih aksi">
+              <nz-option nzValue="to_creator" nzLabel="Kembali ke pembuat"></nz-option>
+              <nz-option nzValue="to_previous" nzLabel="Kembali ke langkah sebelumnya"></nz-option>
+              <nz-option nzValue="to_step" nzLabel="Ke langkah tertentu"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        @if (formData.on_reject_action === 'to_step') {
+          <nz-form-item>
+            <nz-form-label>Tolak ke Langkah</nz-form-label>
+            <nz-form-control>
+              <nz-select nzSize="small" [(ngModel)]="formData.reject_to_step_id" name="rejectStep"
+                         nzPlaceHolder="Pilih langkah" nzShowSearch nzAllowClear>
+                @for (s of existingSteps; track s.id) {
+                  <nz-option [nzValue]="s.id" [nzLabel]="s.step_order + '. ' + s.name"></nz-option>
+                }
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        }
+
+        <div class="flex gap-4 mb-3">
+          <label nz-checkbox [(ngModel)]="formData.is_parallel" [ngModelOptions]="{standalone: true}">Paralel</label>
+          <label nz-checkbox [(ngModel)]="formData.can_edit" [ngModelOptions]="{standalone: true}">Bisa Edit</label>
+          <label nz-checkbox [(ngModel)]="formData.can_comment" [ngModelOptions]="{standalone: true}">Bisa Komentar</label>
+          <label nz-checkbox [(ngModel)]="formData.can_delegate" [ngModelOptions]="{standalone: true}">Bisa Delegasi</label>
+        </div>
+
+        <nz-form-item>
+          <nz-form-label>Instruksi</nz-form-label>
+          <nz-form-control>
+            <textarea nz-input nzSize="small" [(ngModel)]="formData.instructions" name="stepInstructions"
+                      placeholder="Instruksi untuk langkah ini"
+                      [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+      </form>
+
+      <div class="text-right mt-4">
+        <button nz-button nzSize="small" (click)="close()" class="mr-2">Batal</button>
+        <button nz-button nzType="primary" nzSize="small" (click)="save()" [nzLoading]="saving()">
+          Simpan Langkah
+        </button>
+      </div>
+    </nz-spin>
+  </ng-container>
+</nz-drawer>

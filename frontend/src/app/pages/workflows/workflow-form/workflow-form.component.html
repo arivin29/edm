@@ -1,0 +1,91 @@
+<nz-drawer [nzVisible]="visible" [nzTitle]="drawerTitle" nzPlacement="right"
+           nzWidth="500" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <nz-spin [nzSpinning]="saving()">
+      <form nz-form nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label nzRequired>Nama</nz-form-label>
+          <nz-form-control>
+            <input nz-input nzSize="small" [(ngModel)]="formData.name" name="wfName"
+                   placeholder="Nama workflow" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <div class="grid grid-cols-2 gap-x-3">
+          <nz-form-item>
+            <nz-form-label nzRequired>Perusahaan</nz-form-label>
+            <nz-form-control>
+              <nz-select nzSize="small" [(ngModel)]="formData.company_id" name="wfCompany"
+                         nzPlaceHolder="Pilih perusahaan" nzShowSearch nzAllowClear>
+                @for (c of companies; track c.id) {
+                  <nz-option [nzValue]="c.id" [nzLabel]="c.name"></nz-option>
+                }
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>Tipe Dokumen</nz-form-label>
+            <nz-form-control>
+              <nz-select nzSize="small" [(ngModel)]="formData.document_type_id" name="wfDocType"
+                         nzPlaceHolder="Pilih tipe dokumen" nzShowSearch nzAllowClear>
+                @for (dt of documentTypes; track dt.id) {
+                  <nz-option [nzValue]="dt.id" [nzLabel]="dt.name"></nz-option>
+                }
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Kategori</nz-form-label>
+            <nz-form-control>
+              <nz-select nzSize="small" [(ngModel)]="formData.category_id" name="wfCategory"
+                         nzPlaceHolder="Pilih kategori" nzShowSearch nzAllowClear>
+                @for (cat of categories; track cat.id) {
+                  <nz-option [nzValue]="cat.id" [nzLabel]="cat.name"></nz-option>
+                }
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Departemen</nz-form-label>
+            <nz-form-control>
+              <nz-select nzSize="small" [(ngModel)]="formData.department_id" name="wfDept"
+                         nzPlaceHolder="Pilih departemen" nzShowSearch nzAllowClear>
+                @for (dept of departments; track dept.id) {
+                  <nz-option [nzValue]="dept.id" [nzLabel]="dept.name"></nz-option>
+                }
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+
+        <nz-form-item>
+          <nz-form-label>Deskripsi</nz-form-label>
+          <nz-form-control>
+            <textarea nz-input nzSize="small" [(ngModel)]="formData.description" name="wfDesc"
+                      placeholder="Deskripsi workflow"
+                      [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Status Aktif</nz-form-label>
+          <nz-form-control>
+            <nz-switch [(ngModel)]="formData.is_active" [ngModelOptions]="{standalone: true}"
+                       nzSize="small" nzCheckedChildren="Aktif" nzUnCheckedChildren="Nonaktif">
+            </nz-switch>
+          </nz-form-control>
+        </nz-form-item>
+      </form>
+
+      <div class="text-right mt-4">
+        <button nz-button nzSize="small" (click)="close()" class="mr-2">Batal</button>
+        <button nz-button nzType="primary" nzSize="small" (click)="save()" [nzLoading]="saving()">
+          Simpan
+        </button>
+      </div>
+    </nz-spin>
+  </ng-container>
+</nz-drawer>

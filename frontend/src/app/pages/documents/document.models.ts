@@ -117,9 +117,12 @@ export interface TemplateItem {
 }
 
 export interface TemplateTag {
+  id?: string;
   tag_key: string;
   label: string;
   description?: string;
+  help_text?: string;
+  suffix?: string;
   data_type: string;
   source_type: string;
   source_config?: any;

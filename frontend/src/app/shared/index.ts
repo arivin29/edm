@@ -1,6 +1,4 @@
 // Shared Components
-export * from './components/file-manager/file-manager.component';
-export * from './components/file-manager/file-manager.types';
 export * from './components/data-table/data-table.component';
 export * from './components/data-table/data-table.types';
 export * from './components/drawer/drawer.component';

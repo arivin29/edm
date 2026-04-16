@@ -23,7 +23,9 @@ import { NzListModule } from 'ng-zorro-antd/list';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
-import { FileManagerComponent, FileNode } from '../../../shared';
+import { FileManagerComponent, FileNode } from './components/file-manager/file-manager.component';
+import { DocParametersComponent } from './components/doc-parameters/doc-parameters.component';
+import { DocPreviewComponent, PreviewFile } from './components/doc-preview/doc-preview.component';
 import {
   DocumentDetail, DocumentVersion, Comment, WorkflowStep, WorkflowStatus,
   Distribution, Attachment,
@@ -40,7 +42,7 @@ import {
     NzDescriptionsModule, NzTabsModule, NzTimelineModule,
     NzCommentModule, NzAvatarModule, NzInputModule, NzSpinModule,
     NzModalModule, NzBadgeModule, NzToolTipModule, NzTableModule, NzEmptyModule,
-    NzUploadModule, NzListModule, FileManagerComponent
+    NzUploadModule, NzListModule, FileManagerComponent, DocParametersComponent, DocPreviewComponent
   ],
   templateUrl: './document-detail.component.html',
   styleUrls: ['./document-detail.component.scss']
@@ -73,6 +75,9 @@ export class DocumentDetailPage implements OnInit {
   sidebarCollapsed = signal(true);
 
   documentId = '';
+
+  // Preview state
+  previewFile = signal<PreviewFile | null>(null);
 
   // Expose helpers to template
   getStatusColor = getStatusColor;
@@ -513,12 +518,23 @@ export class DocumentDetailPage implements OnInit {
     return labels[status] || status;
   }
 
-  onFmDownload(node: FileNode) {
+  onFmDownload(node: FileNode | PreviewFile) {
     this.message.info(`Download: ${node.name} (mockup)`);
   }
 
   onFmPreview(node: FileNode) {
-    this.message.info(`Preview: ${node.name} (mockup)`);
+    this.previewFile.set({
+      id: node.id,
+      name: node.name,
+      mimeType: node.mimeType || '',
+      size: node.size || 0,
+      url: node.id ? `${environment.apiUrl}/documents/${this.documentId}/files/${node.id}/content` : undefined,
+      version: node.version,
+      uploadedBy: node.uploadedBy,
+      modifiedAt: node.modifiedAt,
+      description: node.description,
+      tags: node.tags
+    });
   }
 
   onFmDelete(node: FileNode) {

@@ -145,6 +145,14 @@
     }
     .doc-info-desc__text { margin: 4px 0 0; font-size: 13px; color: #52525b; line-height: 1.6; }
 
+    .doc-info-params {
+      margin-top: 14px; padding: 12px 14px;
+      background: #fafafa; border-radius: 6px; border: 1px solid #f4f4f5;
+    }
+    .doc-info-params__title {
+      font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px;
+    }
+
     /* ===== Comments ===== */
     .doc-comments { display: flex; flex-direction: column; gap: 10px; }
     .doc-comment {

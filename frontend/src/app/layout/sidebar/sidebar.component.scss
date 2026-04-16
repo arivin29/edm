@@ -65,24 +65,25 @@
   .ant-menu-submenu-title {
     height: 36px !important;
     line-height: 36px !important;
-    margin: 1px 6px !important;
+    margin: 2px 8px !important;
     border-radius: 6px !important;
-    font-size: 12px !important;
-    color: rgba(148, 163, 184, 0.9) !important;
-    padding-left: 12px !important;
+    font-size: 12.5px !important;
+    color: rgba(148, 163, 184, 0.85) !important;
+    padding-left: 14px !important;
     transition: all 0.15s ease;
 
     .anticon {
       font-size: 15px !important;
-      color: rgba(148, 163, 184, 0.7);
+      color: rgba(148, 163, 184, 0.6);
+      margin-right: 10px !important;
       transition: color 0.15s;
     }
 
     &:hover {
-      color: #e2e8f0 !important;
-      background: rgba(255, 255, 255, 0.06) !important;
+      color: #f1f5f9 !important;
+      background: rgba(255, 255, 255, 0.07) !important;
 
-      .anticon { color: #e2e8f0; }
+      .anticon { color: #f1f5f9; }
     }
   }
 
@@ -90,6 +91,7 @@
     background: rgba(14, 165, 233, 0.15) !important;
     color: #7dd3fc !important;
     border-right: none !important;
+    position: relative;
 
     .anticon { color: #38bdf8 !important; }
 
@@ -107,35 +109,58 @@
 
   .ant-menu-submenu-open > .ant-menu-submenu-title {
     color: #e2e8f0 !important;
+    background: rgba(255, 255, 255, 0.04) !important;
     .anticon { color: #e2e8f0 !important; }
   }
 
   .ant-menu-sub {
-    background: rgba(0, 0, 0, 0.12) !important;
+    background: rgba(0, 0, 0, 0.15) !important;
+    padding: 4px 0 !important;
 
     .ant-menu-item {
-      height: 32px !important;
-      line-height: 32px !important;
+      height: 34px !important;
+      line-height: 34px !important;
       font-size: 12px !important;
-      margin: 0 6px !important;
-      padding-left: 20px !important;
-      color: rgba(148, 163, 184, 0.75) !important;
+      margin: 1px 8px 1px 8px !important;
+      padding-left: 38px !important;
+      border-radius: 5px !important;
+      color: rgba(148, 163, 184, 0.7) !important;
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 22px;
+        top: 50%;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: rgba(148, 163, 184, 0.25);
+        transform: translateY(-50%);
+        transition: background 0.15s;
+      }
 
       &:hover {
         color: #e2e8f0 !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        &::after { background: rgba(148, 163, 184, 0.5); }
       }
 
       &.ant-menu-item-selected {
         color: #7dd3fc !important;
         background: rgba(14, 165, 233, 0.12) !important;
+
+        &::after { background: #0ea5e9; }
+        &::before { display: none; }
       }
     }
   }
 
   // Submenu arrow
   .ant-menu-submenu-arrow {
-    color: rgba(148, 163, 184, 0.4) !important;
+    color: rgba(148, 163, 184, 0.35) !important;
     font-size: 10px;
+    right: 12px !important;
   }
 
   // Inline collapsed mode
@@ -144,7 +169,7 @@
     .ant-menu-submenu-title {
       padding: 0 !important;
       text-align: center;
-      margin: 1px 4px !important;
+      margin: 2px 4px !important;
     }
   }
 }

@@ -1,0 +1,50 @@
+@if (loading()) {
+  <div class="params-loading">
+    <nz-spin nzSimple nzSize="small"></nz-spin>
+    <span>Memuat parameter...</span>
+  </div>
+} @else if (tagGroups().length === 0) {
+  <nz-empty nzNotFoundContent="Tidak ada parameter template" [nzNotFoundImage]="'simple'"></nz-empty>
+} @else {
+  <div class="params-container">
+    @for (group of tagGroups(); track group.name; let gi = $index) {
+      @if (gi > 0) {
+        <nz-divider></nz-divider>
+      }
+      <div class="params-group">
+        <div class="params-group-title">
+          <span nz-icon nzType="tags" nzTheme="outline"></span>
+          {{ group.name }}
+        </div>
+        <div class="params-grid">
+          @for (tag of group.tags; track tag.id) {
+            @if (!isSkippedType(tag.data_type)) {
+              <div class="params-item">
+                <div class="params-label">
+                  {{ tag.label }}
+                  @if (tag.help_text) {
+                    <span nz-icon nzType="question-circle" nzTheme="outline"
+                          nz-tooltip [nzTooltipTitle]="tag.help_text"
+                          class="params-help"></span>
+                  }
+                </div>
+                <div class="params-value" [class.params-value--empty]="getDisplayValue(tag) === '-'">
+                  @if (tag.data_type === 'checkbox') {
+                    <nz-tag [nzColor]="getDisplayValue(tag) === 'Ya' ? 'green' : 'default'">
+                      {{ getDisplayValue(tag) }}
+                    </nz-tag>
+                  } @else {
+                    {{ getDisplayValue(tag) }}
+                  }
+                  @if (tag.suffix) {
+                    <span class="params-suffix">{{ tag.suffix }}</span>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+}

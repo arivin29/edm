@@ -1,0 +1,119 @@
+<nz-drawer
+  [nzVisible]="visible()"
+  [nzWidth]="640"
+  nzPlacement="right"
+  [nzClosable]="false"
+  (nzOnClose)="onClose()"
+  [nzTitle]="drawerTitleTpl"
+>
+  <ng-template #drawerTitleTpl>
+    <div class="preview-header">
+      <div class="preview-header__info">
+        <span nz-icon [nzType]="getFileIcon()" nzTheme="twotone" class="preview-header__icon"></span>
+        <span class="preview-header__name" [nz-tooltip]="_file()?.name">
+          {{ _file()?.name || 'File' }}
+        </span>
+      </div>
+      <div class="preview-header__actions">
+        <button nz-button nzType="text" nzSize="small" nz-tooltip nzTooltipTitle="Download" (click)="onDownload()">
+          <span nz-icon nzType="download" nzTheme="outline"></span>
+        </button>
+        <button nz-button nzType="text" nzSize="small" nz-tooltip nzTooltipTitle="Tutup" (click)="onClose()">
+          <span nz-icon nzType="close" nzTheme="outline"></span>
+        </button>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-container *nzDrawerContent>
+    @if (_file(); as f) {
+      <!-- File metadata -->
+      <div class="preview-meta">
+        @if (f.version) {
+          <nz-tag nzColor="blue">{{ f.version }}</nz-tag>
+        }
+        <span class="preview-meta__size">{{ formatFileSize(f.size) }}</span>
+        @if (f.uploadedBy) {
+          <span class="preview-meta__sep">•</span>
+          <span class="preview-meta__user">{{ f.uploadedBy }}</span>
+        }
+        @if (f.modifiedAt) {
+          <span class="preview-meta__sep">•</span>
+          <span class="preview-meta__date">{{ f.modifiedAt | date:'dd MMM yyyy, HH:mm' }}</span>
+        }
+      </div>
+
+      @if (f.description) {
+        <p class="preview-desc">{{ f.description }}</p>
+      }
+
+      @if (f.tags && f.tags.length > 0) {
+        <div class="preview-tags">
+          @for (tag of f.tags; track tag) {
+            <nz-tag>{{ tag }}</nz-tag>
+          }
+        </div>
+      }
+
+      <!-- Preview area -->
+      <div class="preview-content">
+        @if (loading()) {
+          <div class="preview-loading">
+            <nz-spin nzSimple></nz-spin>
+            <span>Memuat preview...</span>
+          </div>
+        }
+
+        @switch (previewType()) {
+          @case ('pdf') {
+            <iframe
+              [src]="previewUrl()"
+              class="preview-iframe"
+              (load)="onIframeLoad()"
+              [style.display]="loading() ? 'none' : 'block'"
+            ></iframe>
+          }
+          @case ('image') {
+            <div class="preview-image-wrap">
+              <img
+                [src]="previewUrl()"
+                [alt]="f.name"
+                class="preview-image"
+                (load)="onImageLoad()"
+                [style.display]="loading() ? 'none' : 'block'"
+              />
+            </div>
+          }
+          @case ('office') {
+            <iframe
+              [src]="previewUrl()"
+              class="preview-iframe"
+              (load)="onIframeLoad()"
+              [style.display]="loading() ? 'none' : 'block'"
+              frameborder="0"
+            ></iframe>
+          }
+          @case ('text') {
+            <iframe
+              [src]="previewUrl()"
+              class="preview-iframe preview-iframe--text"
+              (load)="onIframeLoad()"
+              [style.display]="loading() ? 'none' : 'block'"
+            ></iframe>
+          }
+          @case ('unsupported') {
+            <div class="preview-unsupported" [style.display]="loading() ? 'none' : 'flex'">
+              <span nz-icon [nzType]="getFileIcon()" nzTheme="twotone" class="preview-unsupported__icon"></span>
+              <span class="preview-unsupported__name">{{ f.name }}</span>
+              <span class="preview-unsupported__text">Preview tidak tersedia untuk tipe file ini</span>
+              <button nz-button nzType="primary" nzSize="small" (click)="onDownload()">
+                <span nz-icon nzType="download" nzTheme="outline"></span>
+                Download File
+              </button>
+            </div>
+          }
+        }
+      </div>
+    }
+  </ng-container>
+</nz-drawer>

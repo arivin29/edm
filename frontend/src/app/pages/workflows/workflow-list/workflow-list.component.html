@@ -1,0 +1,140 @@
+<div class="p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h1 class="text-lg font-semibold m-0">Manajemen Workflow</h1>
+      <p class="text-gray-500 text-xs m-0">Kelola alur persetujuan dokumen</p>
+    </div>
+    <button nz-button nzType="primary" nzSize="small" (click)="openForm()">
+      <span nz-icon nzType="plus"></span> Tambah Workflow
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-4 gap-3 mb-4">
+    <div class="bg-white rounded-lg border p-3">
+      <div class="text-xs text-gray-500">Total Workflow</div>
+      <div class="text-xl font-bold text-gray-800">{{ workflows().length }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3">
+      <div class="text-xs text-gray-500">Aktif</div>
+      <div class="text-xl font-bold text-green-600">{{ activeCount() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3">
+      <div class="text-xs text-gray-500">Nonaktif</div>
+      <div class="text-xl font-bold text-gray-400">{{ inactiveCount() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3">
+      <div class="text-xs text-gray-500">Total Steps</div>
+      <div class="text-xl font-bold text-blue-600">{{ getTotalSteps() }}</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <nz-card nzSize="small" class="mb-3">
+    <div class="flex items-center gap-3">
+      <nz-input-group nzSize="small" [nzPrefix]="searchIcon" class="w-56">
+        <input nz-input nzSize="small" placeholder="Cari workflow..." [(ngModel)]="searchText" />
+      </nz-input-group>
+      <ng-template #searchIcon><span nz-icon nzType="search"></span></ng-template>
+      <nz-select nzSize="small" [(ngModel)]="filterDocType" (ngModelChange)="applyFilter()"
+                 nzPlaceHolder="Filter tipe dokumen" nzAllowClear class="w-48">
+        @for (dt of documentTypes(); track dt.id) {
+          <nz-option [nzValue]="dt.id" [nzLabel]="dt.name"></nz-option>
+        }
+      </nz-select>
+      <nz-select nzSize="small" [(ngModel)]="filterStatus" (ngModelChange)="applyFilter()"
+                 nzPlaceHolder="Filter status" nzAllowClear class="w-36">
+        <nz-option nzValue="active" nzLabel="Aktif"></nz-option>
+        <nz-option nzValue="inactive" nzLabel="Nonaktif"></nz-option>
+      </nz-select>
+    </div>
+  </nz-card>
+
+  <!-- Table -->
+  <nz-card nzSize="small">
+    <nz-spin [nzSpinning]="loading()">
+      <nz-table #tbl nzSize="small" [nzData]="filteredWorkflows()"
+                [nzPageSize]="15" [nzFrontPagination]="true" nzShowSizeChanger>
+        <thead>
+          <tr>
+            <th nzWidth="180px">Nama Workflow</th>
+            <th nzWidth="140px">Tipe Dokumen</th>
+            <th nzWidth="120px">Kategori</th>
+            <th nzWidth="120px">Departemen</th>
+            <th nzWidth="70px" nzAlign="center">Steps</th>
+            <th nzWidth="80px" nzAlign="center">Status</th>
+            <th nzWidth="110px">Dibuat</th>
+            <th nzWidth="80px" nzAlign="center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (wf of tbl.data; track wf.id) {
+            <tr>
+              <td>
+                <a class="wf-name-link" (click)="openDetail(wf)">
+                  <div class="flex items-center gap-2">
+                    <span nz-icon nzType="apartment" class="text-blue-500"></span>
+                    <div>
+                      <div class="font-medium text-xs">{{ wf.name }}</div>
+                      @if (wf.description) {
+                        <div class="text-gray-400 text-[10px] truncate max-w-[160px]" [nz-tooltip]="wf.description">{{ wf.description }}</div>
+                      }
+                    </div>
+                  </div>
+                </a>
+              </td>
+              <td>
+                @if (wf.document_type) {
+                  <nz-tag nzColor="blue" class="text-[10px]">{{ wf.document_type.code || wf.document_type.name }}</nz-tag>
+                } @else {
+                  <span class="text-gray-300">-</span>
+                }
+              </td>
+              <td class="text-xs text-gray-600">{{ wf.category?.name || '-' }}</td>
+              <td class="text-xs text-gray-600">{{ wf.department?.name || '-' }}</td>
+              <td nzAlign="center">
+                <nz-tag nzColor="processing">{{ wf.steps?.length || 0 }}</nz-tag>
+              </td>
+              <td nzAlign="center">
+                <nz-tag [nzColor]="wf.is_active ? 'success' : 'default'">
+                  {{ wf.is_active ? 'Aktif' : 'Nonaktif' }}
+                </nz-tag>
+              </td>
+              <td class="text-xs text-gray-500">{{ formatDate(wf.created_at) }}</td>
+              <td nzAlign="center">
+                <button nz-button nzType="text" nzSize="small" nz-tooltip="Detail"
+                        (click)="openDetail(wf)">
+                  <span nz-icon nzType="eye" class="text-blue-500"></span>
+                </button>
+                <button nz-button nzType="text" nzSize="small" nz-tooltip="Hapus"
+                        (click)="confirmDelete(wf)">
+                  <span nz-icon nzType="delete" class="text-red-500"></span>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="text-center text-gray-400 py-8">
+                <span nz-icon nzType="inbox" class="text-3xl text-gray-300 mb-2 block"></span>
+                Belum ada data workflow
+              </td>
+            </tr>
+          }
+        </tbody>
+      </nz-table>
+    </nz-spin>
+  </nz-card>
+
+  <!-- Form Drawer -->
+  <app-workflow-form
+    [visible]="formVisible"
+    [editData]="formEditData"
+    [companies]="companies()"
+    [documentTypes]="documentTypes()"
+    [categories]="categories()"
+    [departments]="departments()"
+    (closed)="onFormClosed()"
+    (saved)="onFormSaved($event)">
+  </app-workflow-form>
+</div>

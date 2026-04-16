@@ -1,0 +1,75 @@
+.params-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  color: #999;
+  font-size: 12px;
+}
+
+.params-container {
+  padding: 4px 0;
+}
+
+.params-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  span[nz-icon] { font-size: 13px; color: #1890ff; }
+}
+
+.params-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+}
+
+.params-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+}
+
+.params-label {
+  font-size: 11px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.params-help {
+  font-size: 11px;
+  color: #bbb;
+  cursor: help;
+}
+
+.params-value {
+  font-size: 12px;
+  color: #333;
+  word-break: break-word;
+}
+
+.params-value--empty {
+  color: #ccc;
+  font-style: italic;
+}
+
+.params-suffix {
+  font-size: 11px;
+  color: #999;
+  margin-left: 2px;
+}
+
+:host ::ng-deep {
+  .ant-divider { margin: 10px 0; }
+  .ant-tag { font-size: 11px; line-height: 18px; padding: 0 4px; }
+  .ant-empty { padding: 16px 0; }
+  .ant-empty-description { font-size: 12px; }
+}
