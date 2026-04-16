@@ -1,0 +1,80 @@
+<nz-drawer [nzVisible]="visible" [nzTitle]="drawerTitle" nzPlacement="right"
+           nzWidth="380px" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <form nz-form nzLayout="vertical">
+      <nz-form-item>
+        <nz-form-label nzRequired>Kode</nz-form-label>
+        <nz-form-control nzErrorTip="Kode wajib diisi">
+          <input nz-input nzSize="small" [(ngModel)]="formData.code" name="code"
+                 placeholder="Masukkan kode" [maxlength]="50" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Nama</nz-form-label>
+        <nz-form-control nzErrorTip="Nama wajib diisi">
+          <input nz-input nzSize="small" [(ngModel)]="formData.name" name="name"
+                 placeholder="Masukkan nama" [maxlength]="255" />
+        </nz-form-control>
+      </nz-form-item>
+
+      @if (type === 'office') {
+        <nz-form-item>
+          <nz-form-label nzRequired>Company</nz-form-label>
+          <nz-form-control nzErrorTip="Company wajib dipilih">
+            <nz-select nzSize="small" [(ngModel)]="formData.company_id" name="company_id"
+                       nzPlaceHolder="Pilih company" nzShowSearch>
+              @for (c of companies; track c.id) {
+                <nz-option [nzValue]="c.id" [nzLabel]="c.name"></nz-option>
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      }
+
+      @if (type === 'department') {
+        <nz-form-item>
+          <nz-form-label nzRequired>Office</nz-form-label>
+          <nz-form-control nzErrorTip="Office wajib dipilih">
+            <nz-select nzSize="small" [(ngModel)]="formData.office_id" name="office_id"
+                       nzPlaceHolder="Pilih office" nzShowSearch>
+              @for (o of offices; track o.id) {
+                <nz-option [nzValue]="o.id" [nzLabel]="o.name"></nz-option>
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      }
+
+      @if (type === 'section') {
+        <nz-form-item>
+          <nz-form-label nzRequired>Department</nz-form-label>
+          <nz-form-control nzErrorTip="Department wajib dipilih">
+            <nz-select nzSize="small" [(ngModel)]="formData.department_id" name="department_id"
+                       nzPlaceHolder="Pilih department" nzShowSearch>
+              @for (d of departments; track d.id) {
+                <nz-option [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      }
+
+      @if (type === 'position') {
+        <nz-form-item>
+          <nz-form-label nzRequired>Level</nz-form-label>
+          <nz-form-control nzErrorTip="Level wajib diisi (1-10)">
+            <input nz-input nzSize="small" [(ngModel)]="formData.level" name="level"
+                   type="number" placeholder="Level 1-10" min="1" max="10" />
+          </nz-form-control>
+        </nz-form-item>
+      }
+
+      <div class="mt-4">
+        <button nz-button nzType="primary" nzSize="small" nzBlock [nzLoading]="saving()" (click)="save()">
+          Simpan
+        </button>
+      </div>
+    </form>
+  </ng-container>
+</nz-drawer>

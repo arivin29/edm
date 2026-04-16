@@ -1,0 +1,433 @@
+    <div class="doc-detail-page">
+      @if (loading()) {
+        <div class="text-center py-12">
+          <nz-spin nzSimple></nz-spin>
+        </div>
+      } @else if (document()) {
+        <!-- Page Header -->
+        <div class="doc-header">
+          <div class="doc-header__left">
+            <a routerLink="/documents" class="doc-header__back" nz-tooltip nzTooltipTitle="Kembali ke daftar">
+              <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
+            </a>
+            <div class="doc-header__info">
+              <div class="doc-header__title-row">
+                <h1 class="doc-header__title">{{ document()!.title }}</h1>
+                <div class="doc-header__tags">
+                  <span class="doc-status-tag" [attr.data-status]="document()!.status">
+                    <span class="doc-status-tag__dot"></span>
+                    {{ getStatusLabel(document()!.status) }}
+                  </span>
+                  <span class="doc-meta-tag" [attr.data-priority]="document()!.priority">{{ getPriorityLabel(document()!.priority) }}</span>
+                  <span class="doc-meta-tag">{{ getConfidentialityLabel(document()!.confidentiality) }}</span>
+                </div>
+              </div>
+              <div class="doc-header__subtitle">
+                <span class="doc-number">
+                  <span nz-icon nzType="number" nzTheme="outline"></span>
+                  {{ document()!.document_number || 'Belum ada nomor' }}
+                </span>
+                <span class="doc-header__sep">·</span>
+                <span class="doc-header__meta">{{ document()!.document_type?.name || '' }}</span>
+                <span class="doc-header__sep">·</span>
+                <span class="doc-header__meta">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
+                <span class="doc-header__sep">·</span>
+                <span class="doc-header__meta">
+                  <span nz-icon nzType="user" nzTheme="outline" style="font-size: 10px; margin-right: 2px;"></span>
+                  {{ document()!.creator?.name || '-' }}
+                </span>
+                <span class="doc-header__sep">·</span>
+                <span class="doc-header__meta">{{ document()!.department?.name || '-' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="doc-header__actions">
+            <button nz-button nzSize="small" (click)="downloadDocument()" nz-tooltip nzTooltipTitle="Download">
+              <span nz-icon nzType="download"></span>
+            </button>
+            <button nz-button nzSize="small" nz-tooltip nzTooltipTitle="Print">
+              <span nz-icon nzType="printer"></span>
+            </button>
+            <button nz-button nzSize="small" nz-tooltip nzTooltipTitle="Share">
+              <span nz-icon nzType="share-alt"></span>
+            </button>
+            <span class="doc-header__divider"></span>
+            <button nz-button nzSize="small" [routerLink]="['/documents', document()!.id, 'edit']">
+              <span nz-icon nzType="edit"></span> Edit
+            </button>
+            @if (document()!.status === 'draft') {
+              <button nz-button nzType="primary" nzSize="small" (click)="submitForReview()">
+                <span nz-icon nzType="send"></span> Submit Review
+              </button>
+            }
+            @if (document()!.status === 'in_review') {
+              <button nz-button nzSize="small" class="btn-approve" (click)="approveDocument()">
+                <span nz-icon nzType="check-circle"></span> Setujui
+              </button>
+              <button nz-button nzDanger nzSize="small" (click)="openRejectModal()">
+                <span nz-icon nzType="close-circle"></span> Tolak
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Content Body: Tabs + Collapsible Sidebar -->
+        <div class="doc-body" [class.doc-body--collapsed]="sidebarCollapsed()">
+          <!-- Main Area -->
+          <div class="doc-main">
+            <div class="doc-tabs-panel">
+              <nz-tabset nzSize="small" [(nzSelectedIndex)]="activeTab" (nzSelectedIndexChange)="onTabChange($event)">
+
+                <!-- Tab: Berkas -->
+                <nz-tab nzTitle="Berkas">
+                  <app-file-manager
+                    [config]="{ documentId: documentId, readonly: false, showUpload: true, showCreateFolder: true, showVersions: true }"
+                    [tree]="mockFileTree"
+                    (fileDownload)="onFmDownload($event)"
+                    (filePreview)="onFmPreview($event)"
+                    (fileDelete)="onFmDelete($event)"
+                    (folderCreate)="onFmCreateFolder($event)"
+                    (fileUpload)="onFmUpload($event)"
+                  ></app-file-manager>
+                </nz-tab>
+
+                <!-- Tab: Informasi -->
+                <nz-tab nzTitle="Informasi">
+                  <div class="doc-info-section">
+                    <div class="doc-info-grid">
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Tipe Dokumen</span>
+                        <span class="doc-info-value">{{ document()!.document_type?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Kategori</span>
+                        <span class="doc-info-value">{{ document()!.category?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Kode Tipe</span>
+                        <span class="doc-info-value doc-info-value--mono">{{ document()!.document_type?.code || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Pembuat</span>
+                        <span class="doc-info-value">
+                          <span nz-icon nzType="user" nzTheme="outline" class="doc-info-icon"></span>
+                          {{ document()!.creator?.name || '-' }}
+                        </span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Versi</span>
+                        <span class="doc-info-value doc-info-value--mono">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Jumlah Revisi</span>
+                        <span class="doc-info-value">{{ document()!.revision_count }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Department</span>
+                        <span class="doc-info-value">{{ document()!.department?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Section</span>
+                        <span class="doc-info-value">{{ document()!.section?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Perusahaan</span>
+                        <span class="doc-info-value">{{ document()!.company?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Kantor</span>
+                        <span class="doc-info-value">{{ document()!.office?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Template</span>
+                        <span class="doc-info-value">{{ document()!.template?.name || '-' }}</span>
+                      </div>
+                      <div class="doc-info-item">
+                        <span class="doc-info-label">Nomor Dokumen</span>
+                        <span class="doc-info-value doc-info-value--mono">{{ document()!.document_number || 'Belum ada' }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Timestamps -->
+                    <div class="doc-info-timestamps">
+                      <div class="doc-info-ts">
+                        <span nz-icon nzType="calendar" nzTheme="outline"></span>
+                        <span class="doc-info-label">Dibuat</span>
+                        <span class="doc-info-value">{{ document()!.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                      </div>
+                      <div class="doc-info-ts">
+                        <span nz-icon nzType="edit" nzTheme="outline"></span>
+                        <span class="doc-info-label">Diperbarui</span>
+                        <span class="doc-info-value">{{ document()!.updated_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                      </div>
+                      @if (document()!.submitted_at) {
+                        <div class="doc-info-ts">
+                          <span nz-icon nzType="send" nzTheme="outline"></span>
+                          <span class="doc-info-label">Disubmit</span>
+                          <span class="doc-info-value">{{ document()!.submitted_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                        </div>
+                      }
+                      @if (document()!.approved_at) {
+                        <div class="doc-info-ts">
+                          <span nz-icon nzType="check-circle" nzTheme="outline"></span>
+                          <span class="doc-info-label">Disetujui</span>
+                          <span class="doc-info-value">{{ document()!.approved_at | date:'dd MMM yyyy, HH:mm' }}</span>
+                        </div>
+                      }
+                    </div>
+
+                    @if (document()!.description) {
+                      <div class="doc-info-desc">
+                        <span class="doc-info-label">Deskripsi</span>
+                        <p class="doc-info-desc__text">{{ document()!.description }}</p>
+                      </div>
+                    }
+                  </div>
+                </nz-tab>
+
+                <!-- Tab: Komentar -->
+                <nz-tab nzTitle="Komentar">
+                  @if (commentsLoading()) {
+                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                  } @else {
+                    <div class="doc-comments">
+                      @for (c of comments(); track c.id) {
+                        <div class="doc-comment" [class.doc-comment--resolved]="c.is_resolved">
+                          <div class="doc-comment__avatar">
+                            <nz-avatar nzIcon="user" [nzSize]="28" [style.background-color]="c.is_resolved ? '#d4d4d8' : '#0284c7'" style="font-size: 12px"></nz-avatar>
+                          </div>
+                          <div class="doc-comment__body">
+                            <div class="doc-comment__header">
+                              <span class="doc-comment__author">{{ c.user?.name || 'Anonim' }}</span>
+                              <span class="doc-comment__time">{{ formatDate(c.created_at) }}</span>
+                              @if (c.is_resolved) {
+                                <span class="doc-comment__resolved-badge">
+                                  <span nz-icon nzType="check-circle" nzTheme="fill"></span> Terselesaikan
+                                </span>
+                              }
+                              <span class="doc-comment__actions">
+                                @if (c.is_resolved) {
+                                  <button nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Buka kembali" (click)="unresolveComment(c.id)" class="doc-action-btn">
+                                    <span nz-icon nzType="undo"></span>
+                                  </button>
+                                } @else {
+                                  <button nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Selesaikan" (click)="resolveComment(c.id)" class="doc-action-btn">
+                                    <span nz-icon nzType="check"></span>
+                                  </button>
+                                }
+                                <button nz-button nzSize="small" nzType="text" nzDanger nz-tooltip nzTooltipTitle="Hapus" (click)="deleteComment(c.id)" class="doc-action-btn">
+                                  <span nz-icon nzType="delete"></span>
+                                </button>
+                              </span>
+                            </div>
+                            <p class="doc-comment__content">{{ c.content }}</p>
+
+                            @if (c.replies && c.replies.length > 0) {
+                              <div class="doc-comment__replies">
+                                @for (r of c.replies; track r.id) {
+                                  <div class="doc-comment__reply">
+                                    <span class="doc-comment__author">{{ r.user?.name || 'Anonim' }}</span>
+                                    <span class="doc-comment__time">{{ formatDate(r.created_at) }}</span>
+                                    <p class="doc-comment__content">{{ r.content }}</p>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            @if (replyingTo() === c.id) {
+                              <div class="doc-comment__reply-input">
+                                <textarea nz-input [(ngModel)]="replyContent" placeholder="Tulis balasan..." [nzAutosize]="{ minRows: 1, maxRows: 3 }"></textarea>
+                                <div class="flex gap-1 mt-1">
+                                  <button nz-button nzSize="small" nzType="primary" [disabled]="!replyContent.trim()" (click)="addReply(c.id)">Balas</button>
+                                  <button nz-button nzSize="small" (click)="replyingTo.set(null)">Batal</button>
+                                </div>
+                              </div>
+                            } @else {
+                              <button nz-button nzSize="small" nzType="text" class="doc-comment__reply-btn" (click)="replyingTo.set(c.id)">
+                                <span nz-icon nzType="message" nzTheme="outline"></span> Balas
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      } @empty {
+                        <nz-empty nzNotFoundContent="Belum ada komentar"></nz-empty>
+                      }
+
+                      <div class="doc-comment-composer">
+                        <nz-avatar nzIcon="user" [nzSize]="28" style="background-color: #0284c7; font-size: 12px"></nz-avatar>
+                        <div class="doc-comment-composer__input">
+                          <textarea nz-input [(ngModel)]="newComment" placeholder="Tulis komentar..."
+                                    [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
+                          <button nz-button nzType="primary" nzSize="small" class="mt-2"
+                                  [disabled]="!newComment.trim()" (click)="addComment()">
+                            <span nz-icon nzType="send"></span> Kirim
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </nz-tab>
+
+                <!-- Tab: Workflow -->
+                <nz-tab nzTitle="Workflow">
+                  @if (workflowLoading()) {
+                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                  } @else if (workflow()) {
+                    <div class="doc-workflow-steps">
+                      @for (step of workflow()!.steps; track step.id; let i = $index; let last = $last) {
+                        <div class="doc-wf-step" [attr.data-status]="step.status">
+                          <div class="doc-wf-step__indicator">
+                            <div class="doc-wf-step__dot">
+                              @if (step.status === 'completed') {
+                                <span nz-icon nzType="check" nzTheme="outline"></span>
+                              } @else if (step.status === 'rejected') {
+                                <span nz-icon nzType="close" nzTheme="outline"></span>
+                              } @else if (step.status === 'in_progress') {
+                                <span nz-icon nzType="loading" nzTheme="outline"></span>
+                              } @else {
+                                <span class="doc-wf-step__num">{{ i + 1 }}</span>
+                              }
+                            </div>
+                            @if (!last) {
+                              <div class="doc-wf-step__line"></div>
+                            }
+                          </div>
+                          <div class="doc-wf-step__content">
+                            <div class="doc-wf-step__name">{{ step.name }}</div>
+                            <div class="doc-wf-step__actor">
+                              <span nz-icon nzType="user" nzTheme="outline"></span>
+                              {{ step.actor?.name || 'Belum ditentukan' }}
+                            </div>
+                            @if (step.action_type) {
+                              <span class="doc-wf-action-tag" [attr.data-action]="step.action_type">
+                                {{ getActionLabel(step.action_type) }}
+                              </span>
+                            }
+                            @if (step.comment) {
+                              <div class="doc-wf-step__comment">"{{ step.comment }}"</div>
+                            }
+                            @if (step.completed_at) {
+                              <div class="doc-wf-step__time">{{ step.completed_at | date:'dd MMM yyyy, HH:mm' }}</div>
+                            }
+                          </div>
+                        </div>
+                      } @empty {
+                        <nz-empty nzNotFoundContent="Belum ada langkah workflow"></nz-empty>
+                      }
+                    </div>
+                  } @else {
+                    <nz-empty nzNotFoundContent="Workflow belum dimulai"></nz-empty>
+                  }
+                </nz-tab>
+
+                <!-- Tab: Distribusi -->
+                <nz-tab nzTitle="Distribusi">
+                  @if (distributionsLoading()) {
+                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                  } @else {
+                    <nz-table #distTable [nzData]="distributions()" nzSize="small" [nzShowPagination]="false" [nzFrontPagination]="false">
+                      <thead>
+                        <tr>
+                          <th>Penerima</th>
+                          <th>Department</th>
+                          <th nzWidth="140px">Didistribusikan</th>
+                          <th nzWidth="140px">Diterima</th>
+                          <th nzWidth="100px">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (d of distTable.data; track d.id) {
+                          <tr>
+                            <td class="text-xs">{{ d.user?.name || '-' }}</td>
+                            <td class="text-xs">{{ d.department?.name || '-' }}</td>
+                            <td class="text-xs text-gray-500">{{ d.distributed_at | date:'dd/MM/yy HH:mm' }}</td>
+                            <td class="text-xs text-gray-500">{{ d.received_at ? (d.received_at | date:'dd/MM/yy HH:mm') : '-' }}</td>
+                            <td>
+                              <nz-tag [nzColor]="d.status === 'received' ? 'green' : d.status === 'sent' ? 'blue' : 'default'">
+                                {{ getDistributionLabel(d.status) }}
+                              </nz-tag>
+                            </td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="5"><nz-empty nzNotFoundContent="Belum ada distribusi"></nz-empty></td></tr>
+                        }
+                      </tbody>
+                    </nz-table>
+                  }
+                </nz-tab>
+              </nz-tabset>
+            </div>
+          </div>
+
+          <!-- Collapsible Side Panel -->
+          <div class="doc-side" [class.doc-side--collapsed]="sidebarCollapsed()">
+            <button class="doc-side__toggle" (click)="toggleSidebar()" nz-tooltip [nzTooltipTitle]="sidebarCollapsed() ? 'Tampilkan panel' : 'Sembunyikan panel'">
+              <span nz-icon [nzType]="sidebarCollapsed() ? 'menu-unfold' : 'menu-fold'" nzTheme="outline"></span>
+            </button>
+
+            @if (!sidebarCollapsed()) {
+              <!-- Quick Summary -->
+              <div class="doc-side__section">
+                <div class="doc-side__heading">Ringkasan</div>
+                <div class="doc-side__summary">
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Status</span>
+                    <span class="doc-status-tag doc-status-tag--sm" [attr.data-status]="document()!.status">
+                      <span class="doc-status-tag__dot"></span>
+                      {{ getStatusLabel(document()!.status) }}
+                    </span>
+                  </div>
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Versi</span>
+                    <span class="doc-side__val doc-side__val--mono">v{{ document()!.major_version }}.{{ document()!.minor_version }}</span>
+                  </div>
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Prioritas</span>
+                    <span class="doc-meta-tag doc-meta-tag--sm" [attr.data-priority]="document()!.priority">{{ getPriorityLabel(document()!.priority) }}</span>
+                  </div>
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Pembuat</span>
+                    <span class="doc-side__val">{{ document()!.creator?.name || '-' }}</span>
+                  </div>
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Diperbarui</span>
+                    <span class="doc-side__val">{{ document()!.updated_at | date:'dd/MM/yy HH:mm' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Workflow Mini Steps -->
+              <div class="doc-side__section">
+                <div class="doc-side__heading">Workflow</div>
+                @if (workflow()) {
+                  <div class="doc-sidebar-steps">
+                    @for (step of workflow()!.steps; track step.id; let last = $last) {
+                      <div class="doc-sidebar-step" [attr.data-status]="step.status">
+                        <div class="doc-sidebar-step__dot"></div>
+                        @if (!last) {
+                          <div class="doc-sidebar-step__connector"></div>
+                        }
+                        <div class="doc-sidebar-step__info">
+                          <span class="doc-sidebar-step__name">{{ step.name }}</span>
+                          <span class="doc-sidebar-step__meta">{{ step.actor?.name || '-' }}</span>
+                          @if (step.completed_at) {
+                            <span class="doc-sidebar-step__time">{{ step.completed_at | date:'dd/MM/yy HH:mm' }}</span>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="text-gray-400 text-xs text-center py-3">Workflow belum dimulai</div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="text-center py-12 text-gray-500">
+          Dokumen tidak ditemukan
+        </div>
+      }
+    </div>
+  `,

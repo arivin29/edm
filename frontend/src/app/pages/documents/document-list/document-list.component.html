@@ -1,0 +1,191 @@
+<div class="p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h1 class="text-lg font-semibold m-0">Dokumen</h1>
+      <p class="text-gray-500 text-xs m-0">Kelola semua dokumen perusahaan</p>
+    </div>
+    <button nz-button nzType="primary" nzSize="small" routerLink="/documents/create">
+      <span nz-icon nzType="plus"></span>
+      Buat Dokumen
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-5 gap-3 mb-4">
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-blue-500">
+      <div class="text-xs text-gray-500">Total Dokumen</div>
+      <div class="text-xl font-bold text-gray-800">{{ total() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-gray-400">
+      <div class="text-xs text-gray-500">Draft</div>
+      <div class="text-xl font-bold text-gray-500">{{ statDraft() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-blue-400">
+      <div class="text-xs text-gray-500">Dalam Review</div>
+      <div class="text-xl font-bold text-blue-500">{{ statReview() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-green-500">
+      <div class="text-xs text-gray-500">Disetujui</div>
+      <div class="text-xl font-bold text-green-600">{{ statApproved() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-emerald-600">
+      <div class="text-xs text-gray-500">Final</div>
+      <div class="text-xl font-bold text-emerald-600">{{ statFinal() }}</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <nz-card nzSize="small" class="mb-3">
+    <div class="flex items-center gap-3 flex-wrap">
+      <nz-input-group nzSize="small" [nzPrefix]="prefixIcon" class="w-56">
+        <input nz-input nzSize="small" placeholder="Cari nomor / judul dokumen..." [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
+      </nz-input-group>
+      <ng-template #prefixIcon><span nz-icon nzType="search"></span></ng-template>
+
+      <nz-select nzSize="small" [(ngModel)]="filterStatus" (ngModelChange)="onFilter()"
+                 nzPlaceHolder="Semua Status" nzAllowClear class="w-40">
+        <nz-option nzValue="draft" nzLabel="Draft"></nz-option>
+        <nz-option nzValue="in_review" nzLabel="Dalam Review"></nz-option>
+        <nz-option nzValue="revision" nzLabel="Revisi"></nz-option>
+        <nz-option nzValue="approved" nzLabel="Disetujui"></nz-option>
+        <nz-option nzValue="final" nzLabel="Final"></nz-option>
+        <nz-option nzValue="obsolete" nzLabel="Usang"></nz-option>
+        <nz-option nzValue="archived" nzLabel="Diarsipkan"></nz-option>
+      </nz-select>
+
+      <nz-select nzSize="small" [(ngModel)]="filterType" (ngModelChange)="onFilter()"
+                 nzPlaceHolder="Semua Tipe" nzAllowClear class="w-40">
+        @for (type of documentTypes(); track type.id) {
+          <nz-option [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+        }
+      </nz-select>
+
+      <nz-select nzSize="small" [(ngModel)]="filterCategory" (ngModelChange)="onFilter()"
+                 nzPlaceHolder="Semua Kategori" nzAllowClear class="w-40">
+        @for (cat of categories(); track cat.id) {
+          <nz-option [nzValue]="cat.id" [nzLabel]="cat.name"></nz-option>
+        }
+      </nz-select>
+
+      <nz-select nzSize="small" [(ngModel)]="filterPriority" (ngModelChange)="onFilter()"
+                 nzPlaceHolder="Prioritas" nzAllowClear class="w-36">
+        <nz-option nzValue="normal" nzLabel="Normal"></nz-option>
+        <nz-option nzValue="high" nzLabel="Tinggi"></nz-option>
+        <nz-option nzValue="urgent" nzLabel="Mendesak"></nz-option>
+      </nz-select>
+    </div>
+  </nz-card>
+
+  <!-- Table -->
+  <nz-card nzSize="small">
+    <nz-table #docTable [nzData]="documents()" [nzLoading]="loading()"
+              nzSize="small"
+              [nzFrontPagination]="false"
+              [nzTotal]="total()"
+              [nzPageIndex]="pageIndex()"
+              [nzPageSize]="pageSize()"
+              [nzShowSizeChanger]="true"
+              [nzPageSizeOptions]="[15, 30, 50, 100]"
+              [nzShowQuickJumper]="true"
+              [nzShowTotal]="totalTemplate"
+              (nzPageIndexChange)="onPageIndexChange($event)"
+              (nzPageSizeChange)="onPageSizeChange($event)">
+    <ng-template #totalTemplate let-total let-range="range">
+      <span class="pagination-total">
+        Menampilkan <strong>{{ range[0] }}-{{ range[1] }}</strong> dari <strong>{{ total }}</strong> dokumen
+      </span>
+    </ng-template>
+      <thead>
+        <tr>
+          <th nzWidth="140px">No. Dokumen</th>
+          <th>Judul</th>
+          <th nzWidth="110px">Tipe</th>
+          <th nzWidth="80px" nzAlign="center">Versi</th>
+          <th nzWidth="90px" nzAlign="center">Status</th>
+          <th nzWidth="80px" nzAlign="center">Prioritas</th>
+          <th nzWidth="100px">Pembuat</th>
+          <th nzWidth="90px">Tanggal</th>
+          <th nzWidth="70px" nzAlign="center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (doc of docTable.data; track doc.id) {
+          <tr>
+            <td>
+              <a [routerLink]="['/documents', doc.id]" class="text-blue-600 font-mono text-[11px] hover:underline">
+                {{ doc.document_number || '-' }}
+              </a>
+            </td>
+            <td>
+              <div class="flex items-center gap-2">
+                <span nz-icon nzType="file-text" class="text-blue-400 text-sm"></span>
+                <div class="min-w-0">
+                  <div class="font-medium text-xs truncate" [nz-tooltip]="doc.title">{{ doc.title }}</div>
+                  @if (doc.department) {
+                    <div class="text-[10px] text-gray-400 truncate">{{ doc.department.name }}</div>
+                  }
+                </div>
+              </div>
+            </td>
+            <td>
+              @if (doc.document_type) {
+                <nz-tag nzColor="blue">{{ doc.document_type.code || doc.document_type.name }}</nz-tag>
+              } @else {
+                <span class="text-gray-300">-</span>
+              }
+            </td>
+            <td nzAlign="center">
+              <nz-tag nzColor="geekblue">v{{ doc.current_version || 1 }}</nz-tag>
+            </td>
+            <td nzAlign="center">
+              <nz-tag [nzColor]="getStatusColor(doc.status)">{{ getStatusLabel(doc.status) }}</nz-tag>
+            </td>
+            <td nzAlign="center">
+              <nz-tag [nzColor]="getPriorityColor(doc.priority)">{{ getPriorityLabel(doc.priority) }}</nz-tag>
+            </td>
+            <td>
+              @if (doc.creator) {
+                <div class="flex items-center gap-1.5">
+                  <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                    {{ doc.creator.name.charAt(0).toUpperCase() }}
+                  </span>
+                  <span class="text-xs truncate max-w-[70px]" [nz-tooltip]="doc.creator.name">{{ doc.creator.name }}</span>
+                </div>
+              } @else {
+                <span class="text-gray-300">-</span>
+              }
+            </td>
+            <td class="text-xs text-gray-500">{{ formatDate(doc.created_at) }}</td>
+            <td nzAlign="center">
+              <a nz-dropdown [nzDropdownMenu]="actionMenu" nzTrigger="click">
+                <span nz-icon nzType="more" class="cursor-pointer text-gray-500 hover:text-blue-500"></span>
+              </a>
+              <nz-dropdown-menu #actionMenu="nzDropdownMenu">
+                <ul nz-menu nzSelectable>
+                  <li nz-menu-item [routerLink]="['/documents', doc.id]">
+                    <span nz-icon nzType="eye" class="mr-1"></span> Lihat Detail
+                  </li>
+                  <li nz-menu-item [routerLink]="['/documents', doc.id, 'edit']">
+                    <span nz-icon nzType="edit" class="mr-1"></span> Edit
+                  </li>
+                  <li nz-menu-divider></li>
+                  <li nz-menu-item nzDanger (click)="deleteDocument(doc)">
+                    <span nz-icon nzType="delete" class="mr-1"></span> Hapus
+                  </li>
+                </ul>
+              </nz-dropdown-menu>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="9" class="text-center text-gray-400 py-8">
+              <span nz-icon nzType="inbox" class="text-3xl text-gray-300 mb-2 block"></span>
+              Tidak ada dokumen ditemukan
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </nz-card>
+</div>

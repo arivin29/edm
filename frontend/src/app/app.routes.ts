@@ -41,25 +41,25 @@ export const routes: Routes = [
           {
             path: '',
             loadComponent: () =>
-              import('./pages/documents/document-list.page').then(m => m.DocumentListPage),
+              import('./pages/documents/document-list/document-list.component').then(m => m.DocumentListPage),
             title: 'Dokumen - DMS'
           },
           {
             path: 'create',
             loadComponent: () =>
-              import('./pages/documents/document-form.page').then(m => m.DocumentFormPage),
+              import('./pages/documents/document-form/document-form.component').then(m => m.DocumentFormPage),
             title: 'Buat Dokumen - DMS'
           },
           {
             path: ':id',
             loadComponent: () =>
-              import('./pages/documents/document-detail.page').then(m => m.DocumentDetailPage),
+              import('./pages/documents/document-detail/document-detail.component').then(m => m.DocumentDetailPage),
             title: 'Detail Dokumen - DMS'
           },
           {
             path: ':id/edit',
             loadComponent: () =>
-              import('./pages/documents/document-form.page').then(m => m.DocumentFormPage),
+              import('./pages/documents/document-form/document-form.component').then(m => m.DocumentFormPage),
             title: 'Edit Dokumen - DMS'
           }
         ]
@@ -78,7 +78,7 @@ export const routes: Routes = [
           {
             path: '',
             loadComponent: () =>
-              import('./pages/organization/organization.page').then(m => m.OrganizationPage),
+              import('./pages/organization/organization-list/organization-list.component').then(m => m.OrganizationListComponent),
             title: 'Organisasi - DMS'
           }
         ]
