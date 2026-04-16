@@ -2,7 +2,6 @@
   <!-- Toolbar -->
   <div class="fm-toolbar">
     <div class="fm-toolbar__left">
-      <!-- Breadcrumbs -->
       <div class="fm-breadcrumbs">
         <button class="fm-breadcrumb" (click)="navigateToRoot()" [class.fm-breadcrumb--active]="!currentFolder()">
           <span nz-icon nzType="home" nzTheme="outline"></span>
@@ -20,20 +19,17 @@
       </div>
     </div>
     <div class="fm-toolbar__right">
-      <!-- Search -->
       <nz-input-group nzSize="small" [nzPrefix]="searchIcon" class="fm-search">
-        <input nz-input placeholder="Cari file..." [(ngModel)]="searchQuery" (ngModelChange)="searchQuery.set($event)" nzSize="small" />
+        <input nz-input placeholder="Cari file..." [(ngModel)]="searchText" (ngModelChange)="onSearchChange($event)" nzSize="small" />
       </nz-input-group>
       <ng-template #searchIcon><span nz-icon nzType="search"></span></ng-template>
 
       @if (!config.readonly) {
-        <!-- Create Folder -->
         @if (config.showCreateFolder) {
           <button nz-button nzSize="small" nz-tooltip nzTooltipTitle="Buat Folder" (click)="showNewFolderInput.set(true)">
             <span nz-icon nzType="folder-add" nzTheme="outline"></span>
           </button>
         }
-        <!-- Upload -->
         @if (config.showUpload) {
           <button nz-button nzSize="small" nzType="primary" nz-tooltip nzTooltipTitle="Upload File">
             <span nz-icon nzType="upload"></span>
@@ -42,7 +38,6 @@
         }
       }
 
-      <!-- View Toggle -->
       <button nz-button nzSize="small" nz-tooltip [nzTooltipTitle]="viewMode() === 'list' ? 'Grid View' : 'List View'" (click)="toggleViewMode()">
         <span nz-icon [nzType]="viewMode() === 'list' ? 'appstore' : 'unordered-list'" nzTheme="outline"></span>
       </button>
@@ -119,7 +114,6 @@
     <!-- Center: File List -->
     <div class="fm-files">
       @if (viewMode() === 'list') {
-        <!-- List View -->
         <div class="fm-list">
           <!-- Header -->
           <div class="fm-list-header">
@@ -135,9 +129,7 @@
                 <span nz-icon [nzType]="sortOrder() === 'asc' ? 'caret-up' : 'caret-down'" class="fm-sort-icon"></span>
               }
             </div>
-            <div class="fm-list-col fm-list-col--type" (click)="toggleSort('type')">
-              Tipe
-            </div>
+            <div class="fm-list-col fm-list-col--type" (click)="toggleSort('type')">Tipe</div>
             <div class="fm-list-col fm-list-col--version">Versi</div>
             <div class="fm-list-col fm-list-col--modified" (click)="toggleSort('modifiedAt')">
               Diubah
@@ -146,7 +138,7 @@
               }
             </div>
             <div class="fm-list-col fm-list-col--user">Oleh</div>
-            <div class="fm-list-col fm-list-col--actions"></div>
+            <div class="fm-list-col fm-list-col--actions">Aksi</div>
           </div>
 
           <!-- Rows -->
@@ -178,9 +170,9 @@
               </div>
               <div class="fm-list-col fm-list-col--modified">{{ formatDate(node.modifiedAt) }}</div>
               <div class="fm-list-col fm-list-col--user">{{ node.uploadedBy || '-' }}</div>
-              <div class="fm-list-col fm-list-col--actions">
+              <div class="fm-list-col fm-list-col--actions fm-list-col--actions-visible">
                 @if (node.type === 'file') {
-                  <button class="fm-action-btn" nz-tooltip nzTooltipTitle="Preview" (click)="onPreview(node); $event.stopPropagation()">
+                  <button class="fm-action-btn" nz-tooltip nzTooltipTitle="Preview" (click)="openPreview(node); $event.stopPropagation()">
                     <span nz-icon nzType="eye" nzTheme="outline"></span>
                   </button>
                   <button class="fm-action-btn" nz-tooltip nzTooltipTitle="Download" (click)="onDownload(node); $event.stopPropagation()">
@@ -191,6 +183,10 @@
                       <span nz-icon nzType="delete" nzTheme="outline"></span>
                     </button>
                   }
+                } @else {
+                  <button class="fm-action-btn" nz-tooltip nzTooltipTitle="Buka" (click)="openNode(node); $event.stopPropagation()">
+                    <span nz-icon nzType="folder-open" nzTheme="outline"></span>
+                  </button>
                 }
               </div>
             </div>
@@ -242,7 +238,6 @@
         </div>
 
         <div class="fm-detail__body">
-          <!-- Icon & Name -->
           <div class="fm-detail__preview">
             <span nz-icon [nzType]="getFileIcon(selectedNode()!)" nzTheme="outline"
                   [style.color]="getFileIconColor(selectedNode()!)" class="fm-detail__icon"></span>
@@ -253,7 +248,6 @@
             <div class="fm-detail__desc">{{ selectedNode()!.description }}</div>
           }
 
-          <!-- Metadata -->
           <div class="fm-detail__meta-list">
             <div class="fm-detail__meta-item">
               <span class="fm-detail__meta-label">Tipe</span>
@@ -298,7 +292,6 @@
             }
           </div>
 
-          <!-- Tags -->
           @if (selectedNode()!.tags && selectedNode()!.tags!.length > 0) {
             <div class="fm-detail__tags">
               <span class="fm-detail__meta-label">Tag</span>
@@ -310,10 +303,9 @@
             </div>
           }
 
-          <!-- Actions -->
           @if (selectedNode()!.type === 'file') {
             <div class="fm-detail__actions">
-              <button nz-button nzSize="small" nzBlock (click)="onPreview(selectedNode()!)">
+              <button nz-button nzSize="small" nzBlock nzType="primary" (click)="openPreview(selectedNode()!)">
                 <span nz-icon nzType="eye"></span> Preview
               </button>
               <button nz-button nzSize="small" nzBlock (click)="onDownload(selectedNode()!)">
@@ -331,3 +323,150 @@
     }
   </div>
 </div>
+
+<!-- Preview Drawer -->
+<nz-drawer
+  [nzVisible]="showPreviewDrawer()"
+  [nzWidth]="560"
+  nzPlacement="right"
+  [nzTitle]="previewTitle"
+  (nzOnClose)="closePreview()"
+  [nzClosable]="true"
+>
+  <ng-template #previewTitle>
+    <div class="fm-preview-title">
+      @if (previewNode()) {
+        <span nz-icon [nzType]="getFileIcon(previewNode()!)" nzTheme="outline"
+              [style.color]="getFileIconColor(previewNode()!)" style="font-size: 16px;"></span>
+        <span>{{ previewNode()!.name }}</span>
+      }
+    </div>
+  </ng-template>
+
+  <div *nzDrawerContent>
+    @if (previewNode()) {
+      <!-- Preview Area -->
+      <div class="fm-preview">
+        @switch (getPreviewType(previewNode()!)) {
+          @case ('image') {
+            <div class="fm-preview__image">
+              <div class="fm-preview__placeholder">
+                <span nz-icon nzType="file-image" nzTheme="outline" class="fm-preview__placeholder-icon"></span>
+                <p>Preview gambar</p>
+                <p class="fm-preview__placeholder-hint">{{ previewNode()!.name }}</p>
+              </div>
+            </div>
+          }
+          @case ('pdf') {
+            <div class="fm-preview__pdf">
+              <div class="fm-preview__placeholder">
+                <span nz-icon nzType="file-pdf" nzTheme="outline" class="fm-preview__placeholder-icon" style="color: #ff4d4f;"></span>
+                <p>Preview PDF</p>
+                <p class="fm-preview__placeholder-hint">{{ previewNode()!.name }}</p>
+              </div>
+            </div>
+          }
+          @case ('text') {
+            <div class="fm-preview__text">
+              <div class="fm-preview__placeholder">
+                <span nz-icon nzType="file-text" nzTheme="outline" class="fm-preview__placeholder-icon" style="color: #52c41a;"></span>
+                <p>Preview teks/CSV</p>
+                <p class="fm-preview__placeholder-hint">{{ previewNode()!.name }}</p>
+              </div>
+            </div>
+          }
+          @default {
+            <div class="fm-preview__none">
+              <div class="fm-preview__placeholder">
+                <span nz-icon [nzType]="getFileIcon(previewNode()!)" nzTheme="outline"
+                      class="fm-preview__placeholder-icon" [style.color]="getFileIconColor(previewNode()!)"></span>
+                <p>Preview tidak tersedia untuk tipe file ini</p>
+                <p class="fm-preview__placeholder-hint">Silakan download untuk melihat isi file</p>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- File Info -->
+      <div class="fm-preview-info">
+        <h4 class="fm-preview-info__title">Informasi File</h4>
+        <div class="fm-preview-info__grid">
+          <div class="fm-preview-info__item">
+            <span class="fm-preview-info__label">Nama File</span>
+            <span class="fm-preview-info__value">{{ previewNode()!.name }}</span>
+          </div>
+          <div class="fm-preview-info__item">
+            <span class="fm-preview-info__label">Tipe</span>
+            <span class="fm-preview-info__value">{{ getFileTypeLabel(previewNode()!) }}</span>
+          </div>
+          <div class="fm-preview-info__item">
+            <span class="fm-preview-info__label">Ukuran</span>
+            <span class="fm-preview-info__value">{{ formatFileSize(previewNode()!.size) }}</span>
+          </div>
+          @if (previewNode()!.version) {
+            <div class="fm-preview-info__item">
+              <span class="fm-preview-info__label">Versi</span>
+              <span class="fm-preview-info__value">
+                <span class="fm-version-badge">{{ previewNode()!.version }}</span>
+                @if (previewNode()!.isCurrent) {
+                  <nz-tag nzColor="blue" class="fm-tag-sm ml-1">Aktif</nz-tag>
+                }
+              </span>
+            </div>
+          }
+          @if (previewNode()!.uploadedBy) {
+            <div class="fm-preview-info__item">
+              <span class="fm-preview-info__label">Diupload oleh</span>
+              <span class="fm-preview-info__value">{{ previewNode()!.uploadedBy }}</span>
+            </div>
+          }
+          <div class="fm-preview-info__item">
+            <span class="fm-preview-info__label">Dibuat</span>
+            <span class="fm-preview-info__value">{{ formatDate(previewNode()!.createdAt) }}</span>
+          </div>
+          <div class="fm-preview-info__item">
+            <span class="fm-preview-info__label">Diubah</span>
+            <span class="fm-preview-info__value">{{ formatDate(previewNode()!.modifiedAt) }}</span>
+          </div>
+          @if (previewNode()!.mimeType) {
+            <div class="fm-preview-info__item">
+              <span class="fm-preview-info__label">MIME Type</span>
+              <span class="fm-preview-info__value fm-detail__meta-value--mono">{{ previewNode()!.mimeType }}</span>
+            </div>
+          }
+        </div>
+
+        @if (previewNode()!.description) {
+          <div class="fm-preview-info__desc">
+            <span class="fm-preview-info__label">Deskripsi</span>
+            <p>{{ previewNode()!.description }}</p>
+          </div>
+        }
+
+        @if (previewNode()!.tags && previewNode()!.tags!.length > 0) {
+          <div class="fm-preview-info__tags">
+            <span class="fm-preview-info__label">Tag</span>
+            <div class="fm-preview-info__tags-list">
+              @for (tag of previewNode()!.tags!; track tag) {
+                <nz-tag>{{ tag }}</nz-tag>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Actions -->
+      <div class="fm-preview-actions">
+        <button nz-button nzSize="small" (click)="onDownload(previewNode()!)">
+          <span nz-icon nzType="download"></span> Download
+        </button>
+        @if (!config.readonly) {
+          <button nz-button nzSize="small" nzDanger (click)="onDelete(previewNode()!); closePreview()">
+            <span nz-icon nzType="delete"></span> Hapus
+          </button>
+        }
+      </div>
+    }
+  </div>
+</nz-drawer>

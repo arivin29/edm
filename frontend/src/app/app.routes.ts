@@ -102,7 +102,7 @@ export const routes: Routes = [
           {
             path: 'templates',
             loadComponent: () =>
-              import('./pages/templates/template-list.page').then(m => m.TemplateListPage),
+              import('./pages/templates/template-list/template-list.component').then(m => m.TemplateListComponent),
             title: 'Template - DMS'
           },
           {

@@ -1,0 +1,248 @@
+<!-- Drawer: Tag Management -->
+<nz-drawer [nzVisible]="visible"
+           [nzTitle]="'Parameter Template: ' + (template?.name || '')"
+           nzPlacement="right" [nzWidth]="700" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <div class="flex justify-between items-center mb-3">
+      <span class="text-xs text-gray-500">Daftar parameter/tag untuk template ini</span>
+      <button nz-button nzType="primary" nzSize="small" (click)="openTagForm()">
+        <span nz-icon nzType="plus"></span> Tambah Parameter
+      </button>
+    </div>
+
+    <nz-table #tagTable [nzData]="tags()" [nzLoading]="tagsLoading()"
+              nzSize="small" [nzPageSize]="20" [nzShowPagination]="tags().length > 20">
+      <thead>
+        <tr>
+          <th nzWidth="140px">Tag Key</th>
+          <th nzWidth="140px">Label</th>
+          <th nzWidth="90px">Tipe Data</th>
+          <th nzWidth="70px">Wajib</th>
+          <th nzWidth="60px">Urutan</th>
+          <th nzWidth="80px">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (tag of tagTable.data; track tag.id) {
+          <tr>
+            <td><code class="text-xs">{{ tag.tag_key }}</code></td>
+            <td>{{ tag.label }}</td>
+            <td><nz-tag>{{ tag.data_type }}</nz-tag></td>
+            <td>
+              <nz-tag [nzColor]="tag.is_required ? 'red' : 'default'">
+                {{ tag.is_required ? 'Ya' : 'Tidak' }}
+              </nz-tag>
+            </td>
+            <td>{{ tag.field_order }}</td>
+            <td>
+              <button nz-button nzType="link" nzSize="small" (click)="openTagForm(tag)"
+                      nz-tooltip nzTooltipTitle="Edit">
+                <span nz-icon nzType="edit"></span>
+              </button>
+              <button nz-button nzType="link" nzSize="small" nzDanger (click)="deleteTag(tag)"
+                      nz-tooltip nzTooltipTitle="Hapus">
+                <span nz-icon nzType="delete"></span>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="text-center text-gray-500 py-6">
+              Belum ada parameter. Klik "Tambah Parameter" untuk menambahkan.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </ng-container>
+</nz-drawer>
+
+<!-- Drawer: Tag Form -->
+<nz-drawer [nzVisible]="tagFormVisible"
+           [nzTitle]="editTagId ? 'Edit Parameter' : 'Tambah Parameter'"
+           nzPlacement="right" [nzWidth]="500" (nzOnClose)="closeTagForm()">
+  <ng-container *nzDrawerContent>
+    <form nz-form nzLayout="vertical">
+      <!-- Informasi Dasar -->
+      <nz-divider nzText="Informasi Dasar" nzOrientation="left" class="!mt-0 !text-xs"></nz-divider>
+      <nz-form-item>
+        <nz-form-label nzRequired>Tag Key</nz-form-label>
+        <nz-form-control>
+          <input nz-input nzSize="small" [(ngModel)]="tagFormData.tag_key" name="tag_key"
+                 placeholder="contoh: document_number" (ngModelChange)="onTagKeyChange()" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Placeholder</nz-form-label>
+        <nz-form-control>
+          <input nz-input nzSize="small" [(ngModel)]="tagFormData.tag_placeholder" name="tag_placeholder"
+                 placeholder="Auto-generated" [disabled]="true" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label nzRequired>Label</nz-form-label>
+        <nz-form-control>
+          <input nz-input nzSize="small" [(ngModel)]="tagFormData.label" name="label"
+                 placeholder="contoh: Nomor Dokumen" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Deskripsi</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input [(ngModel)]="tagFormData.description" name="tag_description"
+                    placeholder="Deskripsi parameter (opsional)" [nzAutosize]="{ minRows: 2, maxRows: 3 }"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Tipe & Sumber -->
+      <nz-divider nzText="Tipe & Sumber" nzOrientation="left" class="!text-xs"></nz-divider>
+      <nz-form-item>
+        <nz-form-label nzRequired>Tipe Data</nz-form-label>
+        <nz-form-control>
+          <nz-select nzSize="small" [(ngModel)]="tagFormData.data_type" name="data_type"
+                     nzPlaceHolder="Pilih tipe data">
+            @for (dt of dataTypeOptions; track dt) {
+              <nz-option [nzValue]="dt" [nzLabel]="dt"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label nzRequired>Tipe Sumber</nz-form-label>
+        <nz-form-control>
+          <nz-select nzSize="small" [(ngModel)]="tagFormData.source_type" name="source_type"
+                     nzPlaceHolder="Pilih tipe sumber">
+            @for (st of sourceTypeOptions; track st) {
+              <nz-option [nzValue]="st" [nzLabel]="st"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      @if (tagFormData.source_type === 'api' || tagFormData.source_type === 'computed') {
+        <nz-form-item>
+          <nz-form-label>Konfigurasi Sumber (JSON)</nz-form-label>
+          <nz-form-control>
+            <textarea nz-input [(ngModel)]="sourceConfigStr" name="source_config"
+                      placeholder='{"url": "/api/...", "labelField": "name", "valueField": "id"}'
+                      [nzAutosize]="{ minRows: 3, maxRows: 6 }"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+      }
+
+      <!-- Validasi -->
+      <nz-divider nzText="Validasi" nzOrientation="left" class="!text-xs"></nz-divider>
+      <div class="flex gap-4 mb-3">
+        <label nz-checkbox [(ngModel)]="tagFormData.is_required" name="is_required">Wajib</label>
+        <label nz-checkbox [(ngModel)]="tagFormData.is_readonly" name="is_readonly">Readonly</label>
+        <label nz-checkbox [(ngModel)]="tagFormData.is_hidden" name="is_hidden">Tersembunyi</label>
+      </div>
+      <div class="flex gap-2">
+        <nz-form-item class="flex-1">
+          <nz-form-label>Min Panjang</nz-form-label>
+          <nz-form-control>
+            <nz-input-number nzSize="small" [(ngModel)]="tagFormData.min_length" name="min_length"
+                             [nzMin]="0" class="w-full"></nz-input-number>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item class="flex-1">
+          <nz-form-label>Max Panjang</nz-form-label>
+          <nz-form-control>
+            <nz-input-number nzSize="small" [(ngModel)]="tagFormData.max_length" name="max_length"
+                             [nzMin]="0" class="w-full"></nz-input-number>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div class="flex gap-2">
+        <nz-form-item class="flex-1">
+          <nz-form-label>Min Nilai</nz-form-label>
+          <nz-form-control>
+            <nz-input-number nzSize="small" [(ngModel)]="tagFormData.min_value" name="min_value"
+                             class="w-full"></nz-input-number>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item class="flex-1">
+          <nz-form-label>Max Nilai</nz-form-label>
+          <nz-form-control>
+            <nz-input-number nzSize="small" [(ngModel)]="tagFormData.max_value" name="max_value"
+                             class="w-full"></nz-input-number>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <nz-form-item>
+        <nz-form-label>Regex Validasi</nz-form-label>
+        <nz-form-control>
+          <input nz-input nzSize="small" [(ngModel)]="tagFormData.validation_regex" name="validation_regex"
+                 placeholder="contoh: ^[A-Z0-9]+$" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Pesan Validasi</nz-form-label>
+        <nz-form-control>
+          <input nz-input nzSize="small" [(ngModel)]="tagFormData.validation_message" name="validation_message"
+                 placeholder="Pesan error jika validasi gagal" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Tampilan -->
+      <nz-divider nzText="Tampilan" nzOrientation="left" class="!text-xs"></nz-divider>
+      <nz-form-item>
+        <nz-form-label>Nilai Default</nz-form-label>
+        <nz-form-control>
+          <input nz-input nzSize="small" [(ngModel)]="tagFormData.default_value" name="default_value"
+                 placeholder="Nilai default (opsional)" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Placeholder Teks</nz-form-label>
+        <nz-form-control>
+          <input nz-input nzSize="small" [(ngModel)]="tagFormData.placeholder_text" name="placeholder_text"
+                 placeholder="Placeholder input (opsional)" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Format Pattern</nz-form-label>
+        <nz-form-control>
+          <input nz-input nzSize="small" [(ngModel)]="tagFormData.format_pattern" name="format_pattern"
+                 placeholder="contoh: DD/MM/YYYY" />
+        </nz-form-control>
+      </nz-form-item>
+      <div class="flex gap-2">
+        <nz-form-item class="flex-1">
+          <nz-form-label>Nama Grup</nz-form-label>
+          <nz-form-control>
+            <input nz-input nzSize="small" [(ngModel)]="tagFormData.group_name" name="group_name"
+                   placeholder="Nama grup" />
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item class="w-24">
+          <nz-form-label>Urutan Grup</nz-form-label>
+          <nz-form-control>
+            <nz-input-number nzSize="small" [(ngModel)]="tagFormData.group_order" name="group_order"
+                             [nzMin]="0" class="w-full"></nz-input-number>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div class="flex gap-2">
+        <nz-form-item class="w-28">
+          <nz-form-label>Urutan Field</nz-form-label>
+          <nz-form-control>
+            <nz-input-number nzSize="small" [(ngModel)]="tagFormData.field_order" name="field_order"
+                             [nzMin]="0" class="w-full"></nz-input-number>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item class="flex-1">
+          <nz-form-label>Lebar Kolom (1-24): {{ tagFormData.col_span }}</nz-form-label>
+          <nz-form-control>
+            <nz-slider [(ngModel)]="tagFormData.col_span" name="col_span"
+                        [nzMin]="1" [nzMax]="24" [nzStep]="1"></nz-slider>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+
+      <div class="mt-4">
+        <button nz-button nzType="primary" nzSize="small" nzBlock
+                [nzLoading]="tagSaving()" (click)="saveTag()">Simpan Parameter</button>
+      </div>
+    </form>
+  </ng-container>
+</nz-drawer>

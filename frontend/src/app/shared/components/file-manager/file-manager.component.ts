@@ -22,6 +22,7 @@ import { NzBadgeModule } from 'ng-zorro-antd/badge';
 import { NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import {
   FileNode,
   FileManagerConfig,
@@ -49,6 +50,7 @@ export type { FileNode, FileManagerConfig } from './file-manager.types';
     NzBadgeModule,
     NzUploadModule,
     NzModalModule,
+    NzDrawerModule,
   ],
   templateUrl: './file-manager.component.html',
   styleUrl: './file-manager.component.scss'
@@ -66,6 +68,7 @@ export class FileManagerComponent implements OnInit, OnChanges {
 
   viewMode = signal<ViewMode>('list');
   searchQuery = signal('');
+  searchText = '';
   sortField = signal<SortField>('name');
   sortOrder = signal<SortOrder>('asc');
 
@@ -76,6 +79,8 @@ export class FileManagerComponent implements OnInit, OnChanges {
   showNewFolderInput = signal(false);
   newFolderName = '';
   showDetailPanel = signal(false);
+  showPreviewDrawer = signal(false);
+  previewNode = signal<FileNode | null>(null);
 
   currentFiles = computed(() => {
     const folder = this.currentFolder();
@@ -131,6 +136,7 @@ export class FileManagerComponent implements OnInit, OnChanges {
     this.currentFolder.set(folder);
     this.selectedNode.set(null);
     this.searchQuery.set('');
+    this.searchText = '';
     this.buildBreadcrumbs(folder);
   }
 
@@ -173,7 +179,7 @@ export class FileManagerComponent implements OnInit, OnChanges {
     if (node.type === 'folder') {
       this.selectTreeFolder(node);
     } else {
-      this.filePreview.emit(node);
+      this.openPreview(node);
     }
   }
 
@@ -184,6 +190,35 @@ export class FileManagerComponent implements OnInit, OnChanges {
   closeDetailPanel() {
     this.showDetailPanel.set(false);
     this.selectedNode.set(null);
+  }
+
+  // --- Search ---
+  onSearchChange(value: string) {
+    this.searchQuery.set(value);
+  }
+
+  // --- Preview Drawer ---
+  openPreview(node: FileNode) {
+    this.previewNode.set(node);
+    this.showPreviewDrawer.set(true);
+  }
+
+  closePreview() {
+    this.showPreviewDrawer.set(false);
+    this.previewNode.set(null);
+  }
+
+  isPreviewable(node: FileNode): boolean {
+    const mime = node.mimeType || '';
+    return mime.includes('image') || mime.includes('pdf') || mime.includes('text') || mime.includes('csv');
+  }
+
+  getPreviewType(node: FileNode): string {
+    const mime = node.mimeType || '';
+    if (mime.includes('image')) return 'image';
+    if (mime.includes('pdf')) return 'pdf';
+    if (mime.includes('text') || mime.includes('csv')) return 'text';
+    return 'none';
   }
 
   // --- Actions ---

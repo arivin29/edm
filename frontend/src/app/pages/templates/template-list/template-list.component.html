@@ -1,0 +1,155 @@
+<div class="p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h1 class="text-lg font-semibold m-0">Template Dokumen</h1>
+      <p class="text-gray-500 text-xs m-0">Kelola template DOCX</p>
+    </div>
+    <button nz-button nzType="primary" nzSize="small" (click)="openForm()">
+      <span nz-icon nzType="plus"></span>
+      Tambah Template
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-4 gap-3 mb-4">
+    <div class="bg-white rounded-lg border p-3">
+      <div class="text-xs text-gray-500">Total Template</div>
+      <div class="text-xl font-bold text-gray-800">{{ statsTotal() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-2 border-l-green-500">
+      <div class="text-xs text-gray-500">Aktif</div>
+      <div class="text-xl font-bold text-green-600">{{ statsActive() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-2 border-l-orange-500">
+      <div class="text-xs text-gray-500">Draft</div>
+      <div class="text-xl font-bold text-orange-600">{{ statsDraft() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-2 border-l-gray-400">
+      <div class="text-xs text-gray-500">Arsip</div>
+      <div class="text-xl font-bold text-gray-500">{{ statsArchived() }}</div>
+    </div>
+  </div>
+
+  <!-- Search & Filter -->
+  <nz-card nzSize="small" class="mb-3">
+    <div class="flex items-center gap-3">
+      <nz-input-group nzSize="small" [nzPrefix]="prefixIcon" class="w-64">
+        <input nz-input nzSize="small" placeholder="Cari template..." [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
+      </nz-input-group>
+      <nz-select nzSize="small" [(ngModel)]="filterDocTypeId" nzPlaceHolder="Semua Tipe Dokumen"
+                 nzAllowClear class="w-48" (ngModelChange)="onSearch()">
+        @for (type of documentTypes(); track type.id) {
+          <nz-option [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+        }
+      </nz-select>
+    </div>
+    <ng-template #prefixIcon><span nz-icon nzType="search"></span></ng-template>
+  </nz-card>
+
+  <!-- Table -->
+  <nz-card nzSize="small">
+    <nz-table #tplTable [nzData]="filteredTemplates()" [nzLoading]="loading()"
+              nzSize="small" [nzPageSize]="15">
+      <thead>
+        <tr>
+          <th nzWidth="90px">Kode</th>
+          <th>Nama</th>
+          <th nzWidth="120px">Tipe Dokumen</th>
+          <th nzWidth="50px" nzAlign="center">Versi</th>
+          <th nzWidth="180px">File</th>
+          <th nzWidth="70px" nzAlign="center">Status</th>
+          <th nzWidth="65px" nzAlign="center">Tags</th>
+          <th nzWidth="90px">Dibuat</th>
+          <th nzWidth="60px" nzAlign="center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (tpl of tplTable.data; track tpl.id) {
+          <tr>
+            <td><code class="text-xs">{{ tpl.code || '-' }}</code></td>
+            <td>
+              <div class="font-medium text-gray-800">{{ tpl.name }}</div>
+              @if (tpl.category?.name || tpl.category_name) {
+                <div class="text-xs text-gray-400">{{ tpl.category?.name || tpl.category_name }}</div>
+              }
+            </td>
+            <td>
+              <span class="text-xs">{{ tpl.document_type?.name || tpl.type_name || '-' }}</span>
+            </td>
+            <td nzAlign="center">
+              <nz-tag nzColor="blue" class="m-0">v{{ tpl.version || 1 }}</nz-tag>
+            </td>
+            <td>
+              <div class="flex items-center gap-1.5">
+                <span nz-icon nzType="file-word" class="text-blue-500 text-sm"></span>
+                <div class="truncate">
+                  <div class="text-xs truncate max-w-[120px]" [title]="tpl.file_name">{{ tpl.file_name || '-' }}</div>
+                  @if (tpl.file_size) {
+                    <div class="text-[10px] text-gray-400">{{ formatFileSize(tpl.file_size) }}</div>
+                  }
+                </div>
+              </div>
+            </td>
+            <td nzAlign="center">
+              <nz-tag [nzColor]="getStatusColor(tpl.status)" class="m-0">
+                {{ getStatusLabel(tpl.status) }}
+              </nz-tag>
+            </td>
+            <td nzAlign="center">
+              <nz-tag class="m-0">{{ tpl.tag_count || 0 }}</nz-tag>
+            </td>
+            <td>
+              <span class="text-xs text-gray-500">{{ formatDate(tpl.created_at) }}</span>
+            </td>
+            <td nzAlign="center">
+              <a nz-dropdown [nzDropdownMenu]="actionMenu" nzTrigger="click">
+                <span nz-icon nzType="more" class="cursor-pointer text-gray-600"></span>
+              </a>
+              <nz-dropdown-menu #actionMenu="nzDropdownMenu">
+                <ul nz-menu nzSelectable>
+                  <li nz-menu-item (click)="openForm(tpl)">
+                    <span nz-icon nzType="edit"></span> Edit
+                  </li>
+                  <li nz-menu-item (click)="openDetail(tpl)">
+                    <span nz-icon nzType="setting"></span> Kelola Parameter
+                  </li>
+                  <li nz-menu-item (click)="download(tpl)">
+                    <span nz-icon nzType="download"></span> Download
+                  </li>
+                  <li nz-menu-item nzDanger (click)="deleteTemplate(tpl)">
+                    <span nz-icon nzType="delete"></span> Hapus
+                  </li>
+                </ul>
+              </nz-dropdown-menu>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="9" class="text-center text-gray-500 py-8">
+              Tidak ada template ditemukan
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </nz-card>
+
+  <!-- Form Drawer (Create/Edit) -->
+  <app-template-form
+    [visible]="formVisible"
+    [editData]="formEditData"
+    [documentTypes]="documentTypes()"
+    [categories]="categories()"
+    [companies]="companies()"
+    (closed)="onFormClosed()"
+    (saved)="onFormSaved()">
+  </app-template-form>
+
+  <!-- Detail Drawer (Tag Management) -->
+  <app-template-detail
+    [visible]="detailVisible"
+    [template]="detailTemplate"
+    (closed)="onDetailClosed()">
+  </app-template-detail>
+</div>

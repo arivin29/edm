@@ -86,7 +86,10 @@ import {
   AppstoreOutline,
   UnorderedListOutline,
   CloudUploadOutline,
-  NumberOutline
+  NumberOutline,
+  ThunderboltOutline,
+  MessageOutline,
+  LoadingOutline
 } from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
@@ -177,7 +180,10 @@ const icons = [
   AppstoreOutline,
   UnorderedListOutline,
   CloudUploadOutline,
-  NumberOutline
+  NumberOutline,
+  ThunderboltOutline,
+  MessageOutline,
+  LoadingOutline
 ];
 
 export const appConfig: ApplicationConfig = {

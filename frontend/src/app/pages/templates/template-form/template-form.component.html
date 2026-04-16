@@ -1,0 +1,68 @@
+<nz-drawer [nzVisible]="visible" [nzTitle]="drawerTitle"
+           nzPlacement="right" [nzWidth]="500" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <form nz-form nzLayout="vertical">
+      <nz-form-item>
+        <nz-form-label nzRequired>Nama Template</nz-form-label>
+        <nz-form-control>
+          <input nz-input nzSize="small" [(ngModel)]="formData.name" name="name" placeholder="Nama template" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Tipe Dokumen</nz-form-label>
+        <nz-form-control>
+          <nz-select nzSize="small" [(ngModel)]="formData.document_type_id" name="document_type_id"
+                     nzPlaceHolder="Pilih tipe" nzAllowClear>
+            @for (type of documentTypes; track type.id) {
+              <nz-option [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Kategori</nz-form-label>
+        <nz-form-control>
+          <nz-select nzSize="small" [(ngModel)]="formData.category_id" name="category_id"
+                     nzPlaceHolder="Pilih kategori" nzAllowClear>
+            @for (cat of categories; track cat.id) {
+              <nz-option [nzValue]="cat.id" [nzLabel]="cat.name"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Perusahaan</nz-form-label>
+        <nz-form-control>
+          <nz-select nzSize="small" [(ngModel)]="formData.company_id" name="company_id"
+                     nzPlaceHolder="Pilih perusahaan" nzAllowClear>
+            @for (comp of companies; track comp.id) {
+              <nz-option [nzValue]="comp.id" [nzLabel]="comp.name"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Deskripsi</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input [(ngModel)]="formData.description" name="description"
+                    placeholder="Deskripsi (opsional)" [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+      @if (!editId) {
+        <nz-form-item>
+          <nz-form-label nzRequired>File Template (DOCX)</nz-form-label>
+          <nz-form-control>
+            <nz-upload [nzBeforeUpload]="beforeUpload" [nzFileList]="fileList" nzAccept=".docx">
+              <button nz-button nzSize="small" type="button">
+                <span nz-icon nzType="upload"></span> Pilih File
+              </button>
+            </nz-upload>
+          </nz-form-control>
+        </nz-form-item>
+      }
+      <div class="mt-4">
+        <button nz-button nzType="primary" nzSize="small" nzBlock [nzLoading]="saving()" (click)="save()">Simpan</button>
+      </div>
+    </form>
+  </ng-container>
+</nz-drawer>
