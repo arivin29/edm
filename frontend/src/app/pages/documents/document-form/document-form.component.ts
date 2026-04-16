@@ -22,12 +22,20 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, Subject, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { forkJoin, of, Subject, Subscription } from 'rxjs';
+import { debounceTime, map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import {
   DropdownItem, TemplateItem, TemplateTag, TagGroup, DraftData, DRAFT_KEY
 } from '../document.models';
+
+function parseSourceConfig(cfg: any): any {
+  if (!cfg) return {};
+  if (typeof cfg === 'string') {
+    try { return JSON.parse(cfg); } catch { return {}; }
+  }
+  return cfg;
+}
 
 @Component({
   selector: 'app-document-form',
@@ -73,6 +81,8 @@ export class DocumentFormPage implements OnInit, OnDestroy {
   sections = signal<DropdownItem[]>([]);
   allTemplates = signal<TemplateItem[]>([]);
   templateTags = signal<TemplateTag[]>([]);
+  apiOptions = new Map<string, { label: string; value: any }[]>();
+  apiLoading = new Map<string, boolean>();
 
   filteredTemplates = computed(() => {
     const typeId = this.selectedTypeId();
@@ -319,9 +329,13 @@ export class DocumentFormPage implements OnInit, OnDestroy {
     this.loadingTags.set(true);
     this.http.get<any>(`${environment.apiUrl}/templates/${templateId}/tags`).subscribe({
       next: (res) => {
-        const tags: TemplateTag[] = res.data || [];
+        const tags: TemplateTag[] = (res.data || []).map((t: any) => ({
+          ...t,
+          source_config: parseSourceConfig(t.source_config)
+        }));
         this.templateTags.set(tags);
         this.buildMetadataForm(tags);
+        this.loadApiOptions(tags);
         this.loadingTags.set(false);
       },
       error: () => {
@@ -378,11 +392,62 @@ export class DocumentFormPage implements OnInit, OnDestroy {
     return (this.metadataForm.get(tagKey) as FormControl) || new FormControl();
   }
 
-  getSelectOptions(tag: TemplateTag): { label: string; value: any }[] {
-    if (tag.source_type === 'static' && tag.source_config?.options) {
-      return tag.source_config.options;
+  private loadApiOptions(tags: TemplateTag[]) {
+    const apiTags = tags.filter(t => t.source_type === 'api');
+    if (!apiTags.length) return;
+
+    const requests: Record<string, any> = {};
+    for (const tag of apiTags) {
+      this.apiLoading.set(tag.tag_key, true);
+      const cfg = parseSourceConfig(tag.source_config);
+      const endpoint = cfg.endpoint || cfg.url;
+      if (!endpoint) continue;
+
+      const url = endpoint.startsWith('http')
+        ? endpoint
+        : `${environment.apiUrl}${endpoint}`;
+
+      requests[tag.tag_key] = this.http.get<any>(url).pipe(
+        map(res => {
+          const items = res.data || res || [];
+          const labelField = cfg.label_field || cfg.labelField || 'name';
+          const valueField = cfg.value_field || cfg.valueField || 'id';
+          return (Array.isArray(items) ? items : []).map((item: any) => ({
+            label: item[labelField] || String(item),
+            value: item[valueField] || item
+          }));
+        }),
+        catchError(() => of([]))
+      );
     }
-    return [];
+
+    if (Object.keys(requests).length === 0) return;
+
+    forkJoin(requests).subscribe({
+      next: (results: Record<string, any>) => {
+        for (const [key, options] of Object.entries(results)) {
+          this.apiOptions.set(key, options as any[]);
+          this.apiLoading.set(key, false);
+        }
+      },
+      error: () => {
+        for (const tag of apiTags) {
+          this.apiLoading.set(tag.tag_key, false);
+        }
+      }
+    });
+  }
+
+  getSelectOptions(tag: TemplateTag): { label: string; value: any }[] {
+    if (tag.source_type === 'api') {
+      return this.apiOptions.get(tag.tag_key) || [];
+    }
+    const cfg = parseSourceConfig(tag.source_config);
+    return cfg?.options || [];
+  }
+
+  isApiLoading(tag: TemplateTag): boolean {
+    return this.apiLoading.get(tag.tag_key) || false;
   }
 
   loadDocument(id: string) {
@@ -390,7 +455,11 @@ export class DocumentFormPage implements OnInit, OnDestroy {
     this.http.get<any>(`${environment.apiUrl}/documents/${id}`).subscribe({
       next: (res) => {
         const doc = res.data;
-        this.existingMetadata = doc.metadata || null;
+        let meta = doc.metadata || null;
+        if (typeof meta === 'string') {
+          try { meta = JSON.parse(meta); } catch { meta = null; }
+        }
+        this.existingMetadata = meta;
         this.form.patchValue({
           title: doc.title,
           document_type_id: doc.document_type_id,
@@ -430,6 +499,11 @@ export class DocumentFormPage implements OnInit, OnDestroy {
     if (val == null || val === '') return '-';
     if (tag.data_type === 'checkbox') return val ? 'Ya' : 'Tidak';
     if (tag.data_type === 'date' && val instanceof Date) return val.toLocaleDateString('id-ID');
+    if (tag.data_type === 'select') {
+      const options = this.getSelectOptions(tag);
+      const match = options.find(o => o.value === val);
+      if (match) return match.label;
+    }
     return String(val);
   }
 

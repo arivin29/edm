@@ -243,7 +243,8 @@
                                   <nz-select nzSize="small" nzShowSearch
                                              [formControl]="getTagControl(tag.tag_key)"
                                              [nzPlaceHolder]="tag.placeholder_text || 'Pilih'"
-                                             [nzDisabled]="tag.is_readonly">
+                                             [nzDisabled]="tag.is_readonly"
+                                             [nzLoading]="isApiLoading(tag)">
                                     @for (opt of getSelectOptions(tag); track opt.value) {
                                       <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
                                     }
@@ -280,6 +281,30 @@
                                 }
                                 @case ('table') {
                                   <span class="placeholder-text">(tabel akan diisi di editor)</span>
+                                }
+                                @case ('email') {
+                                  <input nz-input nzSize="small" type="email"
+                                         [formControl]="getTagControl(tag.tag_key)"
+                                         [placeholder]="tag.placeholder_text || 'email@example.com'"
+                                         [readOnly]="tag.is_readonly" />
+                                }
+                                @case ('phone') {
+                                  <input nz-input nzSize="small" type="tel"
+                                         [formControl]="getTagControl(tag.tag_key)"
+                                         [placeholder]="tag.placeholder_text || '+62-xxx-xxxx-xxxx'"
+                                         [readOnly]="tag.is_readonly" />
+                                }
+                                @case ('url') {
+                                  <input nz-input nzSize="small" type="url"
+                                         [formControl]="getTagControl(tag.tag_key)"
+                                         [placeholder]="tag.placeholder_text || 'https://...'"
+                                         [readOnly]="tag.is_readonly" />
+                                }
+                                @case ('auto') {
+                                  <input nz-input nzSize="small"
+                                         [formControl]="getTagControl(tag.tag_key)"
+                                         [placeholder]="'Otomatis'"
+                                         [readOnly]="true" [disabled]="true" />
                                 }
                                 @default {
                                   <input nz-input nzSize="small"
