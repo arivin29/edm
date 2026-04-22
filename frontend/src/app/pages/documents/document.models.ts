@@ -80,12 +80,19 @@ export interface WorkflowStepInstance {
   id: string;
   workflow_step_id: string;
   step_order: number;
-  status: string; // pending, active, approved, rejected
+  status: string; // pending, active, approved, rejected, skipped
   deadline?: string;
   required_approvals: number;
   current_approvals: number;
   name?: string;
+  step_type?: string;
+  assignee_type?: string;
+  assignee_user_id?: string;
+  instructions?: string;
+  can_delegate?: boolean;
+  deadline_days?: number;
   actor?: { id: string; name: string };
+  assignee_user?: { id: string; name: string };
   action_type?: string;
   comment?: string;
   step?: WorkflowTemplateStep;

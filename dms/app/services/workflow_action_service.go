@@ -642,13 +642,23 @@ func (s *WorkflowActionService) GetWorkflowStatus(documentID string, ctx http.Co
 		}
 	}
 
+	// Workflow name from the instance
+	workflowName := ""
+	workflowID := ""
+	if instance.Workflow != nil {
+		workflowName = instance.Workflow.Name
+		workflowID = instance.Workflow.ID
+	}
+
 	return &WorkflowStatus{
-		Instance:    instance,
-		CurrentStep: currentStep,
-		Steps:       instance.Steps,
-		CanApprove:  canApprove,
-		CanReject:   canReject,
-		CanDelegate: canDelegate,
+		Instance:     instance,
+		CurrentStep:  currentStep,
+		Steps:        instance.Steps,
+		CanApprove:   canApprove,
+		CanReject:    canReject,
+		CanDelegate:  canDelegate,
+		WorkflowName: workflowName,
+		WorkflowID:   workflowID,
 	}, nil
 }
 

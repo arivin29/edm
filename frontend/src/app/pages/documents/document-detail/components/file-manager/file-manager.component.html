@@ -31,10 +31,13 @@
           </button>
         }
         @if (config.showUpload) {
-          <button nz-button nzSize="small" nzType="primary" nz-tooltip nzTooltipTitle="Upload File">
+          <button nz-button nzSize="small" nzType="primary" nz-tooltip nzTooltipTitle="Upload File" (click)="fileInput.click()">
             <span nz-icon nzType="upload"></span>
             <span>Upload</span>
           </button>
+          <input #fileInput type="file" hidden multiple
+                 accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.png,.jpg,.jpeg,.gif,.zip,.rar,.csv,.txt"
+                 (change)="onFileSelected($event)" />
         }
       }
 

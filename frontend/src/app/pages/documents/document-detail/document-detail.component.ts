@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -108,105 +108,63 @@ export class DocumentDetailPage implements OnInit {
   formatFileSize = formatFileSize;
   getFileIcon = getFileIcon;
 
-  // Mock file tree for Berkas tab
-  mockFileTree: FileNode[] = [
-    {
-      id: 'folder-dokumen-utama', name: 'Dokumen Utama', type: 'folder', expanded: true,
-      modifiedAt: '2026-04-10T09:00:00Z', uploadedBy: 'Admin',
-      children: [
-        {
-          id: 'file-v2', name: 'SOP-Procurement-v2.0.docx', type: 'file',
-          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 2457600, version: 'v2.0', isCurrent: true,
-          uploadedBy: 'Budi Santoso', modifiedAt: '2026-04-10T09:15:00Z', createdAt: '2026-04-10T09:15:00Z',
-          description: 'Versi final setelah review tim legal dan compliance.',
-          tags: ['Final', 'Reviewed'], parentId: 'folder-dokumen-utama'
-        },
-        {
-          id: 'file-v1', name: 'SOP-Procurement-v1.0.docx', type: 'file',
-          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 2150400, version: 'v1.0', isCurrent: false,
-          uploadedBy: 'Budi Santoso', modifiedAt: '2026-03-20T14:30:00Z', createdAt: '2026-03-20T14:30:00Z',
-          description: 'Draft awal dokumen SOP.', parentId: 'folder-dokumen-utama'
-        },
-        {
-          id: 'file-pdf', name: 'SOP-Procurement-v2.0.pdf', type: 'file',
-          mimeType: 'application/pdf', size: 1843200,
-          uploadedBy: 'System', modifiedAt: '2026-04-10T09:20:00Z', createdAt: '2026-04-10T09:20:00Z',
-          description: 'Versi PDF dari dokumen utama (auto-generated).', tags: ['Auto-PDF'],
-          parentId: 'folder-dokumen-utama'
-        }
-      ]
-    },
-    {
-      id: 'folder-lampiran', name: 'Lampiran', type: 'folder',
-      modifiedAt: '2026-04-12T11:00:00Z', uploadedBy: 'Admin',
-      children: [
-        {
-          id: 'folder-lampiran-legal', name: 'Dokumen Legal', type: 'folder',
-          modifiedAt: '2026-04-08T16:00:00Z', parentId: 'folder-lampiran',
-          children: [
-            {
-              id: 'file-kontrak', name: 'Kontrak-Vendor-2026.pdf', type: 'file',
-              mimeType: 'application/pdf', size: 3145728,
-              uploadedBy: 'Siti Aminah', modifiedAt: '2026-04-08T16:30:00Z', createdAt: '2026-04-08T16:30:00Z',
-              description: 'Kontrak kerjasama dengan vendor utama.', tags: ['Legal', 'Kontrak'],
-              parentId: 'folder-lampiran-legal'
-            },
-            {
-              id: 'file-nda', name: 'NDA-Signed.pdf', type: 'file',
-              mimeType: 'application/pdf', size: 524288,
-              uploadedBy: 'Siti Aminah', modifiedAt: '2026-04-05T10:00:00Z', createdAt: '2026-04-05T10:00:00Z',
-              parentId: 'folder-lampiran-legal'
-            }
-          ]
-        },
-        {
-          id: 'file-data-survey', name: 'survey-data-2026.csv', type: 'file',
-          mimeType: 'text/csv', size: 375,
-          uploadedBy: 'Rini Wulandari', modifiedAt: '2026-04-12T11:00:00Z', createdAt: '2026-04-12T11:00:00Z',
-          tags: ['Data'], parentId: 'folder-lampiran'
-        },
-        {
-          id: 'file-foto', name: 'site-photo-001.jpg', type: 'file',
-          mimeType: 'image/jpeg', size: 4194304,
-          uploadedBy: 'Andi Pratama', modifiedAt: '2026-04-11T08:45:00Z', createdAt: '2026-04-11T08:45:00Z',
-          description: 'Foto lokasi site visit tanggal 11 April.', parentId: 'folder-lampiran'
-        }
-      ]
-    },
-    {
-      id: 'folder-referensi', name: 'Referensi', type: 'folder',
-      modifiedAt: '2026-04-01T10:00:00Z', uploadedBy: 'Admin',
-      children: [
-        {
-          id: 'file-peraturan', name: 'Peraturan-OJK-2025.pdf', type: 'file',
-          mimeType: 'application/pdf', size: 5242880,
-          uploadedBy: 'Legal Team', modifiedAt: '2026-04-01T10:30:00Z', createdAt: '2026-04-01T10:30:00Z',
-          tags: ['Regulasi', 'OJK'], parentId: 'folder-referensi'
-        },
-        {
-          id: 'file-template-excel', name: 'Template-Laporan.xlsx', type: 'file',
-          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', size: 102400,
-          uploadedBy: 'Finance Team', modifiedAt: '2026-03-28T09:00:00Z', createdAt: '2026-03-28T09:00:00Z',
-          parentId: 'folder-referensi'
-        }
-      ]
-    },
-    {
-      id: 'folder-review', name: 'Catatan Review', type: 'folder',
-      modifiedAt: '2026-04-09T15:00:00Z', uploadedBy: 'Admin',
-      children: [
-        {
-          id: 'file-review-note', name: 'review-notes-budi.docx', type: 'file',
-          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 51200, uploadedBy: 'Budi Santoso',
-          modifiedAt: '2026-04-09T15:20:00Z', createdAt: '2026-04-09T15:20:00Z',
-          parentId: 'folder-review'
-        }
-      ]
-    }
-  ];
+  // Build file tree from real API data (versions + attachments)
+  fileTree = computed<FileNode[]>(() => {
+    const doc = this.document();
+    const vers = this.versions();
+    const atts = this.attachments();
+
+    // Folder 1: Dokumen Utama (from document versions)
+    const versionNodes: FileNode[] = vers.map(v => ({
+      id: `ver-${v.id}`,
+      name: v.file_name || `Versi ${v.major_version}.${v.minor_version}`,
+      type: 'file' as const,
+      mimeType: this.guessMimeType(v.file_name),
+      size: v.file_size || 0,
+      version: `v${v.major_version}.${v.minor_version}`,
+      isCurrent: v.is_current,
+      uploadedBy: v.creator?.name || '-',
+      modifiedAt: v.created_at,
+      createdAt: v.created_at,
+      description: v.change_summary || undefined,
+      tags: v.is_current ? ['Aktif'] : undefined,
+      parentId: 'folder-dokumen-utama'
+    }));
+
+    const dokumenUtama: FileNode = {
+      id: 'folder-dokumen-utama',
+      name: 'Dokumen Utama',
+      type: 'folder',
+      expanded: true,
+      modifiedAt: versionNodes.length > 0 ? versionNodes[0].modifiedAt : doc?.created_at,
+      uploadedBy: doc?.creator?.name || '-',
+      children: versionNodes
+    };
+
+    // Folder 2: File Pendukung (from attachments API)
+    const attachmentNodes: FileNode[] = atts.map(att => ({
+      id: `att-${att.id}`,
+      name: att.original_name,
+      type: 'file' as const,
+      mimeType: att.mime_type,
+      size: att.file_size,
+      uploadedBy: att.uploader?.name || '-',
+      modifiedAt: att.created_at,
+      createdAt: att.created_at,
+      parentId: 'folder-lampiran'
+    }));
+
+    const filePendukung: FileNode = {
+      id: 'folder-lampiran',
+      name: 'File Pendukung',
+      type: 'folder',
+      expanded: true,
+      modifiedAt: attachmentNodes.length > 0 ? attachmentNodes[0].modifiedAt : undefined,
+      children: attachmentNodes
+    };
+
+    return [dokumenUtama, filePendukung];
+  });
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -214,6 +172,7 @@ export class DocumentDetailPage implements OnInit {
       this.documentId = id;
       this.loadDocument(id);
       this.loadVersions(id);
+      this.loadAttachments();
       this.loadComments(id);
       this.loadWorkflow(id);
       this.loadDistributions(id);
@@ -258,7 +217,36 @@ export class DocumentDetailPage implements OnInit {
   loadWorkflow(id: string) {
     this.workflowLoading.set(true);
     this.http.get<any>(`${environment.apiUrl}/documents/${id}/workflow`).subscribe({
-      next: (res) => { this.workflow.set(res.data || null); this.workflowLoading.set(false); },
+      next: (res) => {
+        const data = res.data;
+        if (data) {
+          // Normalize: flatten instance.steps so template can access step.name, step.actorName etc.
+          if (data.instance?.steps) {
+            data.steps = data.instance.steps.map((si: any) => ({
+              ...si,
+              name: si.step?.name || `Step ${si.step_order}`,
+              step_type: si.step?.step_type || '',
+              assignee_type: si.step?.assignee_type || '',
+              instructions: si.step?.instructions || '',
+              can_delegate: si.step?.can_delegate || false,
+              deadline_days: si.step?.deadline_days,
+              // Extract actor from first action if completed/rejected
+              actor: si.actions?.[0]?.actor || null,
+              action_type: si.actions?.[0]?.action_type || null,
+              comment: si.actions?.[0]?.comment || null,
+              // Assignee user from template step (for pending/active steps)
+              assignee_user: si.step?.assignee_user || null,
+              assignee_user_id: si.step?.assignee_user_id || null,
+            }));
+          }
+          // Ensure workflow_name is set
+          if (!data.workflow_name && data.instance?.workflow?.name) {
+            data.workflow_name = data.instance.workflow.name;
+          }
+        }
+        this.workflow.set(data || null);
+        this.workflowLoading.set(false);
+      },
       error: () => { this.workflow.set(null); this.workflowLoading.set(false); }
     });
   }
@@ -555,9 +543,18 @@ export class DocumentDetailPage implements OnInit {
 
   getStepColor(status: string): string {
     const colors: Record<string, string> = {
-      pending: 'gray', in_progress: 'blue', completed: 'green', rejected: 'red'
+      pending: 'gray', active: 'blue', approved: 'green', rejected: 'red', skipped: 'orange'
     };
     return colors[status] || 'gray';
+  }
+
+  getStepTypeLabel(type: string | undefined): string {
+    if (!type) return '-';
+    const labels: Record<string, string> = {
+      approval: 'Persetujuan', approve: 'Persetujuan', review: 'Review', sign: 'Tanda Tangan',
+      acknowledge: 'Acknowledgment', input: 'Input Data'
+    };
+    return labels[type] || type;
   }
 
   getActionLabel(action: string): string {
@@ -575,7 +572,42 @@ export class DocumentDetailPage implements OnInit {
   }
 
   onFmDownload(node: FileNode | PreviewFile) {
-    this.message.info(`Download: ${node.name} (mockup)`);
+    // Download version file
+    if (node.id.startsWith('ver-')) {
+      const versionId = node.id.replace('ver-', '');
+      this.http.get(`${environment.apiUrl}/documents/${this.documentId}/versions/${versionId}/download`, {
+        responseType: 'blob'
+      }).subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = node.name;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => this.message.error('Gagal mengunduh file')
+      });
+      return;
+    }
+    // Download attachment
+    if (node.id.startsWith('att-')) {
+      const attId = node.id.replace('att-', '');
+      this.http.get(`${environment.apiUrl}/documents/${this.documentId}/attachments/${attId}/download`, {
+        responseType: 'blob'
+      }).subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = node.name;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => this.message.error('Gagal mengunduh file')
+      });
+      return;
+    }
   }
 
   onFmPreview(node: FileNode) {
@@ -594,23 +626,47 @@ export class DocumentDetailPage implements OnInit {
   }
 
   onFmDelete(node: FileNode) {
+    if (!node.id.startsWith('att-')) {
+      this.message.warning('Hanya file pendukung yang bisa dihapus dari sini');
+      return;
+    }
+    const attId = node.id.replace('att-', '');
     this.modal.confirm({
       nzTitle: 'Hapus File?',
       nzContent: `Yakin ingin menghapus "${node.name}"?`,
       nzOkText: 'Hapus',
       nzOkDanger: true,
       nzOnOk: () => {
-        this.message.success(`${node.name} dihapus (mockup)`);
+        this.http.delete(`${environment.apiUrl}/documents/${this.documentId}/attachments/${attId}`).subscribe({
+          next: () => {
+            this.message.success('File berhasil dihapus');
+            this.loadAttachments();
+          },
+          error: () => this.message.error('Gagal menghapus file')
+        });
       }
     });
   }
 
-  onFmCreateFolder(event: { parentId: string; name: string }) {
-    this.message.success(`Folder "${event.name}" dibuat di ${event.parentId} (mockup)`);
+  onFmCreateFolder(_event: { parentId: string; name: string }) {
+    this.message.info('Pembuatan folder tidak didukung — file dikelola berdasarkan kategori otomatis');
   }
 
   onFmUpload(event: { parentId: string; file: File }) {
-    this.message.success(`Upload ${event.file.name} ke ${event.parentId} (mockup)`);
+    this.uploadingAttachment.set(true);
+    const formData = new FormData();
+    formData.append('file', event.file);
+    this.http.post(`${environment.apiUrl}/documents/${this.documentId}/attachments`, formData).subscribe({
+      next: () => {
+        this.message.success(`${event.file.name} berhasil diupload`);
+        this.loadAttachments();
+        this.uploadingAttachment.set(false);
+      },
+      error: () => {
+        this.message.error(`Gagal mengupload ${event.file.name}`);
+        this.uploadingAttachment.set(false);
+      }
+    });
   }
 
   onMetadataUpdated(metadata: Record<string, any>) {
@@ -635,12 +691,30 @@ export class DocumentDetailPage implements OnInit {
     const seen = new Set<string>();
     const users: { id: string; name: string; stepName?: string }[] = [];
     for (const step of wf.steps) {
-      if (step.actor && !seen.has(step.actor.id)) {
-        seen.add(step.actor.id);
-        users.push({ id: step.actor.id, name: step.actor.name, stepName: step.name });
+      // Use actor (from completed action) or assignee_user_id for pending steps
+      const actor = step.actor || step.actions?.[0]?.actor;
+      if (actor && !seen.has(actor.id)) {
+        seen.add(actor.id);
+        users.push({ id: actor.id, name: actor.name, stepName: step.name || step.step?.name });
       }
     }
     return users;
+  }
+
+  private guessMimeType(fileName?: string): string {
+    if (!fileName) return 'application/octet-stream';
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    const map: Record<string, string> = {
+      pdf: 'application/pdf',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      doc: 'application/msword',
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      xls: 'application/vnd.ms-excel',
+      pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
+      csv: 'text/csv', txt: 'text/plain', zip: 'application/zip'
+    };
+    return map[ext || ''] || 'application/octet-stream';
   }
 
   // OCR methods

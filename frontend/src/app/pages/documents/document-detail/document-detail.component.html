@@ -59,15 +59,17 @@
             <button nz-button nzSize="small" [routerLink]="['/documents', document()!.id, 'edit']">
               <span nz-icon nzType="edit"></span> Edit
             </button>
-            @if (document()!.status === 'draft') {
+            @if (document()!.status === 'draft' || document()!.status === 'revision') {
               <button nz-button nzType="primary" nzSize="small" (click)="submitForReview()">
                 <span nz-icon nzType="send"></span> Submit Review
               </button>
             }
-            @if (document()!.status === 'in_review') {
+            @if (workflow()?.can_approve) {
               <button nz-button nzSize="small" class="btn-approve" (click)="approveDocument()">
                 <span nz-icon nzType="check-circle"></span> Setujui
               </button>
+            }
+            @if (workflow()?.can_reject) {
               <button nz-button nzDanger nzSize="small" (click)="openRejectModal()">
                 <span nz-icon nzType="close-circle"></span> Tolak
               </button>
@@ -93,10 +95,11 @@
                           <span nz-icon nzType="node-index" nzTheme="outline"></span>
                           Alur Persetujuan
                         </div>
-                        @if (workflow()?.is_preview) {
-                          <div class="wf-flow__badge wf-flow__badge--plan">
-                            <span nz-icon nzType="info-circle" nzTheme="outline"></span>
-                            <span>{{ workflow()!.workflow_name }} — akan dijalankan saat submit</span>
+                        @if (workflow()?.workflow_name) {
+                          <div class="wf-flow__badge" [class.wf-flow__badge--plan]="workflow()!.is_preview"
+                               [class.wf-flow__badge--active]="!workflow()!.is_preview">
+                            <span nz-icon [nzType]="workflow()!.is_preview ? 'info-circle' : 'thunderbolt'" nzTheme="outline"></span>
+                            <span>{{ workflow()!.workflow_name }}{{ workflow()!.is_preview ? ' — akan dijalankan saat submit' : '' }}</span>
                           </div>
                         }
                       </div>
@@ -104,6 +107,7 @@
                       @if (workflowLoading()) {
                         <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
                       } @else if (workflow()?.is_preview && workflow()?.preview_steps?.length) {
+                        <!-- Preview mode (draft) -->
                         <div class="wf-flow__track">
                           @for (step of workflow()!.preview_steps!; track step.id; let i = $index; let last = $last) {
                             <div class="wf-step" data-status="preview">
@@ -111,20 +115,26 @@
                               @if (!last) { <div class="wf-step__line" data-status="preview"></div> }
                               <div class="wf-step__info">
                                 <span class="wf-step__name">{{ step.name }}</span>
-                                <span class="wf-step__type">{{ step.step_type === 'approval' ? 'Persetujuan' : step.step_type }}</span>
+                                <span class="wf-step__type">{{ getStepTypeLabel(step.step_type) }}</span>
+                                @if (step.deadline_days) {
+                                  <span class="wf-step__deadline">{{ step.deadline_days }}d</span>
+                                }
                               </div>
                             </div>
                           }
                         </div>
                       } @else if (workflow()?.steps?.length) {
+                        <!-- Active workflow -->
                         <div class="wf-flow__track">
                           @for (step of workflow()!.steps; track step.id; let i = $index; let last = $last) {
                             <div class="wf-step" [attr.data-status]="step.status">
                               <div class="wf-step__dot">
-                                @if (step.status === 'completed') {
+                                @if (step.status === 'approved') {
                                   <span nz-icon nzType="check" nzTheme="outline"></span>
                                 } @else if (step.status === 'rejected') {
                                   <span nz-icon nzType="close" nzTheme="outline"></span>
+                                } @else if (step.status === 'active') {
+                                  <span nz-icon nzType="loading" nzTheme="outline"></span>
                                 } @else {
                                   {{ i + 1 }}
                                 }
@@ -132,16 +142,54 @@
                               @if (!last) { <div class="wf-step__line" [attr.data-status]="step.status"></div> }
                               <div class="wf-step__info">
                                 <span class="wf-step__name">{{ step.name }}</span>
-                                <span class="wf-step__type">{{ step.actor?.name || '-' }}</span>
-                                @if (step.completed_at) {
-                                  <span class="wf-step__date">{{ step.completed_at | date:'dd/MM/yy' }}</span>
-                                } @else if (step.status === 'in_progress') {
-                                  <span class="wf-step__date wf-step__date--active">Menunggu</span>
+                                @if (step.status === 'approved' || step.status === 'rejected') {
+                                  <span class="wf-step__actor">{{ step.actor?.name || '-' }}</span>
+                                  @if (step.completed_at) {
+                                    <span class="wf-step__date">{{ step.completed_at | date:'dd/MM/yy HH:mm' }}</span>
+                                  }
+                                } @else if (step.status === 'active') {
+                                  <span class="wf-step__actor wf-step__actor--waiting">Menunggu persetujuan</span>
+                                  @if (step.deadline) {
+                                    <span class="wf-step__deadline">⏱ {{ step.deadline | date:'dd/MM/yy' }}</span>
+                                  }
+                                } @else {
+                                  <span class="wf-step__type">{{ getStepTypeLabel(step.step_type) }}</span>
                                 }
                               </div>
                             </div>
                           }
                         </div>
+
+                        <!-- Current Step Detail Card -->
+                        @for (step of workflow()!.steps; track step.id) {
+                          @if (step.status === 'active') {
+                            <div class="wf-active-card">
+                              <div class="wf-active-card__header">
+                                <span nz-icon nzType="clock-circle" class="text-blue-500"></span>
+                                <span class="font-medium text-xs">Step {{ step.step_order }} — {{ step.name }}</span>
+                                <nz-tag [nzColor]="'blue'" class="ml-auto">{{ getStepTypeLabel(step.step_type) }}</nz-tag>
+                              </div>
+                              @if (step.instructions) {
+                                <div class="wf-active-card__instructions">{{ step.instructions }}</div>
+                              }
+                              <div class="wf-active-card__meta">
+                                @if (step.deadline) {
+                                  <span class="wf-active-card__meta-item">
+                                    <span nz-icon nzType="calendar"></span> Tenggat: {{ step.deadline | date:'dd MMM yyyy' }}
+                                  </span>
+                                }
+                                <span class="wf-active-card__meta-item">
+                                  <span nz-icon nzType="safety-certificate"></span> {{ step.current_approvals }}/{{ step.required_approvals }} persetujuan
+                                </span>
+                                @if (step.can_delegate) {
+                                  <span class="wf-active-card__meta-item text-blue-400">
+                                    <span nz-icon nzType="swap"></span> Bisa didelegasikan
+                                  </span>
+                                }
+                              </div>
+                            </div>
+                          }
+                        }
                       } @else {
                         <div class="text-gray-400 text-xs py-2">Tidak ada workflow untuk dokumen ini</div>
                       }
@@ -154,7 +202,7 @@
                           <span nz-icon nzType="file-text" nzTheme="outline"></span>
                         </div>
                         <div class="info-stat-card__body">
-                          <div class="info-stat-card__value">{{ countFiles(mockFileTree) }}</div>
+                          <div class="info-stat-card__value">{{ countFiles(fileTree()) }}</div>
                           <div class="info-stat-card__label">Total Berkas</div>
                         </div>
                       </div>
@@ -310,8 +358,8 @@
                 <!-- Tab: Berkas -->
                 <nz-tab nzTitle="Berkas">
                   <app-file-manager
-                    [config]="{ documentId: documentId, readonly: false, showUpload: true, showCreateFolder: true, showVersions: true }"
-                    [tree]="mockFileTree"
+                    [config]="{ documentId: documentId, readonly: document()?.status === 'final' || document()?.status === 'archived', showUpload: true, showCreateFolder: false, showVersions: true }"
+                    [tree]="fileTree()"
                     (fileDownload)="onFmDownload($event)"
                     (filePreview)="onFmPreview($event)"
                     (fileDelete)="onFmDelete($event)"
@@ -516,17 +564,19 @@
                             <div class="doc-wf-step__name">{{ step.name }}</div>
                             <div class="doc-wf-step__actor">
                               <span nz-icon nzType="team" nzTheme="outline"></span>
-                              {{ step.assignee_type === 'role' ? 'Berdasarkan Role' : step.assignee_type === 'user' ? 'Pengguna Tertentu' : 'Berdasarkan Posisi' }}
+                              {{ step.assignee_type === 'role' ? 'Berdasarkan Role' : step.assignee_type === 'user' ? 'Pengguna Tertentu' : step.assignee_type === 'position' ? 'Berdasarkan Posisi' : step.assignee_type === 'department' ? 'Berdasarkan Departemen' : 'Berdasarkan ' + step.assignee_type }}
                             </div>
-                            <nz-tag [nzColor]="step.step_type === 'approval' ? 'blue' : 'cyan'">
-                              {{ step.step_type === 'approval' ? 'Persetujuan' : 'Review' }}
-                            </nz-tag>
-                            @if (step.deadline_days) {
-                              <nz-tag nzColor="orange">Tenggat {{ step.deadline_days }} hari</nz-tag>
-                            }
-                            @if (step.can_delegate) {
-                              <nz-tag nzColor="geekblue">Bisa Didelegasikan</nz-tag>
-                            }
+                            <div class="flex flex-wrap gap-1 mt-1">
+                              <nz-tag [nzColor]="step.step_type === 'approve' || step.step_type === 'approval' ? 'blue' : step.step_type === 'sign' ? 'purple' : 'cyan'">
+                                {{ getStepTypeLabel(step.step_type) }}
+                              </nz-tag>
+                              @if (step.deadline_days) {
+                                <nz-tag nzColor="orange">Tenggat {{ step.deadline_days }} hari</nz-tag>
+                              }
+                              @if (step.can_delegate) {
+                                <nz-tag nzColor="geekblue">Bisa Didelegasikan</nz-tag>
+                              }
+                            </div>
                             @if (step.instructions) {
                               <div class="doc-wf-step__comment">{{ step.instructions }}</div>
                             }
@@ -535,16 +585,24 @@
                       }
                     </div>
                   } @else if (workflow()?.steps?.length) {
+                    <!-- Active workflow -->
+                    @if (workflow()!.workflow_name) {
+                      <div class="mb-3 px-3 py-2 bg-blue-50 rounded-lg flex items-center gap-2">
+                        <span nz-icon nzType="thunderbolt" class="text-blue-500"></span>
+                        <span class="text-xs text-blue-700 font-medium">{{ workflow()!.workflow_name }}</span>
+                        <span class="text-xs text-blue-400">— Iterasi {{ workflow()!.instance?.iteration || 1 }}</span>
+                      </div>
+                    }
                     <div class="doc-workflow-steps">
                       @for (step of workflow()!.steps; track step.id; let i = $index; let last = $last) {
                         <div class="doc-wf-step" [attr.data-status]="step.status">
                           <div class="doc-wf-step__indicator">
                             <div class="doc-wf-step__dot">
-                              @if (step.status === 'completed') {
+                              @if (step.status === 'approved') {
                                 <span nz-icon nzType="check" nzTheme="outline"></span>
                               } @else if (step.status === 'rejected') {
                                 <span nz-icon nzType="close" nzTheme="outline"></span>
-                              } @else if (step.status === 'in_progress') {
+                              } @else if (step.status === 'active') {
                                 <span nz-icon nzType="loading" nzTheme="outline"></span>
                               } @else {
                                 <span class="doc-wf-step__num">{{ i + 1 }}</span>
@@ -556,20 +614,43 @@
                           </div>
                           <div class="doc-wf-step__content">
                             <div class="doc-wf-step__name">{{ step.name }}</div>
-                            <div class="doc-wf-step__actor">
-                              <span nz-icon nzType="user" nzTheme="outline"></span>
-                              {{ step.actor?.name || 'Belum ditentukan' }}
-                            </div>
-                            @if (step.action_type) {
-                              <span class="doc-wf-action-tag" [attr.data-action]="step.action_type">
-                                {{ getActionLabel(step.action_type) }}
-                              </span>
+                            @if (step.actor) {
+                              <div class="doc-wf-step__actor">
+                                <span nz-icon nzType="user" nzTheme="outline"></span>
+                                {{ step.actor.name }}
+                              </div>
+                            } @else if (step.status === 'active') {
+                              <div class="doc-wf-step__actor doc-wf-step__actor--waiting">
+                                <span nz-icon nzType="hourglass" nzTheme="outline"></span>
+                                Menunggu persetujuan
+                              </div>
                             }
+                            <div class="flex flex-wrap gap-1 mt-1">
+                              @if (step.action_type) {
+                                <nz-tag [nzColor]="step.action_type === 'approve' ? 'green' : step.action_type === 'reject' ? 'red' : 'blue'">
+                                  {{ getActionLabel(step.action_type) }}
+                                </nz-tag>
+                              }
+                              @if (step.status === 'active') {
+                                <nz-tag nzColor="processing">Sedang Berlangsung</nz-tag>
+                              }
+                              @if (step.status === 'active' && step.deadline) {
+                                <nz-tag nzColor="orange">Tenggat: {{ step.deadline | date:'dd MMM yyyy' }}</nz-tag>
+                              }
+                              @if (step.status === 'active' && step.can_delegate) {
+                                <nz-tag nzColor="geekblue">Bisa Didelegasikan</nz-tag>
+                              }
+                            </div>
                             @if (step.comment) {
                               <div class="doc-wf-step__comment">"{{ step.comment }}"</div>
                             }
+                            @if (step.status === 'active' && step.instructions) {
+                              <div class="doc-wf-step__comment text-blue-500">📋 {{ step.instructions }}</div>
+                            }
                             @if (step.completed_at) {
                               <div class="doc-wf-step__time">{{ step.completed_at | date:'dd MMM yyyy, HH:mm' }}</div>
+                            } @else if (step.activated_at && step.status === 'active') {
+                              <div class="doc-wf-step__time text-blue-400">Aktif sejak {{ step.activated_at | date:'dd MMM yyyy, HH:mm' }}</div>
                             }
                           </div>
                         </div>
@@ -816,7 +897,11 @@
                         }
                         <div class="doc-sidebar-step__info">
                           <span class="doc-sidebar-step__name">{{ step.name }}</span>
-                          <span class="doc-sidebar-step__meta">{{ step.actor?.name || '-' }}</span>
+                          @if (step.status === 'approved' || step.status === 'rejected') {
+                            <span class="doc-sidebar-step__meta">{{ step.actor?.name || '-' }}</span>
+                          } @else if (step.status === 'active') {
+                            <span class="doc-sidebar-step__meta doc-sidebar-step__meta--active">Menunggu</span>
+                          }
                           @if (step.completed_at) {
                             <span class="doc-sidebar-step__time">{{ step.completed_at | date:'dd/MM/yy HH:mm' }}</span>
                           }

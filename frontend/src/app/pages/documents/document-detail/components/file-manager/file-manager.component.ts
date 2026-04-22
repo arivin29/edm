@@ -247,6 +247,16 @@ export class FileManagerComponent implements OnInit, OnChanges {
     this.showNewFolderInput.set(false);
   }
 
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+    const parentId = this.currentFolder()?.id || 'root';
+    for (let i = 0; i < input.files.length; i++) {
+      this.fileUpload.emit({ parentId, file: input.files[i] });
+    }
+    input.value = '';
+  }
+
   toggleViewMode() {
     this.viewMode.update(v => v === 'list' ? 'grid' : 'list');
   }
