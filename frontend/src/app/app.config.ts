@@ -121,7 +121,22 @@ import {
   NodeIndexOutline,
   ArrowRightOutline,
   QuestionCircleOutline,
-  InfoOutline
+  InfoOutline,
+  EyeInvisibleOutline,
+  DoubleLeftOutline,
+  IdcardOutline,
+  PhoneOutline,
+  MailOutline,
+  KeyOutline,
+  GlobalOutline,
+  CrownOutline,
+  ContactsOutline,
+  BankOutline,
+  LaptopOutline,
+  SisternodeOutline,
+  CameraOutline,
+  SaveOutline,
+  MobileOutline,
 } from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
@@ -243,7 +258,22 @@ const icons = [
   NodeIndexOutline,
   ArrowRightOutline,
   QuestionCircleOutline,
-  InfoOutline
+  InfoOutline,
+  EyeInvisibleOutline,
+  DoubleLeftOutline,
+  IdcardOutline,
+  PhoneOutline,
+  MailOutline,
+  KeyOutline,
+  GlobalOutline,
+  CrownOutline,
+  ContactsOutline,
+  BankOutline,
+  LaptopOutline,
+  SisternodeOutline,
+  CameraOutline,
+  SaveOutline,
+  MobileOutline,
 ];
 
 export const appConfig: ApplicationConfig = {

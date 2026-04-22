@@ -40,7 +40,7 @@
             <td>
               <div class="flex items-center gap-2">
                 <nz-avatar [nzSrc]="user.avatar" nzIcon="user" nzSize="small"></nz-avatar>
-                <span>{{ user.name }}</span>
+                <a [routerLink]="['/profile/overview']">{{ user.name }}</a>
               </div>
             </td>
             <td>{{ user.email }}</td>

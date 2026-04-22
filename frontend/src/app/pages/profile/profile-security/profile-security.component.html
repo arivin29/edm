@@ -1,0 +1,157 @@
+<div class="security-grid">
+
+  <!-- Password change -->
+  <nz-card nzSize="small" class="sec-card">
+    <div class="sec-card__header">
+      <span nz-icon nzType="key" nzTheme="outline" class="sec-card__icon sec-card__icon--blue"></span>
+      <div>
+        <div class="sec-card__title">Ubah Password</div>
+        <div class="sec-card__sub">Pastikan password Anda kuat dan unik</div>
+      </div>
+    </div>
+
+    <form nz-form [formGroup]="passwordForm" (ngSubmit)="submitPassword()" nzLayout="vertical" class="sec-form">
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Password Lama</nz-form-label>
+        <nz-form-control [nzErrorTip]="curErr">
+          <nz-input-group [nzSuffix]="suffixCur" nzSize="default">
+            <input nz-input formControlName="current_password" [type]="showCurrent() ? 'text' : 'password'" placeholder="Masukkan password saat ini" />
+          </nz-input-group>
+          <ng-template #suffixCur>
+            <span nz-icon [nzType]="showCurrent() ? 'eye' : 'eye-invisible'" nzTheme="outline" class="cursor-pointer" (click)="showCurrent.set(!showCurrent())"></span>
+          </ng-template>
+          <ng-template #curErr let-ctrl>
+            @if (ctrl.hasError('required')) { Password lama wajib diisi }
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Password Baru</nz-form-label>
+        <nz-form-control [nzErrorTip]="newErr">
+          <nz-input-group [nzSuffix]="suffixNew" nzSize="default">
+            <input nz-input formControlName="new_password" [type]="showNew() ? 'text' : 'password'" placeholder="Minimal 8 karakter" />
+          </nz-input-group>
+          <ng-template #suffixNew>
+            <span nz-icon [nzType]="showNew() ? 'eye' : 'eye-invisible'" nzTheme="outline" class="cursor-pointer" (click)="showNew.set(!showNew())"></span>
+          </ng-template>
+          <ng-template #newErr let-ctrl>
+            @if (ctrl.hasError('required')) { Password baru wajib diisi }
+            @else if (ctrl.hasError('minlength')) { Minimal 8 karakter }
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Password strength -->
+      @if (passwordForm.get('new_password')?.value) {
+        <div class="sec-pw-strength">
+          <div class="sec-pw-strength__bar">
+            <nz-progress
+              [nzPercent]="passwordStrength().percent"
+              [nzStrokeColor]="passwordStrength().color"
+              [nzShowInfo]="false"
+              nzSize="small"
+            ></nz-progress>
+            <span class="sec-pw-strength__label" [style.color]="passwordStrength().color">
+              {{ passwordStrength().label }}
+            </span>
+          </div>
+          <div class="sec-pw-reqs">
+            @for (req of passwordRequirements(); track req.label) {
+              <div class="sec-pw-req" [class.ok]="req.ok">
+                <span nz-icon [nzType]="req.ok ? 'check-circle' : 'close-circle'" nzTheme="outline"></span>
+                {{ req.label }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Konfirmasi Password</nz-form-label>
+        <nz-form-control [nzErrorTip]="confirmErr">
+          <nz-input-group [nzSuffix]="suffixConf" nzSize="default">
+            <input nz-input formControlName="new_password_confirmation" [type]="showConfirm() ? 'text' : 'password'" placeholder="Ulangi password baru" />
+          </nz-input-group>
+          <ng-template #suffixConf>
+            <span nz-icon [nzType]="showConfirm() ? 'eye' : 'eye-invisible'" nzTheme="outline" class="cursor-pointer" (click)="showConfirm.set(!showConfirm())"></span>
+          </ng-template>
+          <ng-template #confirmErr let-ctrl>
+            @if (ctrl.hasError('required')) { Konfirmasi password wajib diisi }
+            @else if (ctrl.hasError('mismatch')) { Password tidak cocok }
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <button nz-button nzType="primary" [nzLoading]="submitting()">
+        <span nz-icon nzType="safety-certificate" nzTheme="outline"></span>
+        Ubah Password
+      </button>
+    </form>
+  </nz-card>
+
+  <!-- Active sessions -->
+  <nz-card nzSize="small" class="sec-card">
+    <div class="sec-card__header">
+      <span nz-icon nzType="global" nzTheme="outline" class="sec-card__icon sec-card__icon--orange"></span>
+      <div class="sec-card__header-text">
+        <div class="sec-card__title">Sesi Aktif</div>
+        <div class="sec-card__sub">Perangkat yang sedang login ke akun Anda</div>
+      </div>
+      @if (sessions().length > 1) {
+        <button
+          nz-button nzDanger nzSize="small" nzGhost
+          nz-popconfirm
+          nzPopconfirmTitle="Cabut semua sesi lain?"
+          (nzOnConfirm)="revokeAllSessions()"
+        >
+          <span nz-icon nzType="close-circle" nzTheme="outline"></span> Cabut Semua
+        </button>
+      }
+    </div>
+
+    <nz-spin [nzSpinning]="sessionsLoading()">
+      @if (sessions().length > 0) {
+        <div class="sec-sessions">
+          @for (s of sessions(); track s.id) {
+            <div class="sec-session" [class.sec-session--current]="s.is_current">
+              <div class="sec-session__icon">
+                <span nz-icon [nzType]="getDeviceIcon(s.user_agent)" nzTheme="outline"></span>
+              </div>
+              <div class="sec-session__body">
+                <div class="sec-session__top">
+                  <span class="sec-session__browser">{{ getBrowserName(s.user_agent) }}</span>
+                  @if (s.is_current) {
+                    <nz-tag nzColor="success" class="sec-session__tag">Sesi ini</nz-tag>
+                  }
+                </div>
+                <div class="sec-session__meta">
+                  {{ s.ip_address }}
+                  @if (s.location) { &nbsp;·&nbsp; {{ s.location }} }
+                  &nbsp;·&nbsp; Aktif {{ s.last_activity | date:'dd MMM, HH:mm' }}
+                </div>
+              </div>
+              @if (!s.is_current) {
+                <button
+                  nz-button nzDanger nzSize="small" nzType="text"
+                  nz-popconfirm nzPopconfirmTitle="Cabut sesi ini?"
+                  (nzOnConfirm)="revokeSession(s.id)"
+                  nz-tooltip nzTooltipTitle="Cabut sesi"
+                >
+                  <span nz-icon nzType="close" nzTheme="outline"></span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="sec-sessions-empty">
+          <span nz-icon nzType="check-circle" nzTheme="outline" style="color:#52c41a;font-size:20px;"></span>
+          <span>Tidak ada sesi aktif lain</span>
+        </div>
+      }
+    </nz-spin>
+  </nz-card>
+
+</div>

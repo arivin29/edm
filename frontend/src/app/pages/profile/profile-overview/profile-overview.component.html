@@ -1,0 +1,223 @@
+<nz-spin [nzSpinning]="loading()">
+  @if (profile(); as p) {
+    <div class="overview-grid">
+
+      <!-- ===== Info & Org ===== -->
+      <div class="overview-col overview-col--main">
+
+        <!-- Identity Info -->
+        <nz-card nzSize="small" class="ov-card">
+          <div class="ov-card__header">
+            <span nz-icon nzType="idcard" nzTheme="outline" class="ov-card__icon ov-card__icon--blue"></span>
+            <span class="ov-card__title">Informasi Pribadi</span>
+            <a routerLink="/profile/settings" class="ov-card__action">
+              <span nz-icon nzType="edit" nzTheme="outline"></span> Edit
+            </a>
+          </div>
+          <div class="ov-info-grid">
+            <div class="ov-info-item">
+              <span class="ov-info-item__label">
+                <span nz-icon nzType="user" nzTheme="outline"></span> Nama Lengkap
+              </span>
+              <span class="ov-info-item__value">{{ p.name }}</span>
+            </div>
+            <div class="ov-info-item">
+              <span class="ov-info-item__label">
+                <span nz-icon nzType="mail" nzTheme="outline"></span> Email
+              </span>
+              <span class="ov-info-item__value">{{ p.email }}</span>
+            </div>
+            <div class="ov-info-item">
+              <span class="ov-info-item__label">
+                <span nz-icon nzType="phone" nzTheme="outline"></span> Telepon
+              </span>
+              <span class="ov-info-item__value">{{ p.phone || '-' }}</span>
+            </div>
+            <div class="ov-info-item">
+              <span class="ov-info-item__label">
+                <span nz-icon nzType="contacts" nzTheme="outline"></span> ID Karyawan
+              </span>
+              <span class="ov-info-item__value">{{ p.employee_id || '-' }}</span>
+            </div>
+            <div class="ov-info-item">
+              <span class="ov-info-item__label">
+                <span nz-icon nzType="clock-circle" nzTheme="outline"></span> Bergabung
+              </span>
+              <span class="ov-info-item__value">{{ p.created_at | date:'dd MMM yyyy' }}</span>
+            </div>
+            <div class="ov-info-item">
+              <span class="ov-info-item__label">
+                <span nz-icon nzType="check-circle" nzTheme="outline"></span> Status
+              </span>
+              <span class="ov-info-item__value">
+                <nz-tag [nzColor]="p.is_active ? 'success' : 'error'">
+                  {{ p.is_active ? 'Aktif' : 'Nonaktif' }}
+                </nz-tag>
+              </span>
+            </div>
+          </div>
+        </nz-card>
+
+        <!-- Organisation -->
+        <nz-card nzSize="small" class="ov-card">
+          <div class="ov-card__header">
+            <span nz-icon nzType="apartment" nzTheme="outline" class="ov-card__icon ov-card__icon--orange"></span>
+            <span class="ov-card__title">Struktur Organisasi</span>
+          </div>
+          <div class="ov-org-tree">
+            <div class="ov-org-node">
+              <span nz-icon nzType="bank" nzTheme="outline" class="ov-org-node__icon"></span>
+              <div class="ov-org-node__body">
+                <span class="ov-org-node__level">Perusahaan</span>
+                <span class="ov-org-node__name">{{ p.company?.name || '-' }}</span>
+              </div>
+            </div>
+            <div class="ov-org-connector"></div>
+            <div class="ov-org-node">
+              <span nz-icon nzType="laptop" nzTheme="outline" class="ov-org-node__icon"></span>
+              <div class="ov-org-node__body">
+                <span class="ov-org-node__level">Kantor</span>
+                <span class="ov-org-node__name">{{ p.office?.name || '-' }}</span>
+              </div>
+            </div>
+            <div class="ov-org-connector"></div>
+            <div class="ov-org-node">
+              <span nz-icon nzType="team" nzTheme="outline" class="ov-org-node__icon"></span>
+              <div class="ov-org-node__body">
+                <span class="ov-org-node__level">Departemen</span>
+                <span class="ov-org-node__name">{{ p.department?.name || '-' }}</span>
+              </div>
+            </div>
+            @if (p.section?.name) {
+              <div class="ov-org-connector"></div>
+              <div class="ov-org-node">
+                <span nz-icon nzType="sisternode" nzTheme="outline" class="ov-org-node__icon"></span>
+                <div class="ov-org-node__body">
+                  <span class="ov-org-node__level">Seksi</span>
+                  <span class="ov-org-node__name">{{ p.section!.name }}</span>
+                </div>
+              </div>
+            }
+            <div class="ov-org-connector"></div>
+            <div class="ov-org-node ov-org-node--highlight">
+              <span nz-icon nzType="crown" nzTheme="outline" class="ov-org-node__icon"></span>
+              <div class="ov-org-node__body">
+                <span class="ov-org-node__level">Jabatan</span>
+                <span class="ov-org-node__name">{{ p.position?.name || '-' }}</span>
+              </div>
+            </div>
+          </div>
+        </nz-card>
+
+      </div>
+
+      <!-- ===== Roles & Permissions + Activity ===== -->
+      <div class="overview-col overview-col--side">
+
+        <!-- Roles -->
+        <nz-card nzSize="small" class="ov-card">
+          <div class="ov-card__header">
+            <span nz-icon nzType="safety-certificate" nzTheme="outline" class="ov-card__icon ov-card__icon--purple"></span>
+            <span class="ov-card__title">Role</span>
+          </div>
+          <div class="ov-roles">
+            @for (role of p.roles || []; track role) {
+              <div class="ov-role-badge">
+                <span nz-icon nzType="key" nzTheme="outline" class="ov-role-badge__icon"></span>
+                <span>{{ role?.name || role }}</span>
+              </div>
+            }
+            @if (!p.roles?.length) {
+              <span class="ov-empty-text">Tidak ada role</span>
+            }
+          </div>
+        </nz-card>
+
+        <!-- Permissions -->
+        @if (permissionGroups().length > 0) {
+          <nz-card nzSize="small" class="ov-card">
+            <div class="ov-card__header">
+              <span nz-icon nzType="audit" nzTheme="outline" class="ov-card__icon ov-card__icon--green"></span>
+              <span class="ov-card__title">Hak Akses</span>
+              <span class="ov-card__badge">{{ (p.permissions || []).length }} izin</span>
+            </div>
+            <div class="ov-perms">
+              @for (group of permissionGroups(); track group.group) {
+                <div class="ov-perm-group">
+                  <div class="ov-perm-group__label">{{ groupLabel(group.group) }}</div>
+                  <div class="ov-perm-group__tags">
+                    @for (perm of group.items; track perm) {
+                      <span class="ov-perm-tag" [nz-tooltip]="perm">
+                        {{ perm.split('.').slice(1).join('.') || perm }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </nz-card>
+        }
+
+        <!-- Tanda Tangan preview -->
+        @if (p.signature_image) {
+          <nz-card nzSize="small" class="ov-card">
+            <div class="ov-card__header">
+              <span nz-icon nzType="form" nzTheme="outline" class="ov-card__icon ov-card__icon--teal"></span>
+              <span class="ov-card__title">Tanda Tangan Digital</span>
+              <a routerLink="/profile/signature" class="ov-card__action">Ubah</a>
+            </div>
+            <div class="ov-signature-preview">
+              <img [src]="p.signature_image" alt="Tanda Tangan" class="ov-signature-img" />
+            </div>
+          </nz-card>
+        } @else {
+          <nz-card nzSize="small" class="ov-card">
+            <div class="ov-card__header">
+              <span nz-icon nzType="form" nzTheme="outline" class="ov-card__icon ov-card__icon--teal"></span>
+              <span class="ov-card__title">Tanda Tangan Digital</span>
+            </div>
+            <div class="ov-signature-empty">
+              <span nz-icon nzType="inbox" nzTheme="outline" style="font-size:28px;color:#d9d9d9;"></span>
+              <p>Belum ada tanda tangan</p>
+              <a nz-button nzType="link" nzSize="small" routerLink="/profile/signature">Unggah Sekarang</a>
+            </div>
+          </nz-card>
+        }
+
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <nz-card nzSize="small" class="ov-card ov-activity-card" style="margin-top:16px;">
+      <div class="ov-card__header">
+        <span nz-icon nzType="history" nzTheme="outline" class="ov-card__icon ov-card__icon--gray"></span>
+        <span class="ov-card__title">Aktivitas Terakhir</span>
+      </div>
+      <nz-spin [nzSpinning]="activityLoading()">
+        @if (recentActivity().length > 0) {
+          <div class="ov-activity-list">
+            @for (item of recentActivity(); track item.id) {
+              <div class="ov-activity-item">
+                <div class="ov-activity-item__dot" [style.background]="getActionColor(item.action)">
+                  <span nz-icon [nzType]="getActionIcon(item.action)" nzTheme="outline"></span>
+                </div>
+                <div class="ov-activity-item__body">
+                  <span class="ov-activity-item__desc">{{ item.description || item.action }}</span>
+                  <span class="ov-activity-item__meta">
+                    {{ item.created_at | date:'dd MMM yyyy, HH:mm' }}
+                    @if (item.ip_address) {
+                      &nbsp;·&nbsp; {{ item.ip_address }}
+                    }
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <nz-empty nzNotFoundContent="Belum ada aktivitas" class="ov-activity-empty"></nz-empty>
+        }
+      </nz-spin>
+    </nz-card>
+
+  }
+</nz-spin>

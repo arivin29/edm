@@ -1,0 +1,168 @@
+.doc-info-view {
+  @apply space-y-6;
+}
+
+// Workflow Flow
+.wf-flow {
+  @apply bg-gray-50 rounded-lg p-4;
+}
+
+.wf-flow__header {
+  @apply flex items-center gap-2 mb-4 text-sm font-medium text-gray-700;
+
+  span[nz-icon] {
+    @apply text-blue-500;
+  }
+}
+
+.wf-flow__title {
+  @apply flex-1;
+}
+
+.wf-flow__empty {
+  @apply flex items-center justify-center gap-2 py-6 text-gray-400 text-sm;
+}
+
+.wf-pipeline {
+  @apply flex items-center gap-2 overflow-x-auto pb-2;
+}
+
+.wf-card {
+  @apply flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-gray-200;
+  @apply flex-shrink-0 min-w-[140px];
+
+  &[data-status="approved"] {
+    @apply border-green-200 bg-green-50;
+    .wf-card__icon { @apply text-green-500; }
+  }
+  &[data-status="rejected"] {
+    @apply border-red-200 bg-red-50;
+    .wf-card__icon { @apply text-red-500; }
+  }
+  &[data-status="active"] {
+    @apply border-blue-300 bg-blue-50 ring-2 ring-blue-200;
+    .wf-card__icon { @apply text-blue-500; }
+  }
+}
+
+.wf-card__icon {
+  @apply text-lg text-gray-400;
+}
+
+.wf-card__num {
+  @apply w-5 h-5 rounded-full bg-gray-200 text-gray-500 text-xs flex items-center justify-center font-medium;
+}
+
+.wf-card__body {
+  @apply flex-1 min-w-0;
+}
+
+.wf-card__name {
+  @apply text-sm font-medium text-gray-800 truncate;
+}
+
+.wf-card__meta {
+  @apply text-[11px] text-gray-500 truncate;
+}
+
+.wf-arrow {
+  @apply text-gray-300 flex-shrink-0;
+
+  &[data-status="approved"] { @apply text-green-400; }
+  &[data-status="rejected"] { @apply text-red-400; }
+}
+
+// Stats Cards
+.info-stat-cards {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-3;
+}
+
+.info-stat-card {
+  @apply flex items-center gap-3 bg-white rounded-lg border border-gray-200 p-3;
+}
+
+.info-stat-card__icon {
+  @apply w-10 h-10 rounded-lg flex items-center justify-center text-lg;
+
+  &--files { @apply bg-blue-50 text-blue-500; }
+  &--comments { @apply bg-green-50 text-green-500; }
+  &--dist { @apply bg-purple-50 text-purple-500; }
+  &--sign { @apply bg-orange-50 text-orange-500; }
+}
+
+.info-stat-card__body {
+  @apply flex-1 min-w-0;
+}
+
+.info-stat-card__value {
+  @apply text-xl font-bold text-gray-900;
+}
+
+.info-stat-card__label {
+  @apply text-[11px] text-gray-500;
+}
+
+// Info Grid
+.doc-info-grid {
+  @apply grid grid-cols-2 md:grid-cols-3 gap-4 bg-white rounded-lg border border-gray-200 p-4;
+}
+
+.doc-info-item {
+  @apply flex flex-col gap-0.5;
+}
+
+.doc-info-label {
+  @apply text-[11px] text-gray-400 uppercase tracking-wider;
+}
+
+.doc-info-value {
+  @apply text-sm text-gray-800;
+
+  &--mono {
+    @apply font-mono text-gray-600;
+  }
+}
+
+// Timestamps
+.doc-info-timestamps {
+  @apply flex flex-wrap gap-4 text-xs;
+}
+
+.doc-info-ts {
+  @apply flex items-center gap-1.5 text-gray-500;
+
+  span[nz-icon] {
+    @apply text-gray-400;
+  }
+
+  .doc-info-label {
+    @apply text-gray-400 text-xs normal-case tracking-normal;
+  }
+
+  .doc-info-value {
+    @apply text-gray-600 text-xs;
+  }
+}
+
+// Description
+.doc-info-desc {
+  @apply bg-white rounded-lg border border-gray-200 p-4;
+
+  .doc-info-label {
+    @apply block mb-2;
+  }
+}
+
+.doc-info-desc__text {
+  @apply text-sm text-gray-700 m-0 whitespace-pre-wrap;
+}
+
+// Animation
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -29,6 +29,7 @@ func Api() {
 	attachmentController := controllers.NewAttachmentController()
 	relationController := controllers.NewDocumentRelationController()
 	tteController := controllers.NewTTEController()
+	searchController := controllers.NewSearchController()
 
 	// Global CORS preflight handler - must be before other routes
 	facades.Route().Fallback(func(ctx http.Context) http.Response {
@@ -60,6 +61,9 @@ func Api() {
 			router.Get("/auth/me", authController.Me)
 			router.Put("/auth/password", authController.ChangePassword)
 			router.Get("/auth/sso/status", authController.SSOStatus)
+
+			// Global search
+			router.Get("/search", searchController.GlobalSearch)
 		})
 
 		// Organization routes (auth + data scope)

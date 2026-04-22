@@ -1,0 +1,301 @@
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+}
+
+.overview-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- Card shell ---- */
+.ov-card {
+  border-radius: 10px !important;
+
+  ::ng-deep .ant-card-body {
+    padding: 16px;
+  }
+}
+
+.ov-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ov-card__icon {
+  font-size: 17px;
+  flex-shrink: 0;
+
+  &--blue   { color: #1677ff; }
+  &--orange { color: #fa8c16; }
+  &--purple { color: #722ed1; }
+  &--green  { color: #52c41a; }
+  &--teal   { color: #13c2c2; }
+  &--gray   { color: #8c8c8c; }
+}
+
+.ov-card__title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.ov-card__action {
+  font-size: 12px;
+  color: #1677ff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  &:hover { text-decoration: underline; }
+}
+
+.ov-card__badge {
+  font-size: 11px;
+  background: #f0f5ff;
+  color: #1677ff;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+/* ---- Info grid ---- */
+.ov-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+.ov-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ov-info-item__label {
+  font-size: 11px;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .anticon { font-size: 11px; }
+}
+
+.ov-info-item__value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #262626;
+}
+
+/* ---- Org tree ---- */
+.ov-org-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ov-org-connector {
+  width: 2px;
+  height: 12px;
+  background: #e8e8e8;
+  margin-left: 18px;
+}
+
+.ov-org-node {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+  background: #fafafa;
+  transition: background 0.15s;
+
+  &:hover { background: #f0f5ff; }
+
+  &--highlight {
+    background: #eff5ff;
+    border-color: #adc6ff;
+
+    .ov-org-node__icon { color: #1677ff; }
+    .ov-org-node__name { color: #1677ff; font-weight: 600; }
+  }
+}
+
+.ov-org-node__icon {
+  font-size: 15px;
+  color: #8c8c8c;
+  flex-shrink: 0;
+}
+
+.ov-org-node__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.ov-org-node__level {
+  font-size: 10px;
+  color: #aaa;
+  line-height: 1.2;
+}
+
+.ov-org-node__name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #262626;
+}
+
+/* ---- Roles ---- */
+.ov-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ov-role-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: #f9f0ff;
+  border: 1px solid #d3adf7;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #531dab;
+}
+
+.ov-role-badge__icon { color: #722ed1; font-size: 14px; }
+
+/* ---- Permissions ---- */
+.ov-perms {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 4px; }
+}
+
+.ov-perm-group__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8c8c8c;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.ov-perm-group__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ov-perm-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #389e0d;
+  cursor: default;
+}
+
+.ov-empty-text {
+  font-size: 12px;
+  color: #bbb;
+}
+
+/* ---- Signature ---- */
+.ov-signature-preview {
+  display: flex;
+  justify-content: center;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.ov-signature-img {
+  max-width: 100%;
+  max-height: 100px;
+  object-fit: contain;
+}
+
+.ov-signature-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 0;
+  color: #bbb;
+  font-size: 12px;
+}
+
+/* ---- Activity ---- */
+.ov-activity-card {
+  ::ng-deep .ant-card-body { padding: 16px; }
+}
+
+.ov-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ov-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+
+  &:last-child { border-bottom: none; }
+}
+
+.ov-activity-item__dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 13px;
+  margin-top: 1px;
+  opacity: 0.85;
+}
+
+.ov-activity-item__body {
+  flex: 1;
+}
+
+.ov-activity-item__desc {
+  display: block;
+  font-size: 13px;
+  color: #262626;
+  line-height: 1.4;
+}
+
+.ov-activity-item__meta {
+  display: block;
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+.ov-activity-empty {
+  padding: 12px 0;
+}

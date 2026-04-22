@@ -60,8 +60,59 @@ export const routes: Routes = [
           {
             path: ':id',
             loadComponent: () =>
-              import('./pages/documents/document-detail/document-detail.component').then(m => m.DocumentDetailPage),
-            title: 'Detail Dokumen - DMS'
+              import('./pages/documents/document-detail/document-detail-layout.component').then(m => m.DocumentDetailLayoutComponent),
+            title: 'Detail Dokumen - DMS',
+            children: [
+              { path: '', redirectTo: 'info', pathMatch: 'full' },
+              {
+                path: 'info',
+                loadComponent: () =>
+                  import('./pages/documents/document-detail/views/doc-info-view.component').then(m => m.DocInfoViewComponent),
+                title: 'Informasi Dokumen - DMS'
+              },
+              {
+                path: 'files',
+                loadComponent: () =>
+                  import('./pages/documents/document-detail/views/doc-files-view.component').then(m => m.DocFilesViewComponent),
+                title: 'Berkas Dokumen - DMS'
+              },
+              {
+                path: 'versions',
+                loadComponent: () =>
+                  import('./pages/documents/document-detail/views/doc-versions-view.component').then(m => m.DocVersionsViewComponent),
+                title: 'Riwayat Versi - DMS'
+              },
+              {
+                path: 'parameters',
+                loadComponent: () =>
+                  import('./pages/documents/document-detail/views/doc-parameters-view.component').then(m => m.DocParametersViewComponent),
+                title: 'Parameter Dokumen - DMS'
+              },
+              {
+                path: 'comments',
+                loadComponent: () =>
+                  import('./pages/documents/document-detail/views/doc-comments-view.component').then(m => m.DocCommentsViewComponent),
+                title: 'Komentar Dokumen - DMS'
+              },
+              {
+                path: 'workflow',
+                loadComponent: () =>
+                  import('./pages/documents/document-detail/views/doc-workflow-view.component').then(m => m.DocWorkflowViewComponent),
+                title: 'Workflow Dokumen - DMS'
+              },
+              {
+                path: 'distribution',
+                loadComponent: () =>
+                  import('./pages/documents/document-detail/views/doc-distribution-view.component').then(m => m.DocDistributionViewComponent),
+                title: 'Distribusi Dokumen - DMS'
+              },
+              {
+                path: 'signatures',
+                loadComponent: () =>
+                  import('./pages/documents/document-detail/views/doc-signatures-view.component').then(m => m.DocSignaturesViewComponent),
+                title: 'Tanda Tangan Dokumen - DMS'
+              }
+            ]
           },
           {
             path: ':id/edit',
@@ -211,12 +262,38 @@ export const routes: Routes = [
           import('./pages/notifications/notification-list/notification-list.component').then(m => m.NotificationListPage),
         title: 'Notifikasi - DMS'
       },
-      // Profile
+      // Profile (multi-section)
       {
         path: 'profile',
         loadComponent: () =>
-          import('./pages/profile/profile-page/profile-page.component').then(m => m.ProfilePage),
-        title: 'Profil - DMS'
+          import('./pages/profile/profile-layout/profile-layout.component').then(m => m.ProfileLayoutComponent),
+        children: [
+          { path: '', redirectTo: 'overview', pathMatch: 'full' },
+          {
+            path: 'overview',
+            loadComponent: () =>
+              import('./pages/profile/profile-overview/profile-overview.component').then(m => m.ProfileOverviewComponent),
+            title: 'Profil Saya - DMS'
+          },
+          {
+            path: 'settings',
+            loadComponent: () =>
+              import('./pages/profile/profile-settings/profile-settings.component').then(m => m.ProfileSettingsComponent),
+            title: 'Edit Profil - DMS'
+          },
+          {
+            path: 'security',
+            loadComponent: () =>
+              import('./pages/profile/profile-security/profile-security.component').then(m => m.ProfileSecurityComponent),
+            title: 'Keamanan Akun - DMS'
+          },
+          {
+            path: 'signature',
+            loadComponent: () =>
+              import('./pages/profile/profile-signature/profile-signature.component').then(m => m.ProfileSignatureComponent),
+            title: 'Tanda Tangan Digital - DMS'
+          },
+        ]
       },
       {
         path: '',

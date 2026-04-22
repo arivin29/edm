@@ -1,0 +1,50 @@
+<div class="profile-shell">
+  <!-- Left: sidebar card -->
+  <aside class="profile-sidebar">
+    <!-- Identity card -->
+    <div class="profile-id-card">
+      <div class="profile-id-card__cover"></div>
+      <div class="profile-id-card__body">
+        <div class="profile-id-card__avatar-wrap">
+          @if (userAvatar()) {
+            <nz-avatar [nzSrc]="userAvatar()" [nzSize]="80" class="profile-id-card__avatar"></nz-avatar>
+          } @else {
+            <nz-avatar [nzText]="userInitial()" [nzSize]="80" class="profile-id-card__avatar" style="background:#1677ff;font-size:32px;font-weight:600;"></nz-avatar>
+          }
+        </div>
+        <div class="profile-id-card__name">{{ userName() }}</div>
+        <div class="profile-id-card__email">{{ userEmail() }}</div>
+        <div class="profile-id-card__roles">
+          @for (role of userRoleLabel(); track role) {
+            <nz-tag [nzColor]="role === 'Super Admin' ? 'gold' : role === 'Admin Perusahaan' ? 'blue' : 'default'" class="profile-id-card__role-tag">
+              {{ role }}
+            </nz-tag>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="profile-nav">
+      @for (item of navItems; track item.key) {
+        <a
+          class="profile-nav__item"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+        >
+          <span nz-icon [nzType]="item.icon" nzTheme="outline" class="profile-nav__icon"></span>
+          <div class="profile-nav__text">
+            <span class="profile-nav__label">{{ item.label }}</span>
+            <span class="profile-nav__desc">{{ item.description }}</span>
+          </div>
+          <span nz-icon nzType="right" nzTheme="outline" class="profile-nav__arrow"></span>
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <!-- Right: content outlet -->
+  <main class="profile-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

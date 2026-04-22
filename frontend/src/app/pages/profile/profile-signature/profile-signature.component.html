@@ -1,0 +1,111 @@
+<nz-spin [nzSpinning]="loading()">
+  <div class="sig-grid">
+
+    <!-- Signature preview card -->
+    <nz-card nzSize="small" class="sig-card sig-card--main">
+      <div class="sig-card__header">
+        <span nz-icon nzType="form" nzTheme="outline" class="sig-card__icon"></span>
+        <div>
+          <div class="sig-card__title">Tanda Tangan Digital</div>
+          <div class="sig-card__sub">Digunakan untuk Tanda Tangan Elektronik (TTE) pada dokumen</div>
+        </div>
+        @if (signatureUrl()) {
+          <nz-tag nzColor="success">Sudah diunggah</nz-tag>
+        } @else {
+          <nz-tag nzColor="warning">Belum ada</nz-tag>
+        }
+      </div>
+
+      <!-- Preview area -->
+      <div class="sig-preview-area" [class.sig-preview-area--empty]="!signatureUrl()">
+        @if (signatureUrl()) {
+          <img [src]="signatureUrl()" alt="Tanda Tangan" class="sig-preview-img" />
+        } @else {
+          <div class="sig-preview-placeholder">
+            <span nz-icon nzType="form" nzTheme="outline" style="font-size:40px;color:#d9d9d9;"></span>
+            <p>Belum ada tanda tangan digital</p>
+            <span class="sig-preview-hint">Unggah gambar tanda tangan Anda di bawah ini</span>
+          </div>
+        }
+      </div>
+
+      <!-- Actions -->
+      <div class="sig-actions">
+        <nz-upload
+          [nzAction]="getUploadUrl()"
+          [nzHeaders]="uploadHeaders()"
+          nzName="signature"
+          [nzShowUploadList]="false"
+          (nzChange)="onUploadChange($event)"
+          [nzBeforeUpload]="beforeUpload"
+          nzAccept="image/*"
+        >
+          <button nz-button nzType="primary" [nzLoading]="uploading()">
+            <span nz-icon nzType="upload" nzTheme="outline"></span>
+            {{ signatureUrl() ? 'Ganti Tanda Tangan' : 'Unggah Tanda Tangan' }}
+          </button>
+        </nz-upload>
+
+        @if (signatureUrl()) {
+          <button
+            nz-button nzDanger
+            nz-popconfirm
+            nzPopconfirmTitle="Hapus tanda tangan? Anda tidak bisa menandatangani dokumen sebelum menggantinya."
+            nzPopconfirmPlacement="top"
+            (nzOnConfirm)="deleteSignature()"
+          >
+            <span nz-icon nzType="delete" nzTheme="outline"></span> Hapus
+          </button>
+        }
+      </div>
+    </nz-card>
+
+    <!-- Guidelines card -->
+    <nz-card nzSize="small" class="sig-card sig-card--guide">
+      <div class="sig-card__header">
+        <span nz-icon nzType="info-circle" nzTheme="outline" class="sig-card__icon sig-card__icon--gray"></span>
+        <div class="sig-card__title">Panduan Tanda Tangan</div>
+      </div>
+
+      <div class="sig-guidelines">
+        <div class="sig-guide-item">
+          <span nz-icon nzType="check-circle" nzTheme="outline" class="sig-guide-item__icon sig-guide-item__icon--ok"></span>
+          <div>
+            <div class="sig-guide-item__title">Format yang didukung</div>
+            <div class="sig-guide-item__desc">JPG, PNG, GIF, SVG &mdash; Maks. 2MB</div>
+          </div>
+        </div>
+        <div class="sig-guide-item">
+          <span nz-icon nzType="check-circle" nzTheme="outline" class="sig-guide-item__icon sig-guide-item__icon--ok"></span>
+          <div>
+            <div class="sig-guide-item__title">Ukuran rekomendasi</div>
+            <div class="sig-guide-item__desc">Minimal 300×100px, rasio 3:1</div>
+          </div>
+        </div>
+        <div class="sig-guide-item">
+          <span nz-icon nzType="check-circle" nzTheme="outline" class="sig-guide-item__icon sig-guide-item__icon--ok"></span>
+          <div>
+            <div class="sig-guide-item__title">Background transparan</div>
+            <div class="sig-guide-item__desc">PNG dengan background transparan terlihat lebih baik</div>
+          </div>
+        </div>
+        <div class="sig-guide-item">
+          <span nz-icon nzType="close-circle" nzTheme="outline" class="sig-guide-item__icon sig-guide-item__icon--err"></span>
+          <div>
+            <div class="sig-guide-item__title">Jangan gunakan tanda tangan orang lain</div>
+            <div class="sig-guide-item__desc">Tanda tangan akan tercatat dalam audit trail dokumen</div>
+          </div>
+        </div>
+      </div>
+
+      <nz-divider style="margin: 12px 0;"></nz-divider>
+
+      <nz-alert
+        nzType="info"
+        nzMessage="Tanda tangan ini digunakan untuk fitur TTE (Tanda Tangan Elektronik) pada dokumen yang membutuhkan persetujuan digital."
+        [nzShowIcon]="true"
+      ></nz-alert>
+    </nz-card>
+
+  </div>
+</nz-spin>

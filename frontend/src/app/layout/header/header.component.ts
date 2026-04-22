@@ -1,4 +1,4 @@
-import { Component, signal, inject, output, input, computed, HostListener } from '@angular/core';
+import { Component, signal, inject, output, input, computed, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
@@ -9,6 +9,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { AuthStateService } from '../../core/auth/auth-state.service';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
+import { GlobalSearchComponent } from '../../shared/components/global-search/global-search.component';
 
 @Component({
   selector: 'app-header',
@@ -22,7 +23,8 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
     NzAvatarModule,
     NzInputModule,
     NzToolTipModule,
-    NotificationBellComponent
+    NotificationBellComponent,
+    GlobalSearchComponent
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
@@ -62,6 +64,8 @@ export class HeaderComponent {
     return this.userName()?.charAt(0)?.toUpperCase() || 'U';
   }
 
+  @ViewChild('globalSearch') globalSearch!: GlobalSearchComponent;
+
   @HostListener('document:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
     if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
@@ -71,8 +75,7 @@ export class HeaderComponent {
   }
 
   openSearch(): void {
-    // TODO: implement global search modal/dialog
-    console.log('Open search');
+    this.globalSearch?.open();
   }
 
   logout(): void {

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -20,7 +21,7 @@ import { UserFormComponent } from '../user-form/user-form.component';
   selector: 'app-user-list',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule, FormsModule, RouterLink,
     NzTableModule, NzButtonModule, NzIconModule, NzTagModule,
     NzInputModule, NzCardModule, NzAvatarModule, NzDropDownModule, NzModalModule,
     UserFormComponent

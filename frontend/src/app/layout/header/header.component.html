@@ -45,12 +45,16 @@
           </div>
         </li>
         <li nz-menu-divider></li>
-        <li nz-menu-item routerLink="/profile">
+        <li nz-menu-item routerLink="/profile/overview">
           <span nz-icon nzType="user" nzTheme="outline"></span>
           Profil Saya
         </li>
-        <li nz-menu-item routerLink="/profile/change-password">
-          <span nz-icon nzType="safety" nzTheme="outline"></span>
+        <li nz-menu-item routerLink="/profile/settings">
+          <span nz-icon nzType="edit" nzTheme="outline"></span>
+          Edit Profil
+        </li>
+        <li nz-menu-item routerLink="/profile/security">
+          <span nz-icon nzType="safety-certificate" nzTheme="outline"></span>
           Ubah Password
         </li>
         <li nz-menu-divider></li>
@@ -62,3 +66,4 @@
     </nz-dropdown-menu>
   </div>
 </header>
+<app-global-search #globalSearch></app-global-search>

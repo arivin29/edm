@@ -1,0 +1,167 @@
+.security-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sec-card {
+  border-radius: 10px !important;
+  ::ng-deep .ant-card-body { padding: 20px; }
+}
+
+.sec-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sec-card__icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  &--blue { color: #1677ff; }
+  &--orange { color: #fa8c16; }
+}
+
+.sec-card__header-text { flex: 1; }
+
+.sec-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+  line-height: 1.3;
+}
+
+.sec-card__sub {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-top: 2px;
+}
+
+/* Form */
+.sec-form {
+  max-width: 480px;
+}
+
+/* Password strength */
+.sec-pw-strength {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.sec-pw-strength__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+
+  nz-progress { flex: 1; }
+}
+
+.sec-pw-strength__label {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sec-pw-reqs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+
+.sec-pw-req {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #bbb;
+
+  .anticon { font-size: 12px; color: #d9d9d9; }
+
+  &.ok {
+    color: #595959;
+    .anticon { color: #52c41a; }
+  }
+}
+
+/* Sessions */
+.sec-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sec-session {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+  background: #fafafa;
+  transition: background 0.15s;
+
+  &:hover { background: #f5f5f5; }
+
+  &--current {
+    background: #f6ffed;
+    border-color: #b7eb8f;
+  }
+}
+
+.sec-session__icon {
+  width: 36px;
+  height: 36px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #595959;
+  flex-shrink: 0;
+}
+
+.sec-session__body { flex: 1; }
+
+.sec-session__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.sec-session__browser {
+  font-size: 13px;
+  font-weight: 500;
+  color: #262626;
+}
+
+.sec-session__tag {
+  margin: 0 !important;
+  font-size: 10px !important;
+  line-height: 16px !important;
+  padding: 0 5px !important;
+}
+
+.sec-session__meta {
+  font-size: 11px;
+  color: #aaa;
+}
+
+.sec-sessions-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  color: #8c8c8c;
+  font-size: 13px;
+}

@@ -1,0 +1,136 @@
+<nz-spin [nzSpinning]="loading()">
+  <div class="settings-grid">
+
+    <!-- Avatar card -->
+    <nz-card nzSize="small" class="ps-card ps-avatar-card">
+      <div class="ps-card__header">
+        <span nz-icon nzType="user" nzTheme="outline" class="ps-card__icon"></span>
+        <span class="ps-card__title">Foto Profil</span>
+      </div>
+
+      <div class="ps-avatar-area">
+        <div class="ps-avatar-wrap">
+          <nz-spin [nzSpinning]="avatarUploading()" nzSize="small">
+            @if (previewAvatar()) {
+              <nz-avatar [nzSrc]="previewAvatar()" [nzSize]="96" class="ps-avatar"></nz-avatar>
+            } @else {
+              <nz-avatar [nzText]="initial" [nzSize]="96" class="ps-avatar" style="background:#1677ff;font-size:36px;font-weight:600;"></nz-avatar>
+            }
+          </nz-spin>
+          <nz-upload
+            class="ps-avatar-upload-trigger"
+            [nzAction]="getAvatarUploadUrl()"
+            [nzHeaders]="uploadHeaders()"
+            nzName="avatar"
+            [nzShowUploadList]="false"
+            (nzChange)="onAvatarChange($event)"
+            [nzBeforeUpload]="beforeImageUpload"
+            nzAccept="image/*"
+          >
+            <button class="ps-avatar-edit-btn" nz-button nzShape="circle" nzSize="small" nz-tooltip nzTooltipTitle="Ubah foto">
+              <span nz-icon nzType="camera" nzTheme="outline"></span>
+            </button>
+          </nz-upload>
+        </div>
+
+        <div class="ps-avatar-info">
+          <p class="ps-avatar-name">{{ profile()?.name }}</p>
+          <p class="ps-avatar-email">{{ profile()?.email }}</p>
+          <div class="ps-avatar-actions">
+            <nz-upload
+              [nzAction]="getAvatarUploadUrl()"
+              [nzHeaders]="uploadHeaders()"
+              nzName="avatar"
+              [nzShowUploadList]="false"
+              (nzChange)="onAvatarChange($event)"
+              [nzBeforeUpload]="beforeImageUpload"
+              nzAccept="image/*"
+            >
+              <button nz-button nzType="default" nzSize="small">
+                <span nz-icon nzType="upload" nzTheme="outline"></span> Unggah Foto
+              </button>
+            </nz-upload>
+            @if (previewAvatar()) {
+              <button nz-button nzDanger nzSize="small" (click)="removeAvatar()">
+                <span nz-icon nzType="delete" nzTheme="outline"></span> Hapus
+              </button>
+            }
+          </div>
+          <p class="ps-avatar-hint">Format JPG, PNG atau GIF. Maks. 2MB</p>
+        </div>
+      </div>
+    </nz-card>
+
+    <!-- Info form -->
+    <nz-card nzSize="small" class="ps-card">
+      <div class="ps-card__header">
+        <span nz-icon nzType="idcard" nzTheme="outline" class="ps-card__icon"></span>
+        <span class="ps-card__title">Informasi Pribadi</span>
+      </div>
+
+      <form nz-form [formGroup]="form" (ngSubmit)="submit()" nzLayout="vertical">
+
+        <div class="ps-form-row">
+          <nz-form-item class="ps-form-item">
+            <nz-form-label nzRequired>Nama Lengkap</nz-form-label>
+            <nz-form-control [nzErrorTip]="nameErr">
+              <nz-input-group nzSize="default" [nzPrefix]="userPrefix">
+                <input nz-input formControlName="name" placeholder="Nama lengkap" />
+              </nz-input-group>
+              <ng-template #userPrefix><span nz-icon nzType="user" nzTheme="outline"></span></ng-template>
+              <ng-template #nameErr let-ctrl>
+                @if (ctrl.hasError('required')) { Nama wajib diisi }
+                @else if (ctrl.hasError('minlength')) { Minimal 2 karakter }
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item class="ps-form-item">
+            <nz-form-label>Nomor Telepon</nz-form-label>
+            <nz-form-control>
+              <nz-input-group nzSize="default" [nzPrefix]="phonePrefix">
+                <input nz-input formControlName="phone" placeholder="Contoh: 081234567890" />
+              </nz-input-group>
+              <ng-template #phonePrefix><span nz-icon nzType="phone" nzTheme="outline"></span></ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+
+        <div class="ps-form-row">
+          <nz-form-item class="ps-form-item">
+            <nz-form-label>Email</nz-form-label>
+            <nz-form-control>
+              <nz-input-group nzSize="default" [nzPrefix]="mailPrefix">
+                <input nz-input [value]="profile()?.email || ''" [disabled]="true" placeholder="Email" />
+              </nz-input-group>
+              <ng-template #mailPrefix><span nz-icon nzType="mail" nzTheme="outline"></span></ng-template>
+            </nz-form-control>
+            <div class="ps-field-hint">Email tidak dapat diubah. Hubungi admin untuk perubahan email.</div>
+          </nz-form-item>
+
+          <nz-form-item class="ps-form-item">
+            <nz-form-label>ID Karyawan</nz-form-label>
+            <nz-form-control>
+              <nz-input-group nzSize="default" [nzPrefix]="idPrefix">
+                <input nz-input formControlName="employee_id" placeholder="ID karyawan" />
+              </nz-input-group>
+              <ng-template #idPrefix><span nz-icon nzType="contacts" nzTheme="outline"></span></ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+
+        <div class="ps-form-actions">
+          <button nz-button nzType="primary" [nzLoading]="submitting()" [disabled]="form.pristine">
+            <span nz-icon nzType="save" nzTheme="outline"></span>
+            Simpan Perubahan
+          </button>
+          <button nz-button type="button" (click)="loadProfile()" [disabled]="submitting()">
+            <span nz-icon nzType="undo" nzTheme="outline"></span>
+            Reset
+          </button>
+        </div>
+      </form>
+    </nz-card>
+
+  </div>
+</nz-spin>

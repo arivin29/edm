@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
+import { LayoutService } from '../../core/services/layout.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -12,15 +13,17 @@ import { HeaderComponent } from '../header/header.component';
   styleUrl: './main-layout.component.scss'
 })
 export class MainLayoutComponent {
-  // State
-  sidebarCollapsed = signal(false);
+  private layoutService = inject(LayoutService);
+  
+  // State - sync with LayoutService
+  sidebarCollapsed = this.layoutService.mainSidebarCollapsed;
   mobileSidebarOpen = signal(false);
 
   /**
    * Toggle sidebar collapse (desktop)
    */
   toggleSidebar(): void {
-    this.sidebarCollapsed.update(v => !v);
+    this.layoutService.toggleMainSidebar();
   }
 
   /**
