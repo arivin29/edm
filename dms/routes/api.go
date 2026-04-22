@@ -170,7 +170,12 @@ router.Middleware(middleware.RequirePermission("document.view")).Get("/documents
 router.Middleware(middleware.RequirePermission("document.download")).Get("/documents/{id}/versions/{ver}/download", documentController.DownloadVersion)
 router.Middleware(middleware.RequirePermission("document.edit")).Post("/documents/{id}/versions/{ver}/restore", documentController.RestoreVersion)
 router.Middleware(middleware.RequirePermission("document.download")).Get("/documents/{id}/download", documentController.Download)
+router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/preview", documentController.Preview)
 router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/editor-config", onlyofficeController.GetConfig)
+
+// Watermark Configuration
+router.Get("/watermark/config", documentController.GetWatermarkConfig)
+router.Middleware(middleware.RequirePermission("setting.edit")).Put("/watermark/config", documentController.UpdateWatermarkConfig)
 
 // Document Attachments
 router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/attachments", attachmentController.ListAttachments)

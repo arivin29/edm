@@ -15,9 +15,20 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzCollapseModule } from 'ng-zorro-antd/collapse';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { environment } from '../../../../environments/environment';
 import { SystemSetting, DropdownItem, CategoryGroup } from '../settings.models';
 import { SettingsFormComponent } from '../settings-form/settings-form.component';
+
+interface WatermarkConfigItem {
+  enabled: boolean;
+  text: string;
+  color: string;
+  opacity: number;
+  font_size: number;
+  rotation: number;
+  position: string;
+}
 
 @Component({
   selector: 'app-settings-list',
@@ -26,7 +37,7 @@ import { SettingsFormComponent } from '../settings-form/settings-form.component'
     CommonModule, FormsModule,
     NzTableModule, NzButtonModule, NzIconModule, NzCardModule,
     NzInputModule, NzDrawerModule, NzModalModule, NzTagModule,
-    NzSpinModule, NzToolTipModule, NzCollapseModule,
+    NzSpinModule, NzToolTipModule, NzCollapseModule, NzSwitchModule,
     SettingsFormComponent
   ],
   templateUrl: './settings-list.component.html',
@@ -81,9 +92,26 @@ export class SettingsPage implements OnInit {
   drawerVisible = false;
   editItem: SystemSetting | null = null;
 
+  // Watermark config
+  watermarkConfig = signal<Record<string, WatermarkConfigItem>>({});
+  watermarkLoading = signal(false);
+  classificationLabels: Record<string, string> = {
+    public: '🌐 Publik',
+    internal: '👥 Internal',
+    confidential: '🔒 Rahasia',
+    secret: '🛡️ Sangat Rahasia'
+  };
+  classificationColors: Record<string, string> = {
+    public: '#22c55e',
+    internal: '#3b82f6',
+    confidential: '#f97316',
+    secret: '#ef4444'
+  };
+
   ngOnInit() {
     this.loadSettings();
     this.loadDropdowns();
+    this.loadWatermarkConfig();
   }
 
   loadSettings() {
@@ -202,5 +230,37 @@ export class SettingsPage implements OnInit {
   getCompanyName(companyId?: string): string {
     if (!companyId) return '-';
     return this.companies().find(c => c.id === companyId)?.name || companyId;
+  }
+
+  // Watermark methods
+  loadWatermarkConfig() {
+    this.watermarkLoading.set(true);
+    this.http.get<any>(`${this.apiUrl}/watermark/config`).subscribe({
+      next: (res) => {
+        this.watermarkConfig.set(res.data || {});
+        this.watermarkLoading.set(false);
+      },
+      error: () => this.watermarkLoading.set(false)
+    });
+  }
+
+  updateWatermark(classification: string, field: string, value: any) {
+    const payload: any = { classification };
+    payload[field] = value;
+
+    this.http.put<any>(`${this.apiUrl}/watermark/config`, payload).subscribe({
+      next: (res) => {
+        this.watermarkConfig.update(cfg => ({
+          ...cfg,
+          [classification]: res.data
+        }));
+        this.message.success(`Watermark ${classification} diperbarui`);
+      },
+      error: () => this.message.error('Gagal memperbarui watermark')
+    });
+  }
+
+  getClassifications(): string[] {
+    return ['public', 'internal', 'confidential', 'secret'];
   }
 }

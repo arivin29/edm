@@ -10,6 +10,41 @@
   </div>
 
   <nz-spin [nzSpinning]="loading()">
+    <!-- Watermark Configuration -->
+    <nz-card nzSize="small" class="mb-3">
+      <div class="flex items-center gap-2 mb-3">
+        <span nz-icon nzType="file-protect" class="text-blue-500"></span>
+        <span class="font-semibold text-sm">Watermark Dokumen</span>
+        <span class="text-xs text-gray-400">— Otomatis diterapkan saat preview/download berdasarkan klasifikasi</span>
+      </div>
+
+      @if (watermarkLoading()) {
+        <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+      } @else {
+        <div class="grid grid-cols-4 gap-3">
+          @for (cl of getClassifications(); track cl) {
+            <div class="border rounded-lg p-3" [style.border-left]="'3px solid ' + classificationColors[cl]">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-medium text-xs">{{ classificationLabels[cl] }}</span>
+                <nz-switch nzSize="small"
+                  [ngModel]="watermarkConfig()[cl]?.enabled ?? false"
+                  (ngModelChange)="updateWatermark(cl, 'enabled', $event)">
+                </nz-switch>
+              </div>
+              @if (watermarkConfig()[cl]; as cfg) {
+                <div class="text-xs text-gray-500 mb-1">Teks: <strong>{{ cfg.text || '(tidak ada)' }}</strong></div>
+                <div class="text-xs text-gray-400">Opacity: {{ (cfg.opacity * 100).toFixed(0) }}% · {{ cfg.font_size }}pt · {{ cfg.rotation }}°</div>
+                <div class="mt-2">
+                  <input nz-input nzSize="small" placeholder="Teks watermark..." [ngModel]="cfg.text"
+                         (ngModelChange)="updateWatermark(cl, 'text', $event)" class="text-xs" />
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </nz-card>
+
     <nz-card nzSize="small">
       <div class="mb-2">
         <nz-input-group nzSize="small" [nzPrefix]="searchIcon" class="w-64">

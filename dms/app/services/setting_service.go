@@ -44,3 +44,18 @@ func (s *SettingService) Delete(id string) error {
 	}
 	return s.settingRepo.Delete(id)
 }
+
+// UpsertByKeyValue creates or updates a setting by key
+func (s *SettingService) UpsertByKeyValue(companyID, officeID *string, key, value, valueType string) error {
+	if valueType == "" {
+		valueType = "string"
+	}
+	setting := &models.SystemSetting{
+		CompanyID: companyID,
+		OfficeID:  officeID,
+		Key:       key,
+		Value:     value,
+		Type:      valueType,
+	}
+	return s.settingRepo.Upsert(setting)
+}

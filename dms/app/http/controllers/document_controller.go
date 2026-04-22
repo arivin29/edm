@@ -12,12 +12,14 @@ import (
 )
 
 type DocumentController struct {
-	documentService *services.DocumentService
+	documentService  *services.DocumentService
+	watermarkService *services.WatermarkService
 }
 
 func NewDocumentController() *DocumentController {
 	return &DocumentController{
-		documentService: services.NewDocumentService(),
+		documentService:  services.NewDocumentService(),
+		watermarkService: services.NewWatermarkService(),
 	}
 }
 
@@ -173,6 +175,103 @@ func (c *DocumentController) Download(ctx http.Context) http.Response {
 	}
 
 	return ctx.Response().Download(filePath, fileName)
+}
+
+// ---------------------------------------------------------------------------
+// GET /documents/{id}/preview - Preview with watermark (returns PDF)
+// ---------------------------------------------------------------------------
+
+func (c *DocumentController) Preview(ctx http.Context) http.Response {
+	user := types.GetCurrentUser(ctx)
+	if user == nil || !user.HasPermission("document.view") {
+		return forbiddenResponse(ctx)
+	}
+
+	id := ctx.Request().Route("id")
+	filePath, _, err := c.documentService.GetFilePath(id)
+	if err != nil {
+		return notFoundError(ctx, err.Error())
+	}
+
+	// Get document classification
+	doc, err := c.documentService.GetByID(id)
+	if err != nil {
+		return notFoundError(ctx, err.Error())
+	}
+
+	classification := "internal"
+	if doc.Classification != "" {
+		classification = doc.Classification
+	}
+
+	data, contentType, err := c.watermarkService.GetWatermarkedFile(filePath, classification)
+	if err != nil {
+		return serverError(ctx, "Failed to generate preview: "+err.Error())
+	}
+
+	return ctx.Response().Header("Content-Type", contentType).
+		Header("Content-Disposition", "inline").
+		Data(nethttp.StatusOK, contentType, data)
+}
+
+// ---------------------------------------------------------------------------
+// GET /watermark/config - Get watermark configuration
+// ---------------------------------------------------------------------------
+
+func (c *DocumentController) GetWatermarkConfig(ctx http.Context) http.Response {
+	user := types.GetCurrentUser(ctx)
+	if user == nil {
+		return forbiddenResponse(ctx)
+	}
+
+	classifications := []string{"public", "internal", "confidential", "secret"}
+	configs := make(map[string]services.WatermarkConfig)
+
+	for _, cl := range classifications {
+		configs[cl] = c.watermarkService.GetWatermarkConfig(cl)
+	}
+
+	return ctx.Response().Success().Json(http.Json{
+		"data": configs,
+	})
+}
+
+// ---------------------------------------------------------------------------
+// PUT /watermark/config - Update watermark configuration
+// ---------------------------------------------------------------------------
+
+func (c *DocumentController) UpdateWatermarkConfig(ctx http.Context) http.Response {
+	user := types.GetCurrentUser(ctx)
+	if user == nil || !user.HasPermission("setting.edit") {
+		return forbiddenResponse(ctx)
+	}
+
+	settingService := services.NewSettingService()
+	data := ctx.Request().All()
+
+	// Expect: { classification: string, enabled: bool, text: string }
+	classification, ok := data["classification"].(string)
+	if !ok || classification == "" {
+		return badRequestError(ctx, "classification is required")
+	}
+
+	if enabled, ok := data["enabled"].(bool); ok {
+		val := "false"
+		if enabled {
+			val = "true"
+		}
+		settingService.UpsertByKeyValue(nil, nil, "watermark."+classification+".enabled", val, "boolean")
+	}
+
+	if text, ok := data["text"].(string); ok {
+		settingService.UpsertByKeyValue(nil, nil, "watermark."+classification+".text", text, "string")
+	}
+
+	// Return updated config
+	config := c.watermarkService.GetWatermarkConfig(classification)
+	return ctx.Response().Success().Json(http.Json{
+		"data": config,
+	})
 }
 
 // ---------------------------------------------------------------------------
