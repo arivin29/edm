@@ -34,6 +34,13 @@ export const routes: Routes = [
           import('./pages/dashboard/dashboard-page/dashboard-page.component').then(m => m.DashboardPage),
         title: 'Dashboard - DMS'
       },
+      // Distributions Inbox
+      {
+        path: 'distributions/inbox',
+        loadComponent: () =>
+          import('./pages/distributions/distribution-inbox/distribution-inbox.component').then(m => m.DistributionInboxPage),
+        title: 'Distribusi Masuk - DMS'
+      },
       // Documents
       {
         path: 'documents',

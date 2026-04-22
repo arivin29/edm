@@ -328,7 +328,7 @@
                         @for (v of versions(); track v.id; let i = $index) {
                           <nz-timeline-item
                             [nzColor]="v.is_current ? 'blue' : 'gray'"
-                            [nzDot]="i === 0 ? currentDot : null">
+                            [nzDot]="v.is_current ? currentDot : undefined">
                             <div class="version-item" [class.version-item--current]="v.is_current">
                               <div class="version-item__header">
                                 <div class="version-item__title">

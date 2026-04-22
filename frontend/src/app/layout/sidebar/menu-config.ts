@@ -8,6 +8,12 @@ export const MENU_ITEMS: MenuItem[] = [
     route: '/dashboard'
   },
   {
+    key: 'distribution-inbox',
+    label: 'Distribusi Masuk',
+    icon: 'inbox',
+    route: '/distributions/inbox'
+  },
+  {
     key: 'documents',
     label: 'Dokumen',
     icon: 'file-text',

@@ -1,0 +1,182 @@
+<div class="p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h1 class="text-lg font-semibold m-0">
+        <span nz-icon nzType="inbox" class="mr-2 text-blue-500"></span>
+        Distribusi Masuk
+      </h1>
+      <p class="text-gray-500 text-xs m-0">Dokumen yang didistribusikan kepada Anda</p>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-4 gap-3 mb-4">
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-blue-500">
+      <div class="text-xs text-gray-500">Total Distribusi</div>
+      <div class="text-xl font-bold text-gray-800">{{ total() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-orange-400 cursor-pointer hover:shadow-sm transition-shadow"
+         (click)="filterStatus = 'pending'; onFilter()">
+      <div class="text-xs text-gray-500">Menunggu</div>
+      <div class="text-xl font-bold text-orange-500">{{ statPending() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-blue-400 cursor-pointer hover:shadow-sm transition-shadow"
+         (click)="filterStatus = 'distributed'; onFilter()">
+      <div class="text-xs text-gray-500">Didistribusikan</div>
+      <div class="text-xl font-bold text-blue-500">{{ statDistributed() }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-green-500 cursor-pointer hover:shadow-sm transition-shadow"
+         (click)="filterStatus = 'received'; onFilter()">
+      <div class="text-xs text-gray-500">Diterima</div>
+      <div class="text-xl font-bold text-green-600">{{ statReceived() }}</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <nz-card nzSize="small" class="mb-3">
+    <div class="flex items-center gap-3 flex-wrap">
+      <nz-select nzSize="small" [(ngModel)]="filterStatus" (ngModelChange)="onFilter()"
+                 nzPlaceHolder="Semua Status" nzAllowClear class="w-44">
+        <nz-option nzValue="pending" nzLabel="🟡 Menunggu"></nz-option>
+        <nz-option nzValue="distributed" nzLabel="🔵 Didistribusikan"></nz-option>
+        <nz-option nzValue="received" nzLabel="🟢 Diterima"></nz-option>
+        <nz-option nzValue="cancelled" nzLabel="⚪ Dibatalkan"></nz-option>
+      </nz-select>
+
+      <nz-select nzSize="small" [(ngModel)]="filterType" (ngModelChange)="onFilter()"
+                 nzPlaceHolder="Semua Tipe" nzAllowClear class="w-44">
+        <nz-option nzValue="controlled" nzLabel="Terkendali"></nz-option>
+        <nz-option nzValue="uncontrolled" nzLabel="Tidak Terkendali"></nz-option>
+      </nz-select>
+
+      @if (filterStatus || filterType) {
+        <button nz-button nzSize="small" nzType="link" (click)="filterStatus = ''; filterType = ''; onFilter()">
+          <span nz-icon nzType="close-circle"></span> Reset Filter
+        </button>
+      }
+    </div>
+  </nz-card>
+
+  <!-- Table -->
+  <nz-card nzSize="small">
+    <nz-table #distTable [nzData]="distributions()" [nzLoading]="loading()"
+              nzSize="small"
+              [nzFrontPagination]="false"
+              [nzTotal]="total()"
+              [nzPageIndex]="pageIndex()"
+              [nzPageSize]="pageSize()"
+              [nzShowSizeChanger]="true"
+              [nzPageSizeOptions]="[15, 30, 50]"
+              [nzShowQuickJumper]="true"
+              [nzShowTotal]="totalTemplate"
+              (nzPageIndexChange)="onPageIndexChange($event)"
+              (nzPageSizeChange)="onPageSizeChange($event)">
+      <ng-template #totalTemplate let-total let-range="range">
+        <span class="pagination-total">
+          Menampilkan <strong>{{ range[0] }}-{{ range[1] }}</strong> dari <strong>{{ total }}</strong> distribusi
+        </span>
+      </ng-template>
+      <thead>
+        <tr>
+          <th nzWidth="140px">No. Dokumen</th>
+          <th>Judul Dokumen</th>
+          <th nzWidth="100px">Tipe</th>
+          <th nzWidth="90px" nzAlign="center">Salinan</th>
+          <th nzWidth="90px" nzAlign="center">Distribusi</th>
+          <th nzWidth="90px" nzAlign="center">Status</th>
+          <th nzWidth="110px">Pengirim</th>
+          <th nzWidth="100px">Tanggal</th>
+          <th nzWidth="90px" nzAlign="center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (dist of distTable.data; track dist.id) {
+          <tr [class.unread-row]="dist.status === 'pending' || dist.status === 'distributed'">
+            <td>
+              @if (dist.document) {
+                <a [routerLink]="['/documents', dist.document.id]" class="text-blue-600 font-mono text-[11px] hover:underline">
+                  {{ dist.document.document_number || '-' }}
+                </a>
+              } @else {
+                <span class="text-gray-300">-</span>
+              }
+            </td>
+            <td>
+              <div class="flex items-center gap-2">
+                <span nz-icon nzType="file-text" class="text-blue-400 text-sm flex-shrink-0"></span>
+                <div class="min-w-0">
+                  <div class="font-medium text-xs truncate" [nz-tooltip]="dist.document?.title">
+                    {{ dist.document?.title || 'Dokumen' }}
+                  </div>
+                  @if (dist.document?.document_type) {
+                    <div class="text-[10px] text-gray-400 truncate">{{ dist.document!.document_type!.name }}</div>
+                  }
+                </div>
+              </div>
+            </td>
+            <td>
+              @if (dist.document?.document_type) {
+                <nz-tag nzColor="blue">{{ dist.document!.document_type!.code || dist.document!.document_type!.name }}</nz-tag>
+              } @else {
+                <span class="text-gray-300">-</span>
+              }
+            </td>
+            <td nzAlign="center">
+              @if (dist.copy_number) {
+                <nz-tag [nzColor]="getDistTypeColor(dist.distribution_type)">{{ dist.copy_number }}</nz-tag>
+              } @else {
+                <nz-tag [nzColor]="getDistTypeColor(dist.distribution_type)">{{ getDistTypeLabel(dist.distribution_type) }}</nz-tag>
+              }
+            </td>
+            <td nzAlign="center">
+              <nz-tag [nzColor]="getDistTypeColor(dist.distribution_type)">{{ getDistTypeLabel(dist.distribution_type) }}</nz-tag>
+            </td>
+            <td nzAlign="center">
+              <nz-tag [nzColor]="getStatusColor(dist.status)">{{ getStatusLabel(dist.status) }}</nz-tag>
+            </td>
+            <td>
+              @if (dist.distributor) {
+                <div class="flex items-center gap-1.5">
+                  <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                    {{ dist.distributor.name.charAt(0).toUpperCase() }}
+                  </span>
+                  <span class="text-xs truncate max-w-[80px]" [nz-tooltip]="dist.distributor.name">
+                    {{ dist.distributor.name }}
+                  </span>
+                </div>
+              } @else {
+                <span class="text-gray-300">-</span>
+              }
+            </td>
+            <td class="text-xs text-gray-500">
+              <span [nz-tooltip]="formatDateTime(dist.created_at)">{{ formatDate(dist.created_at) }}</span>
+            </td>
+            <td nzAlign="center">
+              @if (dist.status === 'pending' || dist.status === 'distributed') {
+                <button nz-button nzType="primary" nzSize="small" nzShape="round"
+                        (click)="acknowledge(dist)" [nz-tooltip]="'Konfirmasi Penerimaan'">
+                  <span nz-icon nzType="check"></span>
+                </button>
+              } @else if (dist.status === 'received') {
+                <span nz-icon nzType="check-circle" nzTheme="fill" class="text-green-500 text-base" nz-tooltip="Sudah diterima"></span>
+              } @else {
+                <span class="text-gray-300">-</span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="9" class="text-center py-8">
+              <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="emptyContent">
+                <ng-template #emptyContent>
+                  <span class="text-gray-400">Tidak ada distribusi masuk</span>
+                </ng-template>
+              </nz-empty>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </nz-card>
+</div>

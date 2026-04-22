@@ -520,11 +520,11 @@ export class DocumentDetailPage implements OnInit {
       nzOnOk: () => {
         this.http.post<any>(`${environment.apiUrl}/documents/${doc.id}/versions/${versionNumber}/restore`, {}).subscribe({
           next: () => {
-            this.msg.success('Versi berhasil di-restore');
+            this.message.success('Versi berhasil di-restore');
             this.loadDocument(doc.id);
             this.loadVersions(doc.id);
           },
-          error: () => this.msg.error('Gagal restore versi')
+          error: () => this.message.error('Gagal restore versi')
         });
       }
     });
