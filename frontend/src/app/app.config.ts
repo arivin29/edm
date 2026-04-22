@@ -137,6 +137,8 @@ import {
   CameraOutline,
   SaveOutline,
   MobileOutline,
+  EnterOutline,
+  ControlOutline,
 } from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
@@ -274,6 +276,8 @@ const icons = [
   CameraOutline,
   SaveOutline,
   MobileOutline,
+  EnterOutline,
+  ControlOutline,
 ];
 
 export const appConfig: ApplicationConfig = {

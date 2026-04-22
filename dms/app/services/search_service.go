@@ -89,7 +89,7 @@ func (s *SearchService) GlobalSearch(query string, limit int) (*GlobalSearchResp
 	return resp, nil
 }
 
-// searchDocuments uses PostgreSQL full-text search (tsvector) for documents + OCR content
+// searchDocuments uses PostgreSQL full-text search (tsvector) + ILIKE fallback
 func (s *SearchService) searchDocuments(query string, limit int) (*SearchGroup, error) {
 	type docRow struct {
 		ID             string  `json:"id"`
@@ -99,53 +99,36 @@ func (s *SearchService) searchDocuments(query string, limit int) (*SearchGroup, 
 		Status         string  `json:"status"`
 		TypeName       *string `json:"type_name"`
 		DeptName       *string `json:"dept_name"`
-		Rank           float64 `json:"rank"`
 	}
+
+	likePattern := "%" + strings.ToLower(query) + "%"
+
+	// Count total: ILIKE (catches doc numbers with /) + tsvector
+	var total int64
+	countSQL := `SELECT COUNT(*) FROM documents WHERE deleted_at IS NULL AND (
+		LOWER(document_number) LIKE ? OR LOWER(title) LIKE ? OR LOWER(COALESCE(description,'')) LIKE ?
+		OR search_vector @@ websearch_to_tsquery('simple', ?)
+	)`
+	_ = facades.Orm().Query().Raw(countSQL, likePattern, likePattern, likePattern, query).Scan(&total)
+
+	// Fetch results: ILIKE search (covers doc numbers, titles, partial matches)
+	searchSQL := fmt.Sprintf(`SELECT d.id, d.document_number, d.title, d.description, d.status,
+		dt.name as type_name, dep.name as dept_name
+		FROM documents d
+		LEFT JOIN document_types dt ON dt.id = d.document_type_id
+		LEFT JOIN departments dep ON dep.id = d.department_id
+		WHERE d.deleted_at IS NULL AND (
+			LOWER(d.document_number) LIKE ? OR LOWER(d.title) LIKE ? OR LOWER(COALESCE(d.description,'')) LIKE ?
+			OR d.search_vector @@ websearch_to_tsquery('simple', ?)
+		)
+		ORDER BY
+			CASE WHEN LOWER(d.document_number) LIKE ? THEN 0 ELSE 1 END,
+			CASE WHEN LOWER(d.title) LIKE ? THEN 0 ELSE 1 END,
+			d.updated_at DESC
+		LIMIT %d`, limit)
 
 	var rows []docRow
-	var total int64
-
-	// Count total matches
-	countSQL := `SELECT COUNT(*) FROM documents WHERE deleted_at IS NULL AND search_vector @@ websearch_to_tsquery('simple', ?)`
-	if err := facades.Orm().Query().Raw(countSQL, query).Scan(&total); err != nil {
-		return nil, err
-	}
-
-	// Also search by ILIKE as fallback (for partial matches that tsvector might miss)
-	likePattern := "%" + strings.ToLower(query) + "%"
-	countFallback := `SELECT COUNT(*) FROM documents WHERE deleted_at IS NULL AND (
-		LOWER(title) LIKE ? OR LOWER(document_number) LIKE ? OR LOWER(COALESCE(description,'')) LIKE ?
-	) AND NOT (search_vector @@ websearch_to_tsquery('simple', ?))`
-	var fallbackCount int64
-	_ = facades.Orm().Query().Raw(countFallback, likePattern, likePattern, likePattern, query).Scan(&fallbackCount)
-	total += fallbackCount
-
-	// Fetch ranked results (tsvector first, then ILIKE fallback)
-	searchSQL := fmt.Sprintf(`
-		(SELECT d.id, d.document_number, d.title, d.description, d.status,
-			dt.name as type_name, dep.name as dept_name,
-			ts_rank(d.search_vector, websearch_to_tsquery('simple', $1)) as rank
-		FROM documents d
-		LEFT JOIN document_types dt ON dt.id = d.document_type_id
-		LEFT JOIN departments dep ON dep.id = d.department_id
-		WHERE d.deleted_at IS NULL AND d.search_vector @@ websearch_to_tsquery('simple', $1)
-		ORDER BY rank DESC
-		LIMIT %d)
-		UNION ALL
-		(SELECT d.id, d.document_number, d.title, d.description, d.status,
-			dt.name as type_name, dep.name as dept_name,
-			0.01 as rank
-		FROM documents d
-		LEFT JOIN document_types dt ON dt.id = d.document_type_id
-		LEFT JOIN departments dep ON dep.id = d.department_id
-		WHERE d.deleted_at IS NULL
-			AND (LOWER(d.title) LIKE $2 OR LOWER(d.document_number) LIKE $2 OR LOWER(COALESCE(d.description,'')) LIKE $2)
-			AND NOT (d.search_vector @@ websearch_to_tsquery('simple', $1))
-		LIMIT %d)
-		ORDER BY rank DESC LIMIT %d
-	`, limit, limit, limit)
-
-	if err := facades.Orm().Query().Raw(searchSQL, query, likePattern).Scan(&rows); err != nil {
+	if err := facades.Orm().Query().Raw(searchSQL, likePattern, likePattern, likePattern, query, likePattern, likePattern).Scan(&rows); err != nil {
 		return nil, err
 	}
 
@@ -181,7 +164,6 @@ func (s *SearchService) searchDocuments(query string, limit int) (*SearchGroup, 
 			Description: desc,
 			Status:      r.Status,
 			URL:         "/documents/" + r.ID,
-			Rank:        r.Rank,
 		})
 	}
 
