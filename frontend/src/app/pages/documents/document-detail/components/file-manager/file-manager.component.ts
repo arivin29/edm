@@ -288,7 +288,8 @@ export class FileManagerComponent implements OnInit, OnChanges {
       description: this.uploadDescription.trim() || undefined,
       referenceNumber: this.uploadRefNumber.trim() || undefined
     });
-    this.closeUploadDrawer();
+    // Defer drawer close to avoid NG0100 (signal update in same CD cycle)
+    setTimeout(() => this.closeUploadDrawer());
   }
 
   closeUploadDrawer() {

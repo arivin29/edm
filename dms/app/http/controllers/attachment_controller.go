@@ -22,6 +22,7 @@ type AttachmentController struct {
 	attachmentRepo repositories.AttachmentRepository
 	documentRepo   repositories.DocumentRepository
 	fileService    services.FileService
+	ocrService     *services.OCRService
 }
 
 func NewAttachmentController() *AttachmentController {
@@ -29,6 +30,7 @@ func NewAttachmentController() *AttachmentController {
 		attachmentRepo: repositories.NewAttachmentRepository(),
 		documentRepo:   repositories.NewDocumentRepository(),
 		fileService:    services.NewFileService(),
+		ocrService:     services.NewOCRService(),
 	}
 }
 
@@ -227,6 +229,49 @@ func (c *AttachmentController) DeleteAttachment(ctx http.Context) http.Response 
 
 	return ctx.Response().Success().Json(http.Json{
 		"message": "Lampiran berhasil dihapus",
+	})
+}
+
+// ---------------------------------------------------------------------------
+// POST /documents/{id}/attachments/{attachmentId}/ocr - Run OCR on attachment
+// ---------------------------------------------------------------------------
+
+func (c *AttachmentController) RunAttachmentOCR(ctx http.Context) http.Response {
+	user := types.GetCurrentUser(ctx)
+	if user == nil || !user.HasPermission("document.view") {
+		return forbiddenResponse(ctx)
+	}
+
+	documentID := ctx.Request().Route("id")
+	attachmentID := ctx.Request().Route("attachmentId")
+
+	attachment, err := c.attachmentRepo.FindByID(attachmentID)
+	if err != nil {
+		return serverError(ctx, "Failed to retrieve attachment")
+	}
+	if attachment == nil {
+		return notFoundError(ctx, "Attachment not found")
+	}
+
+	if attachment.EntityType == nil || *attachment.EntityType != "document" ||
+		attachment.EntityID == nil || *attachment.EntityID != documentID {
+		return notFoundError(ctx, "Attachment not found for this document")
+	}
+
+	// Only allow OCR on PDF and image files
+	mime := attachment.MimeType
+	if !strings.Contains(mime, "pdf") && !strings.Contains(mime, "image") {
+		return badRequestError(ctx, "OCR hanya bisa dijalankan pada file PDF atau gambar")
+	}
+
+	result, err := c.ocrService.RunOCROnFile(attachment.FilePath)
+	if err != nil {
+		return badRequestError(ctx, err.Error())
+	}
+
+	return ctx.Response().Success().Json(http.Json{
+		"data":    result,
+		"message": "OCR completed successfully",
 	})
 }
 

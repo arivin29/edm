@@ -329,7 +329,7 @@
                 <button nz-button nzSize="small" nzBlock
                         [nzLoading]="selectedNode()!.ocrProcessing || false"
                         (click)="onRunOcr(selectedNode()!)">
-                  <span nz-icon nzType="scan"></span> OCR Ekstrak Teks
+                  <span nz-icon nzType="scan" nzTheme="outline"></span> OCR Ekstrak Teks
                 </button>
               }
               @if (!config.readonly) {
@@ -502,7 +502,7 @@
 <!-- Upload Drawer -->
 <nz-drawer
   [nzVisible]="showUploadDrawer()"
-  [nzWidth]="420"
+  [nzWidth]="360"
   nzPlacement="right"
   nzTitle="Upload File Pendukung"
   (nzOnClose)="closeUploadDrawer()"
@@ -511,21 +511,23 @@
   <div *nzDrawerContent class="fm-upload-drawer">
     <!-- File Picker -->
     <div class="fm-upload-field">
-      <label class="fm-upload-label">File <span class="text-red-500">*</span></label>
+      <label class="fm-upload-label">File <span style="color: #ff4d4f">*</span></label>
       @if (uploadFile()) {
         <div class="fm-upload-file-info">
           <span nz-icon nzType="paper-clip" nzTheme="outline"></span>
           <span class="fm-upload-file-name">{{ uploadFile()!.name }}</span>
           <span class="fm-upload-file-size">({{ formatFileSize(uploadFile()!.size) }})</span>
-          <button class="fm-action-btn" (click)="uploadFile.set(null)" nz-tooltip nzTooltipTitle="Ganti file">
+          <button class="fm-upload-file-remove" (click)="uploadFile.set(null)">
             <span nz-icon nzType="close" nzTheme="outline"></span>
           </button>
         </div>
+      } @else {
+        <div class="fm-upload-dropzone" (click)="drawerFileInput.click()">
+          <span nz-icon nzType="cloud-upload" nzTheme="outline" class="fm-upload-dropzone__icon"></span>
+          <div class="fm-upload-dropzone__text">Klik untuk pilih file</div>
+          <div class="fm-upload-dropzone__hint">PDF, Word, Excel, Gambar, ZIP (maks 50MB)</div>
+        </div>
       }
-      <button nz-button nzSize="small" (click)="drawerFileInput.click()">
-        <span nz-icon nzType="upload"></span>
-        {{ uploadFile() ? 'Ganti File' : 'Pilih File' }}
-      </button>
       <input #drawerFileInput type="file" hidden
              accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.png,.jpg,.jpeg,.gif,.zip,.rar,.csv,.txt"
              (change)="onUploadDrawerFileChange($event)" />

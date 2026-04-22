@@ -706,6 +706,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 4px 0;
 }
 
 .fm-upload-field {
@@ -720,17 +721,55 @@
   color: #3f3f46;
 }
 
+.fm-upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 20px 16px;
+  border: 1.5px dashed #d4d4d8;
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+
+  &:hover {
+    border-color: #1677ff;
+    background: #f0f5ff;
+  }
+
+  &__icon {
+    font-size: 28px;
+    color: #a1a1aa;
+  }
+  &:hover &__icon {
+    color: #1677ff;
+  }
+
+  &__text {
+    font-size: 13px;
+    font-weight: 500;
+    color: #52525b;
+  }
+
+  &__hint {
+    font-size: 11px;
+    color: #a1a1aa;
+  }
+}
+
 .fm-upload-file-info {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 8px 10px;
   background: #f0f9ff;
   border: 1px solid #bae6fd;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
   color: #0369a1;
-  margin-bottom: 4px;
 }
 
 .fm-upload-file-name {
@@ -745,14 +784,37 @@
 .fm-upload-file-size {
   color: #71717a;
   flex-shrink: 0;
+  font-size: 11px;
+}
+
+.fm-upload-file-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: none;
+  color: #a1a1aa;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 10px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+
+  &:hover {
+    background: #fee2e2;
+    color: #ef4444;
+  }
 }
 
 .fm-upload-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding-top: 12px;
+  padding-top: 16px;
   border-top: 1px solid #f4f4f5;
+  margin-top: 4px;
 }
 
 /* ===== OCR Detail ===== */

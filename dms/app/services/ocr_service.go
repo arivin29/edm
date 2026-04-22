@@ -231,6 +231,47 @@ func (s *OCRService) countPages(text string) int {
 	return count
 }
 
+// RunOCROnFile extracts text from a specific file path (used for attachments)
+func (s *OCRService) RunOCROnFile(filePath string) (*OCRResult, error) {
+	// Resolve absolute path
+	if !filepath.IsAbs(filePath) {
+		filePath = filepath.Join("storage/app", filePath)
+	}
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("file not found: %s", filePath)
+	}
+
+	ext := strings.ToLower(filepath.Ext(filePath))
+	startTime := time.Now()
+
+	var ocrText string
+	var err error
+
+	switch ext {
+	case ".pdf":
+		ocrText, err = s.ocrPDF(filePath)
+	case ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp":
+		ocrText, err = s.ocrImage(filePath)
+	default:
+		return nil, fmt.Errorf("unsupported file type for OCR: %s", ext)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("OCR failed: %v", err)
+	}
+
+	duration := time.Since(startTime)
+	ocrTextStr := strings.TrimSpace(ocrText)
+
+	return &OCRResult{
+		Text:      ocrTextStr,
+		PageCount: s.countPages(ocrTextStr),
+		Engine:    "tesseract",
+		Duration:  fmt.Sprintf("%.1fs", duration.Seconds()),
+	}, nil
+}
+
 // CheckTesseract verifies if Tesseract and PDF tools are installed
 func (s *OCRService) CheckTesseract() (bool, string) {
 	cmd := exec.Command("tesseract", "--version")

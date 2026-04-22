@@ -130,7 +130,7 @@
                                 } @else if (step.status === 'rejected') {
                                   <span nz-icon nzType="close-circle" nzTheme="fill"></span>
                                 } @else if (step.status === 'active') {
-                                  <span nz-icon nzType="sync" nzSpin></span>
+                                  <span nz-icon nzType="sync" nzTheme="outline" nzSpin></span>
                                 } @else if (step.status === 'skipped') {
                                   <span nz-icon nzType="minus-circle" nzTheme="fill"></span>
                                 } @else {
@@ -374,7 +374,7 @@
                                     <button nz-button nzSize="small" nzType="text" nzDanger
                                             nz-tooltip nzTooltipTitle="Restore ke versi ini"
                                             (click)="restoreVersion(v.version_number)">
-                                      <span nz-icon nzType="rollback"></span>
+                                      <span nz-icon nzType="rollback" nzTheme="outline"></span>
                                     </button>
                                   }
                                 </div>
@@ -603,13 +603,39 @@
                               @if (step.status === 'active') {
                                 <nz-tag nzColor="processing">Sedang Berlangsung</nz-tag>
                               }
-                              @if (step.status === 'active' && step.deadline) {
-                                <nz-tag nzColor="orange">Tenggat: {{ step.deadline | date:'dd MMM yyyy' }}</nz-tag>
-                              }
                               @if (step.status === 'active' && step.can_delegate) {
                                 <nz-tag nzColor="geekblue">Bisa Didelegasikan</nz-tag>
                               }
                             </div>
+
+                            <!-- SLA Info -->
+                            @if (getStepSla(step); as sla) {
+                              <div class="wf-sla" [attr.data-sla]="sla.status">
+                                <div class="wf-sla__header">
+                                  <span class="wf-sla__icon">
+                                    @if (sla.status === 'overdue') {
+                                      <span nz-icon nzType="warning" nzTheme="fill"></span>
+                                    } @else if (sla.status === 'danger') {
+                                      <span nz-icon nzType="fire" nzTheme="fill"></span>
+                                    } @else if (sla.status === 'completed') {
+                                      <span nz-icon nzType="check-circle" nzTheme="fill"></span>
+                                    } @else {
+                                      <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+                                    }
+                                  </span>
+                                  <span class="wf-sla__text">{{ sla.remaining }}</span>
+                                  @if (step.deadline && step.status !== 'approved' && step.status !== 'rejected') {
+                                    <span class="wf-sla__deadline">Tenggat: {{ step.deadline | date:'dd MMM yyyy' }}</span>
+                                  }
+                                </div>
+                                @if (step.status === 'active' || step.status === 'approved' || step.status === 'rejected') {
+                                  <div class="wf-sla__bar">
+                                    <div class="wf-sla__bar-fill" [style.width.%]="sla.percent"></div>
+                                  </div>
+                                }
+                              </div>
+                            }
+
                             @if (step.comment) {
                               <div class="doc-wf-step__comment">"{{ step.comment }}"</div>
                             }
@@ -686,7 +712,7 @@
                         }
                         <button nz-button nzType="primary" nzSize="small" [nzLoading]="ocrRunning()" (click)="runOCR()"
                                 [disabled]="!ocrStatus()?.available">
-                          <span nz-icon nzType="scan"></span> Jalankan OCR
+                          <span nz-icon nzType="scan" nzTheme="outline"></span> Jalankan OCR
                         </button>
                       </div>
                     </div>
@@ -707,7 +733,7 @@
                       <pre class="bg-gray-50 border rounded p-3 text-xs whitespace-pre-wrap max-h-[500px] overflow-y-auto font-mono">{{ ocrText() }}</pre>
                     } @else {
                       <div class="text-center py-8">
-                        <span nz-icon nzType="file-search" class="text-4xl text-gray-300 mb-2 block"></span>
+                        <span nz-icon nzType="file-search" nzTheme="outline" class="text-4xl text-gray-300 mb-2 block"></span>
                         <div class="text-gray-400 text-sm">Belum ada hasil OCR</div>
                         <div class="text-gray-300 text-xs">Klik "Jalankan OCR" untuk mengekstrak teks</div>
                       </div>
@@ -721,7 +747,7 @@
                     <div class="flex justify-between items-center mb-3">
                       <div>
                         <h4 class="text-sm font-semibold m-0">
-                          <span nz-icon nzType="safety-certificate" class="mr-1 text-blue-500"></span>
+                          <span nz-icon nzType="safety-certificate" nzTheme="outline" class="mr-1 text-blue-500"></span>
                           Tanda Tangan Digital
                         </h4>
                         <p class="text-xs text-gray-400 m-0">Daftar tanda tangan pada dokumen ini</p>
@@ -798,7 +824,7 @@
                       </div>
                     } @else {
                       <div class="text-center py-8">
-                        <span nz-icon nzType="safety-certificate" class="text-4xl text-gray-300 mb-2 block"></span>
+                        <span nz-icon nzType="safety-certificate" nzTheme="outline" class="text-4xl text-gray-300 mb-2 block"></span>
                         <div class="text-gray-400 text-sm">Belum ada tanda tangan digital</div>
                         <div class="text-gray-300 text-xs">Klik "Tanda Tangani" untuk menandatangani dokumen</div>
                       </div>

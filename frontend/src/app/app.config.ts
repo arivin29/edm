@@ -100,7 +100,21 @@ import {
   FontSizeOutline,
   AlignLeftOutline,
   CheckSquareOutline,
-  TagsOutline
+  TagsOutline,
+  ScanOutline,
+  SafetyCertificateOutline,
+  RollbackOutline,
+  FileSearchOutline,
+  FileTextTwoTone,
+  CheckCircleTwoTone,
+  FormOutline,
+  HourglassOutline,
+  FileProtectOutline,
+  SyncOutline,
+  NodeIndexOutline,
+  ArrowRightOutline,
+  QuestionCircleOutline,
+  InfoOutline
 } from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
@@ -201,7 +215,21 @@ const icons = [
   FontSizeOutline,
   AlignLeftOutline,
   CheckSquareOutline,
-  TagsOutline
+  TagsOutline,
+  ScanOutline,
+  SafetyCertificateOutline,
+  RollbackOutline,
+  FileSearchOutline,
+  FileTextTwoTone,
+  CheckCircleTwoTone,
+  FormOutline,
+  HourglassOutline,
+  FileProtectOutline,
+  SyncOutline,
+  NodeIndexOutline,
+  ArrowRightOutline,
+  QuestionCircleOutline,
+  InfoOutline
 ];
 
 export const appConfig: ApplicationConfig = {

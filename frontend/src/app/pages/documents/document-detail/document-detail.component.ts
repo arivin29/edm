@@ -89,6 +89,7 @@ export class DocumentDetailPage implements OnInit {
   ocrRunning = signal(false);
   ocrResult = signal<{ text: string; page_count: number; engine: string; duration: string } | null>(null);
   ocrText = signal<string>('');
+  attachmentOcrState = signal<Map<string, { ocrProcessing?: boolean; ocrText?: string }>>(new Map());
 
   // TTE (Digital Signatures) state
   signatures = signal<DigitalSignature[]>([]);
@@ -142,17 +143,24 @@ export class DocumentDetailPage implements OnInit {
     };
 
     // Folder 2: File Pendukung (from attachments API)
-    const attachmentNodes: FileNode[] = atts.map(att => ({
-      id: `att-${att.id}`,
-      name: att.original_name,
-      type: 'file' as const,
-      mimeType: att.mime_type,
-      size: att.file_size,
-      uploadedBy: att.uploader?.name || '-',
-      modifiedAt: att.created_at,
-      createdAt: att.created_at,
-      parentId: 'folder-lampiran'
-    }));
+    const ocrState = this.attachmentOcrState();
+    const attachmentNodes: FileNode[] = atts.map(att => {
+      const nodeId = `att-${att.id}`;
+      const ocr = ocrState.get(nodeId);
+      return {
+        id: nodeId,
+        name: att.original_name,
+        type: 'file' as const,
+        mimeType: att.mime_type,
+        size: att.file_size,
+        uploadedBy: att.uploader?.name || '-',
+        modifiedAt: att.created_at,
+        createdAt: att.created_at,
+        parentId: 'folder-lampiran',
+        ocrText: ocr?.ocrText,
+        ocrProcessing: ocr?.ocrProcessing
+      };
+    });
 
     const filePendukung: FileNode = {
       id: 'folder-lampiran',
@@ -571,6 +579,75 @@ export class DocumentDetailPage implements OnInit {
     return labels[status] || status;
   }
 
+  /**
+   * Calculate SLA info for a workflow step.
+   * Returns: { remaining: string, percent: number, status: 'safe'|'warning'|'danger'|'overdue'|'completed', daysLeft: number }
+   */
+  getStepSla(step: any): { remaining: string; percent: number; status: string; daysLeft: number } | null {
+    if (!step.deadline && !step.deadline_days) return null;
+
+    // Completed steps — show how long it took
+    if (step.status === 'approved' || step.status === 'rejected') {
+      if (step.activated_at && step.completed_at) {
+        const start = new Date(step.activated_at).getTime();
+        const end = new Date(step.completed_at).getTime();
+        const daysUsed = Math.max(0, Math.round((end - start) / 86400000));
+        const totalDays = step.deadline_days || 0;
+
+        if (totalDays > 0) {
+          const overdue = step.deadline ? new Date(step.completed_at) > new Date(step.deadline) : false;
+          return {
+            remaining: overdue ? `Terlambat ${daysUsed - totalDays}h` : `Selesai dalam ${daysUsed}h dari ${totalDays}h`,
+            percent: 100,
+            status: overdue ? 'overdue' : 'completed',
+            daysLeft: overdue ? -(daysUsed - totalDays) : totalDays - daysUsed
+          };
+        }
+      }
+      return null;
+    }
+
+    // Active/pending steps — show countdown
+    if (step.deadline) {
+      const now = Date.now();
+      const deadlineTime = new Date(step.deadline).getTime();
+      const msLeft = deadlineTime - now;
+      const daysLeft = Math.ceil(msLeft / 86400000);
+      const hoursLeft = Math.ceil(msLeft / 3600000);
+
+      // Calculate progress percentage
+      let percent = 0;
+      if (step.activated_at) {
+        const startTime = new Date(step.activated_at).getTime();
+        const totalDuration = deadlineTime - startTime;
+        const elapsed = now - startTime;
+        percent = totalDuration > 0 ? Math.min(100, Math.round((elapsed / totalDuration) * 100)) : 0;
+      }
+
+      let status: string;
+      let remaining: string;
+
+      if (msLeft <= 0) {
+        status = 'overdue';
+        remaining = `Terlambat ${Math.abs(daysLeft)}h`;
+        percent = 100;
+      } else if (daysLeft <= 1) {
+        status = 'danger';
+        remaining = hoursLeft <= 24 ? `${hoursLeft} jam lagi` : `${daysLeft} hari lagi`;
+      } else if (daysLeft <= 3) {
+        status = 'warning';
+        remaining = `${daysLeft} hari lagi`;
+      } else {
+        status = 'safe';
+        remaining = `${daysLeft} hari lagi`;
+      }
+
+      return { remaining, percent, status, daysLeft };
+    }
+
+    return null;
+  }
+
   onFmDownload(node: FileNode | PreviewFile) {
     // Download version file
     if (node.id.startsWith('ver-')) {
@@ -652,10 +729,16 @@ export class DocumentDetailPage implements OnInit {
     this.message.info('Pembuatan folder tidak didukung — file dikelola berdasarkan kategori otomatis');
   }
 
-  onFmUpload(event: { file: File }) {
+  onFmUpload(event: FileUploadData) {
     this.uploadingAttachment.set(true);
     const formData = new FormData();
     formData.append('file', event.file);
+    if (event.description) {
+      formData.append('description', event.description);
+    }
+    if (event.referenceNumber) {
+      formData.append('reference_number', event.referenceNumber);
+    }
     this.http.post(`${environment.apiUrl}/documents/${this.documentId}/attachments`, formData).subscribe({
       next: () => {
         this.message.success(`${event.file.name} berhasil diupload`);
@@ -745,6 +828,39 @@ export class DocumentDetailPage implements OnInit {
         this.ocrRunning.set(false);
         this.message.error(err.error?.error || 'OCR gagal');
       }
+    });
+  }
+
+  onFmOcr(node: FileNode) {
+    if (!node.id.startsWith('att-')) {
+      // For version files, use existing document-level OCR
+      this.runOCR();
+      return;
+    }
+    const attId = node.id.replace('att-', '');
+    // Mark as processing on the node via update
+    this.updateFileNodeOcr(node.id, { ocrProcessing: true });
+    this.http.post<any>(`${environment.apiUrl}/documents/${this.documentId}/attachments/${attId}/ocr`, {}).subscribe({
+      next: (res) => {
+        const text = res.data?.text || '';
+        this.updateFileNodeOcr(node.id, { ocrProcessing: false, ocrText: text });
+        this.message.success('OCR berhasil — teks berhasil diekstrak');
+      },
+      error: (err) => {
+        this.updateFileNodeOcr(node.id, { ocrProcessing: false });
+        this.message.error(err.error?.error || 'OCR gagal');
+      }
+    });
+  }
+
+  private updateFileNodeOcr(nodeId: string, patch: { ocrProcessing?: boolean; ocrText?: string }) {
+    // We need to refresh attachments to update the computed fileTree.
+    // Since ocrText/ocrProcessing are transient UI states, store them separately.
+    const current = this.attachmentOcrState().get(nodeId) || {};
+    this.attachmentOcrState.update(m => {
+      const next = new Map(m);
+      next.set(nodeId, { ...current, ...patch });
+      return next;
     });
   }
 
