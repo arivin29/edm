@@ -1,9 +1,10 @@
 import { Component, signal, computed, inject, input, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { AuthStateService } from '../../core/auth/auth-state.service';
 import { MENU_ITEMS } from './menu-config';
 import { environment } from '../../../environments/environment';
@@ -22,7 +23,7 @@ export interface MenuItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, NzMenuModule, NzIconModule],
+  imports: [CommonModule, RouterLink, RouterLinkActive, NzMenuModule, NzIconModule, NzToolTipModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
@@ -38,6 +39,7 @@ export class SidebarComponent implements OnInit {
 
   // State
   menuItems = signal<MenuItem[]>(MENU_ITEMS);
+  expandedMenus: Record<string, boolean> = {};
 
   // Computed - filter menu items based on permissions
   visibleMenuItems = computed(() => {
@@ -46,6 +48,19 @@ export class SidebarComponent implements OnInit {
 
   ngOnInit() {
     this.loadDocumentTypes();
+    // Auto-expand first submenu
+    this.expandedMenus['documents'] = true;
+  }
+
+  toggleSubmenu(key: string) {
+    this.expandedMenus[key] = !this.expandedMenus[key];
+  }
+
+  onMenuClick() {
+    // Auto-expand sidebar when clicking menu in collapsed mode
+    if (this.collapsed()) {
+      this.toggleCollapse.emit();
+    }
   }
 
   private loadDocumentTypes() {

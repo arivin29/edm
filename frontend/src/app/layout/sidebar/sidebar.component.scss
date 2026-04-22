@@ -1,3 +1,4 @@
+// Enterprise Sidebar Styles
 .sidebar {
   @apply fixed left-0 top-0 h-screen flex flex-col bg-gray-900;
   width: var(--sidebar-width);
@@ -6,71 +7,199 @@
 
   &.collapsed {
     width: var(--sidebar-collapsed-width);
+
+    .sidebar-header {
+      @apply justify-center px-2;
+    }
+
+    .logo {
+      @apply justify-center mx-0 px-1.5;
+    }
+
+    .menu-item-content {
+      @apply justify-center px-0;
+    }
   }
 }
 
+// Header with Logo
 .sidebar-header {
-  @apply flex items-center px-4 border-b border-gray-800;
-  height: var(--header-height);
+  @apply flex items-center justify-between px-3 border-b border-gray-800;
+  height: 56px;
+  min-height: 56px;
+  transition: all 0.2s ease;
 }
 
 .logo {
-  @apply flex items-center gap-3;
+  @apply flex items-center gap-2;
+  
+  &.clickable {
+    @apply cursor-pointer rounded-lg px-2 py-1.5 -mx-2;
+    @apply hover:bg-gray-800 transition-colors;
+  }
+}
+
+.collapse-toggle {
+  @apply w-6 h-6 flex items-center justify-center rounded;
+  @apply text-gray-500 bg-transparent border-0 cursor-pointer;
+  @apply hover:bg-gray-800 hover:text-white transition-colors;
+  
+  span {
+    @apply text-xs;
+  }
 }
 
 .logo-icon {
-  @apply w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center;
+  @apply w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0;
+  
+  span {
+    @apply text-white text-base;
+  }
 }
 
 .logo-text {
-  @apply flex flex-col;
+  @apply flex flex-col leading-tight;
 
-  .title {
-    @apply text-white font-semibold;
+  .logo-title {
+    @apply text-white font-semibold text-sm;
   }
 
-  .subtitle {
-    @apply text-xs text-gray-400;
+  .logo-sub {
+    @apply text-[10px] text-gray-500 uppercase tracking-wider;
   }
 }
 
+// Menu Navigation
 .sidebar-nav {
-  @apply flex-1 overflow-y-auto;
-
-  // Override ng-zorro menu styles
-  .ant-menu {
-    @apply bg-transparent border-none;
+  @apply flex-1 overflow-y-auto py-3 px-2;
+  
+  &::-webkit-scrollbar {
+    width: 4px;
   }
+  
+  &::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    @apply bg-gray-700 rounded;
+  }
+}
 
-  .ant-menu-item,
-  .ant-menu-submenu-title {
-    @apply text-gray-300;
+.menu-section-label {
+  @apply text-[10px] font-medium text-gray-600 uppercase tracking-wider;
+  @apply px-3 py-2 mt-2 first:mt-0;
+}
 
-    &:hover {
-      @apply text-white;
+.menu-divider {
+  @apply h-px bg-gray-800 my-2 mx-2;
+}
+
+// Menu Items
+.menu-item {
+  @apply block rounded-md mb-0.5 cursor-pointer;
+  @apply text-gray-400 no-underline;
+  transition: all 0.15s ease;
+
+  &:hover {
+    .menu-item-content {
+      @apply bg-gray-800 text-gray-200;
     }
   }
 
-  .ant-menu-item-selected {
-    @apply bg-blue-600 text-white;
+  &.active {
+    .menu-item-content {
+      @apply bg-blue-600/20 text-blue-400;
+      border-left: 2px solid theme('colors.blue.500');
+      margin-left: -2px;
+      padding-left: calc(0.625rem + 2px);
+    }
+
+    .menu-icon {
+      @apply text-blue-400;
+    }
+  }
+
+  &.has-children {
+    &.expanded {
+      .menu-item-content {
+        @apply text-gray-200;
+      }
+    }
   }
 }
 
+.menu-item-content {
+  @apply flex items-center gap-2.5 px-2.5 py-2 rounded-md;
+  transition: all 0.15s ease;
+}
+
+.menu-icon {
+  @apply text-base flex-shrink-0;
+}
+
+.menu-label {
+  @apply text-[13px] flex-1 truncate;
+}
+
+.expand-arrow {
+  @apply text-[10px] text-gray-600 transition-transform duration-200;
+
+  &.rotated {
+    @apply rotate-180;
+  }
+}
+
+// Submenu
+.submenu {
+  @apply pl-4 pb-1;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.submenu-item {
+  @apply flex items-center gap-2 px-2.5 py-1.5 rounded-md;
+  @apply text-gray-500 text-[12px] no-underline;
+  @apply hover:text-gray-300 hover:bg-gray-800/50;
+  transition: all 0.15s ease;
+
+  &.active {
+    @apply text-blue-400 bg-blue-600/10;
+    
+    .submenu-dot {
+      @apply bg-blue-400;
+    }
+  }
+}
+
+.submenu-dot {
+  @apply w-1 h-1 rounded-full bg-gray-600 flex-shrink-0;
+}
+
+.submenu-label {
+  @apply truncate;
+}
+
+// Footer
 .sidebar-footer {
-  @apply p-3 border-t border-gray-800;
+  @apply px-3 py-2 border-t border-gray-800;
 }
 
-.collapse-btn {
-  @apply w-full flex items-center gap-2 px-3 py-2;
-  @apply text-gray-400 rounded-lg bg-transparent border-0;
-  @apply hover:bg-gray-800 hover:text-white cursor-pointer;
-  @apply transition-colors;
+.version-text {
+  @apply text-[10px] text-gray-600;
 }
 
-.collapse-text {
-  @apply text-sm;
-}
-
+// Responsive
 @media (max-width: 1023px) {
   .sidebar {
     @apply -translate-x-full;

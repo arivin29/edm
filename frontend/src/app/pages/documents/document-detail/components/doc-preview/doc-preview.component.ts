@@ -39,8 +39,10 @@ export class DocPreviewComponent {
   @Input() set file(val: PreviewFile | null) {
     this._file.set(val);
     if (val) {
-      this.visible.set(true);
-      this.loading.set(true);
+      setTimeout(() => {
+        this.visible.set(true);
+        this.loading.set(true);
+      });
     }
   }
 

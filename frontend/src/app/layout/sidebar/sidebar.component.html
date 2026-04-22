@@ -1,7 +1,13 @@
 <aside class="sidebar" [class.collapsed]="collapsed()">
-  <!-- Logo -->
+  <!-- Header with Logo & Collapse Toggle -->
   <div class="sidebar-header">
-    <div class="logo">
+    <div 
+      class="logo" 
+      [class.clickable]="collapsed()"
+      (click)="collapsed() && toggleCollapse.emit()"
+      [nz-tooltip]="collapsed() ? 'Expand Menu' : null"
+      nzTooltipPlacement="right"
+    >
       <div class="logo-icon">
         <span nz-icon nzType="file-text" nzTheme="outline"></span>
       </div>
@@ -12,41 +18,93 @@
         </div>
       }
     </div>
+    @if (!collapsed()) {
+      <button 
+        class="collapse-toggle" 
+        (click)="toggleCollapse.emit()"
+        nz-tooltip
+        nzTooltipTitle="Collapse Menu"
+        nzTooltipPlacement="right"
+      >
+        <span nz-icon nzType="double-left" nzTheme="outline"></span>
+      </button>
+    }
   </div>
 
   <!-- Menu -->
   <nav class="sidebar-nav">
-    <ul nz-menu nzMode="inline" [nzInlineCollapsed]="collapsed()" nzTheme="dark">
-      @for (item of visibleMenuItems(); track item.key) {
-        @if (hasChildren(item)) {
-          <li nz-submenu [nzTitle]="item.label" [nzIcon]="item.icon || ''">
-            <ul>
+    <!-- Main Section -->
+    @if (!collapsed()) {
+      <div class="menu-section-label">MENU UTAMA</div>
+    }
+    
+    @for (item of visibleMenuItems(); track item.key) {
+      @if (hasChildren(item)) {
+        <!-- Submenu with children -->
+        <div 
+          class="menu-item has-children"
+          [class.expanded]="expandedMenus[item.key]"
+          [nz-tooltip]="collapsed() ? item.label : null"
+          nzTooltipPlacement="right"
+        >
+          <div class="menu-item-content" (click)="collapsed() ? onMenuClick() : toggleSubmenu(item.key)">
+            <span nz-icon [nzType]="item.icon || 'folder'" nzTheme="outline" class="menu-icon"></span>
+            @if (!collapsed()) {
+              <span class="menu-label">{{ item.label }}</span>
+              <span nz-icon nzType="down" nzTheme="outline" class="expand-arrow" [class.rotated]="expandedMenus[item.key]"></span>
+            }
+          </div>
+          @if (!collapsed() && expandedMenus[item.key]) {
+            <div class="submenu">
               @for (child of item.children; track child.key) {
-                <li nz-menu-item nzMatchRouter>
-                  <a [routerLink]="child.route" [queryParams]="child.queryParams || {}">{{ child.label }}</a>
-                </li>
+                <a 
+                  class="submenu-item" 
+                  [routerLink]="child.route" 
+                  [queryParams]="child.queryParams || {}"
+                  routerLinkActive="active"
+                  [routerLinkActiveOptions]="{exact: !child.queryParams}"
+                >
+                  <span class="submenu-dot"></span>
+                  <span class="submenu-label">{{ child.label }}</span>
+                </a>
               }
-            </ul>
-          </li>
-        } @else {
-          <li nz-menu-item nzMatchRouter [nzMatchRouterExact]="item.route === '/'">
-            <a [routerLink]="item.route">
-              <span nz-icon [nzType]="item.icon || ''" nzTheme="outline"></span>
-              <span>{{ item.label }}</span>
-            </a>
-          </li>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- Single menu item -->
+        <a 
+          class="menu-item"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}"
+          [nz-tooltip]="collapsed() ? item.label : null"
+          nzTooltipPlacement="right"
+          (click)="onMenuClick()"
+        >
+          <div class="menu-item-content">
+            <span nz-icon [nzType]="item.icon || 'file'" nzTheme="outline" class="menu-icon"></span>
+            @if (!collapsed()) {
+              <span class="menu-label">{{ item.label }}</span>
+            }
+          </div>
+        </a>
+      }
+      
+      <!-- Divider after certain items -->
+      @if (item.key === 'distribution-inbox' || item.key === 'sla-group') {
+        <div class="menu-divider"></div>
+        @if (!collapsed() && item.key === 'sla-group') {
+          <div class="menu-section-label">SISTEM</div>
         }
       }
-    </ul>
+    }
   </nav>
 
-  <!-- Collapse Toggle -->
-  <div class="sidebar-footer">
-    <button class="collapse-btn" (click)="toggleCollapse.emit()">
-      <span nz-icon [nzType]="collapsed() ? 'menu-unfold' : 'menu-fold'" nzTheme="outline"></span>
-      @if (!collapsed()) {
-        <span>Tutup Menu</span>
-      }
-    </button>
-  </div>
+  <!-- Footer with version -->
+  @if (!collapsed()) {
+    <div class="sidebar-footer">
+      <span class="version-text">v1.0.0</span>
+    </div>
+  }
 </aside>

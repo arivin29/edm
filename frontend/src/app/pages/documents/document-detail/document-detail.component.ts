@@ -76,7 +76,7 @@ export class DocumentDetailPage implements OnInit {
   newComment = '';
   replyContent = '';
   replyingTo = signal<string | null>(null);
-  activeTab = 0;
+  activeTab = signal(0);
   sidebarCollapsed = signal(true);
 
   documentId = '';
@@ -270,6 +270,7 @@ export class DocumentDetailPage implements OnInit {
   private fullWidthTabs = new Set([1]);
 
   onTabChange(index: number) {
+    this.activeTab.set(index);
     if (this.fullWidthTabs.has(index)) {
       this.sidebarCollapsed.set(true);
     } else {
