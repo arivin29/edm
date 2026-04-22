@@ -182,6 +182,11 @@ router.Middleware(middleware.RequirePermission("setting.edit")).Put("/watermark/
 router.Get("/sla/dashboard", slaController.Dashboard)
 router.Get("/sla/breached", slaController.Breached)
 
+// OCR
+router.Middleware(middleware.RequirePermission("document.view")).Post("/documents/{id}/ocr", documentController.RunOCR)
+router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/ocr", documentController.GetOCRText)
+router.Get("/ocr/status", documentController.OCRStatus)
+
 // Document Attachments
 router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/attachments", attachmentController.ListAttachments)
 router.Middleware(middleware.RequirePermission("document.create")).Post("/documents/{id}/attachments", attachmentController.UploadAttachment)

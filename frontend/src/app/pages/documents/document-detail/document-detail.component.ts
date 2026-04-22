@@ -82,6 +82,12 @@ export class DocumentDetailPage implements OnInit {
   // Preview state
   previewFile = signal<PreviewFile | null>(null);
 
+  // OCR state
+  ocrStatus = signal<{ available: boolean; engine: string; version: string } | null>(null);
+  ocrRunning = signal(false);
+  ocrResult = signal<{ text: string; page_count: number; engine: string; duration: string } | null>(null);
+  ocrText = signal<string>('');
+
   // Expose helpers to template
   getStatusColor = getStatusColor;
   getStatusLabel = getStatusLabel;
@@ -268,6 +274,11 @@ export class DocumentDetailPage implements OnInit {
     }
     if (index === 6 && this.distributions().length === 0 && !this.distributionsLoading()) {
       this.loadDistributions(this.documentId);
+    }
+    // OCR tab (index 8)
+    if (index === 8 && !this.ocrStatus()) {
+      this.loadOCRStatus();
+      this.loadOCRText();
     }
   }
 
@@ -619,5 +630,36 @@ export class DocumentDetailPage implements OnInit {
       }
     }
     return users;
+  }
+
+  // OCR methods
+  loadOCRStatus() {
+    this.http.get<any>(`${environment.apiUrl}/ocr/status`).subscribe({
+      next: (res) => this.ocrStatus.set(res.data),
+      error: () => this.ocrStatus.set({ available: false, engine: 'tesseract', version: 'not installed' })
+    });
+  }
+
+  loadOCRText() {
+    this.http.get<any>(`${environment.apiUrl}/documents/${this.documentId}/ocr`).subscribe({
+      next: (res) => this.ocrText.set(res.data?.text || ''),
+      error: () => {}
+    });
+  }
+
+  runOCR() {
+    this.ocrRunning.set(true);
+    this.ocrResult.set(null);
+    this.http.post<any>(`${environment.apiUrl}/documents/${this.documentId}/ocr`, {}).subscribe({
+      next: (res) => {
+        this.ocrResult.set(res.data);
+        this.ocrRunning.set(false);
+        this.message.success('OCR berhasil dijalankan');
+      },
+      error: (err) => {
+        this.ocrRunning.set(false);
+        this.message.error(err.error?.error || 'OCR gagal');
+      }
+    });
   }
 }

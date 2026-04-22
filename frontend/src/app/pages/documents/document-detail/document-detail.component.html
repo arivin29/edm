@@ -615,6 +615,55 @@
                     </nz-table>
                   }
                 </nz-tab>
+
+                <!-- Tab: OCR -->
+                <nz-tab nzTitle="OCR">
+                  <div class="p-3">
+                    <div class="flex justify-between items-center mb-3">
+                      <div>
+                        <h4 class="text-sm font-semibold m-0">Hasil OCR (Optical Character Recognition)</h4>
+                        <p class="text-xs text-gray-400 m-0">Ekstrak teks dari dokumen scan (PDF/gambar)</p>
+                      </div>
+                      <div class="flex gap-2 items-center">
+                        @if (ocrStatus()?.available) {
+                          <nz-tag nzColor="green">
+                            <span nz-icon nzType="check-circle"></span> {{ ocrStatus()!.version }}
+                          </nz-tag>
+                        } @else {
+                          <nz-tag nzColor="red">
+                            <span nz-icon nzType="close-circle"></span> Tesseract tidak tersedia
+                          </nz-tag>
+                        }
+                        <button nz-button nzType="primary" nzSize="small" [nzLoading]="ocrRunning()" (click)="runOCR()"
+                                [disabled]="!ocrStatus()?.available">
+                          <span nz-icon nzType="scan"></span> Jalankan OCR
+                        </button>
+                      </div>
+                    </div>
+
+                    @if (ocrRunning()) {
+                      <div class="text-center py-8">
+                        <nz-spin nzSimple nzSize="large"></nz-spin>
+                        <div class="text-gray-500 text-sm mt-2">Memproses OCR, mohon tunggu...</div>
+                      </div>
+                    } @else if (ocrResult(); as result) {
+                      <div class="mb-2 flex gap-3">
+                        <nz-tag nzColor="blue">{{ result.page_count }} halaman</nz-tag>
+                        <nz-tag nzColor="default">{{ result.engine }}</nz-tag>
+                        <nz-tag nzColor="default">{{ result.duration }}</nz-tag>
+                      </div>
+                      <pre class="bg-gray-50 border rounded p-3 text-xs whitespace-pre-wrap max-h-[500px] overflow-y-auto font-mono">{{ result.text || '(tidak ada teks terdeteksi)' }}</pre>
+                    } @else if (ocrText()) {
+                      <pre class="bg-gray-50 border rounded p-3 text-xs whitespace-pre-wrap max-h-[500px] overflow-y-auto font-mono">{{ ocrText() }}</pre>
+                    } @else {
+                      <div class="text-center py-8">
+                        <span nz-icon nzType="file-search" class="text-4xl text-gray-300 mb-2 block"></span>
+                        <div class="text-gray-400 text-sm">Belum ada hasil OCR</div>
+                        <div class="text-gray-300 text-xs">Klik "Jalankan OCR" untuk mengekstrak teks</div>
+                      </div>
+                    }
+                  </div>
+                </nz-tab>
               </nz-tabset>
             </div>
           </div>

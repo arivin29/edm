@@ -14,12 +14,14 @@ import (
 type DocumentController struct {
 	documentService  *services.DocumentService
 	watermarkService *services.WatermarkService
+	ocrService       *services.OCRService
 }
 
 func NewDocumentController() *DocumentController {
 	return &DocumentController{
 		documentService:  services.NewDocumentService(),
 		watermarkService: services.NewWatermarkService(),
+		ocrService:       services.NewOCRService(),
 	}
 }
 
@@ -374,5 +376,63 @@ func (c *DocumentController) RestoreVersion(ctx http.Context) http.Response {
 	return ctx.Response().Success().Json(http.Json{
 		"data":    doc,
 		"message": "Document restored successfully",
+	})
+}
+
+// ---------------------------------------------------------------------------
+// POST /documents/{id}/ocr - Run OCR on document
+// ---------------------------------------------------------------------------
+
+func (c *DocumentController) RunOCR(ctx http.Context) http.Response {
+	id := ctx.Request().Route("id")
+	if id == "" {
+		return badRequestError(ctx, "Document ID is required")
+	}
+
+	result, err := c.ocrService.RunOCR(id)
+	if err != nil {
+		return badRequestError(ctx, err.Error())
+	}
+
+	return ctx.Response().Success().Json(http.Json{
+		"data":    result,
+		"message": "OCR completed successfully",
+	})
+}
+
+// ---------------------------------------------------------------------------
+// GET /documents/{id}/ocr - Get OCR text
+// ---------------------------------------------------------------------------
+
+func (c *DocumentController) GetOCRText(ctx http.Context) http.Response {
+	id := ctx.Request().Route("id")
+	if id == "" {
+		return badRequestError(ctx, "Document ID is required")
+	}
+
+	text, err := c.ocrService.GetOCRText(id)
+	if err != nil {
+		return badRequestError(ctx, err.Error())
+	}
+
+	return ctx.Response().Success().Json(http.Json{
+		"data": http.Json{
+			"text": text,
+		},
+	})
+}
+
+// ---------------------------------------------------------------------------
+// GET /ocr/status - Check OCR engine availability
+// ---------------------------------------------------------------------------
+
+func (c *DocumentController) OCRStatus(ctx http.Context) http.Response {
+	available, version := c.ocrService.CheckTesseract()
+	return ctx.Response().Success().Json(http.Json{
+		"data": http.Json{
+			"available": available,
+			"engine":    "tesseract",
+			"version":   version,
+		},
 	})
 }
