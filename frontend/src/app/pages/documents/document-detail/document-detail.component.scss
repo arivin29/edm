@@ -118,224 +118,141 @@
       margin-bottom: 16px;
       background: #fff;
       border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 12px 16px;
+      border-radius: 10px;
+      padding: 14px 18px;
     }
 
     .wf-flow__top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .wf-flow__title {
       display: flex;
       align-items: center;
-      gap: 5px;
-      font-size: 11px;
+      gap: 6px;
+      font-size: 12px;
       font-weight: 600;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: .4px;
+      color: #374151;
     }
 
-    .wf-flow__badge {
-      display: inline-flex;
+    .wf-flow__tag { margin: 0 !important; }
+
+    .wf-flow__hint {
+      display: flex;
       align-items: center;
-      gap: 4px;
-      font-size: 10px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-weight: 500;
-
-      &--active {
-        color: #1d4ed8;
-        background: #eff6ff;
-      }
+      gap: 6px;
+      font-size: 11px;
+      color: #92400e;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-bottom: 12px;
     }
 
-    .wf-flow__track {
-      display: flex;
-      align-items: flex-start;
-      overflow-x: auto;
-      gap: 0;
-      padding-bottom: 2px;
-    }
-
-    .wf-step {
-      display: flex;
-      align-items: flex-start;
-      flex-shrink: 0;
-      position: relative;
-    }
-
-    .wf-step__dot {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
+    .wf-flow__empty {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
-      font-weight: 600;
-      color: #9ca3af;
-      background: #f3f4f6;
-      border: 2px solid #d1d5db;
-      flex-shrink: 0;
-      transition: all .2s;
-      position: relative;
-      z-index: 1;
+      gap: 6px;
+      padding: 16px 0;
+      font-size: 12px;
+      color: #a1a1aa;
     }
 
-    .wf-step__line {
-      width: 32px;
-      height: 2px;
-      background: #e5e7eb;
-      margin-top: 12px;
-      flex-shrink: 0;
+    /* Compact variant for Informasi tab */
+    .doc-workflow-steps--compact {
+      padding: 0;
+
+      .doc-wf-step__content { padding-bottom: 12px; }
+      .doc-wf-step__line { min-height: 16px; }
     }
 
-    .wf-step__info {
-      position: absolute;
-      top: 30px;
-      left: 50%;
-      transform: translateX(-50%);
+    /* Header row: name + badge inline */
+    .doc-wf-step__header {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      width: 90px;
-      text-align: center;
-
-      /* Place info to the right of dot, not under it */
-      left: 13px;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
-    .wf-step__name {
-      font-size: 10px;
-      font-weight: 600;
-      color: #374151;
-      line-height: 1.3;
-      word-break: break-word;
+    .doc-wf-step__badge {
+      margin: 0 !important;
+      font-size: 10px !important;
+      line-height: 1 !important;
+      padding: 1px 6px !important;
     }
 
-    .wf-step__type {
-      font-size: 9px;
-      color: #9ca3af;
-      line-height: 1.3;
+    .doc-wf-step__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 3px;
     }
 
-    .wf-step__actor {
-      font-size: 9px;
-      color: #6b7280;
-      line-height: 1.3;
-
-      &--waiting {
-        color: #3b82f6;
-        font-weight: 500;
-      }
+    .doc-wf-step__mini-tag {
+      margin: 0 !important;
+      font-size: 10px !important;
+      line-height: 1 !important;
+      padding: 1px 5px !important;
     }
 
-    .wf-step__date {
-      font-size: 9px;
-      color: #9ca3af;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-
-      &--active {
-        color: #3b82f6;
-        font-weight: 500;
-        font-family: inherit;
-      }
+    .doc-wf-step__sep {
+      color: #d1d5db;
+      margin: 0 2px;
     }
 
-    .wf-step__deadline {
-      font-size: 9px;
-      color: #ea580c;
-      font-weight: 500;
+    .doc-wf-step__time-inline {
+      font-size: 11px;
+      color: #a1a1aa;
     }
 
-    /* Status: approved */
-    .wf-step[data-status="approved"] .wf-step__dot {
-      background: #dcfce7;
-      border-color: #22c55e;
-      color: #16a34a;
-    }
-    .wf-step[data-status="approved"] .wf-step__line {
-      background: #86efac;
-    }
-
-    /* Status: active */
-    .wf-step[data-status="active"] .wf-step__dot {
-      background: #dbeafe;
-      border-color: #3b82f6;
-      color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
-    }
-
-    /* Status: rejected */
-    .wf-step[data-status="rejected"] .wf-step__dot {
-      background: #fee2e2;
-      border-color: #ef4444;
-      color: #dc2626;
-    }
-
-    /* Status: skipped */
-    .wf-step[data-status="skipped"] .wf-step__dot {
-      background: #fff7ed;
-      border-color: #f97316;
-      color: #ea580c;
-    }
-
-    /* Status: preview (planned) */
-    .wf-step[data-status="preview"] .wf-step__dot {
-      border-style: dashed;
-      border-color: #d1d5db;
-      color: #9ca3af;
-      background: #f9fafb;
-    }
-    .wf-step[data-status="preview"] .wf-step__line {
-      background: repeating-linear-gradient(90deg, #d1d5db 0 4px, transparent 4px 8px);
-      height: 1px;
-    }
-
-    /* Active step detail card */
-    .wf-active-card {
-      margin-top: 12px;
-      padding: 10px 12px;
-      background: #f0f7ff;
-      border: 1px solid #bfdbfe;
+    /* Active step highlight background */
+    .doc-wf-step--active-highlight {
+      background: linear-gradient(135deg, #eff6ff 0%, #f0f7ff 100%);
+      margin: -6px -10px;
+      padding: 6px 10px;
       border-radius: 8px;
+      border: 1px solid #bfdbfe;
+    }
 
-      &__header {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 6px;
-      }
+    /* Active step meta chips */
+    .doc-wf-step__active-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
 
-      &__instructions {
-        font-size: 11px;
-        color: #4b5563;
-        margin-bottom: 6px;
-        padding: 4px 8px;
-        background: #fff;
-        border-radius: 4px;
-        border-left: 2px solid #3b82f6;
-      }
+    .doc-wf-step__meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      color: #4b5563;
+      background: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
 
-      &__meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
+      &--warn { color: #c2410c; border-color: #fed7aa; background: #fff7ed; }
+      &--info { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
+    }
 
-      &__meta-item {
-        font-size: 10px;
-        color: #6b7280;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
+    .doc-wf-step__instructions {
+      font-size: 11px;
+      color: #4b5563;
+      margin-top: 4px;
+      padding: 4px 8px;
+      background: #fff;
+      border-radius: 4px;
+      border-left: 2px solid #3b82f6;
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
     }
 
     /* ===== Stat Cards ===== */
