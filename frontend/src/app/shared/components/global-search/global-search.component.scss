@@ -1,12 +1,27 @@
-// ── Global Search Modal ───────────────────────────────────
-::ng-deep .global-search-modal {
-  .ant-modal-body { padding: 0 !important; }
-  .ant-modal-content {
-    border-radius: 12px !important;
-    overflow: hidden;
-    box-shadow: 0 16px 70px rgba(0,0,0,.15), 0 0 0 1px rgba(0,0,0,.05) !important;
-  }
+// ── Global Search Overlay ───────────────────────────────────
+:host { display: contents; }
+
+.gs-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 1050;
+  animation: gs-fade-in .15s ease;
 }
+
+.gs-panel {
+  position: fixed;
+  top: 80px; left: 50%; transform: translateX(-50%);
+  width: 560px; max-width: calc(100vw - 32px);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 16px 70px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.05);
+  z-index: 1051;
+  overflow: hidden;
+  animation: gs-slide-in .2s ease;
+}
+
+@keyframes gs-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes gs-slide-in { from { opacity: 0; transform: translateX(-50%) translateY(-8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
 // ── Search Input ──────────────────────────────────────────
 .gs-input-wrap {

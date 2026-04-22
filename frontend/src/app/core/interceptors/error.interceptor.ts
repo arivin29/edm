@@ -1,15 +1,15 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { NotificationService } from '../services/notification.service';
+import { AuthStateService } from '../auth/auth-state.service';
 
 /**
  * Interceptor to handle HTTP errors globally
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const notification = inject(NotificationService);
-  const router = inject(Router);
+  const authState = inject(AuthStateService);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -28,12 +28,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             errorMessage = error.error?.message || 'Permintaan tidak valid.';
             break;
           case 401:
-            // Clear auth data and redirect to login
-            if (!req.url.includes('/auth/login') && !req.url.includes('/auth/refresh')) {
-              localStorage.removeItem('dms_auth');
-              router.navigate(['/auth/login']);
+            // Clear auth state and redirect to login
+            if (!req.url.includes('/auth/login') && !req.url.includes('/auth/refresh') && !req.url.includes('/auth/logout')) {
               errorMessage = 'Sesi Anda telah berakhir. Silakan login kembali.';
               notification.error('Sesi Berakhir', errorMessage);
+              authState.logout();
             }
             break;
           case 403:

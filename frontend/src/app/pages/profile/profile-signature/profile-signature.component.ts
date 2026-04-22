@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -19,7 +19,6 @@ import { AuthStateService } from '../../../core/auth/auth-state.service';
   standalone: true,
   imports: [
     CommonModule,
-    DatePipe,
     NzCardModule,
     NzButtonModule,
     NzIconModule,
