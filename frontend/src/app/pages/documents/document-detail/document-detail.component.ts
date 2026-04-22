@@ -508,6 +508,28 @@ export class DocumentDetailPage implements OnInit {
     window.open(`${environment.apiUrl}/documents/${doc.id}/versions/${versionNumber}/download`, '_blank');
   }
 
+  restoreVersion(versionNumber: number) {
+    const doc = this.document();
+    if (!doc) return;
+    this.modal.confirm({
+      nzTitle: 'Restore Versi',
+      nzContent: `Apakah Anda yakin ingin mengembalikan dokumen ke versi ${versionNumber}? Versi saat ini akan disimpan dan versi yang dipilih akan menjadi versi terbaru.`,
+      nzOkText: 'Ya, Restore',
+      nzOkDanger: false,
+      nzCancelText: 'Batal',
+      nzOnOk: () => {
+        this.http.post<any>(`${environment.apiUrl}/documents/${doc.id}/versions/${versionNumber}/restore`, {}).subscribe({
+          next: () => {
+            this.msg.success('Versi berhasil di-restore');
+            this.loadDocument(doc.id);
+            this.loadVersions(doc.id);
+          },
+          error: () => this.msg.error('Gagal restore versi')
+        });
+      }
+    });
+  }
+
   getStepColor(status: string): string {
     const colors: Record<string, string> = {
       pending: 'gray', in_progress: 'blue', completed: 'green', rejected: 'red'

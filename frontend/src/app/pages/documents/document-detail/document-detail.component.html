@@ -313,6 +313,73 @@
                   ></app-file-manager>
                 </nz-tab>
 
+                <!-- Tab: Riwayat Versi -->
+                <nz-tab nzTitle="Riwayat Versi">
+                  @if (versionsLoading()) {
+                    <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+                  } @else if (versions().length === 0) {
+                    <div class="tab-empty-state">
+                      <nz-empty nzNotFoundContent="Belum ada riwayat versi" [nzNotFoundImage]="'simple'"></nz-empty>
+                    </div>
+                  } @else {
+                    <div class="version-history">
+                      <!-- Version Timeline -->
+                      <nz-timeline>
+                        @for (v of versions(); track v.id; let i = $index) {
+                          <nz-timeline-item
+                            [nzColor]="v.is_current ? 'blue' : 'gray'"
+                            [nzDot]="i === 0 ? currentDot : null">
+                            <div class="version-item" [class.version-item--current]="v.is_current">
+                              <div class="version-item__header">
+                                <div class="version-item__title">
+                                  <nz-tag [nzColor]="v.is_current ? 'blue' : 'default'" class="version-tag">
+                                    v{{ v.major_version }}.{{ v.minor_version }}
+                                  </nz-tag>
+                                  @if (v.is_current) {
+                                    <nz-tag nzColor="green">Saat Ini</nz-tag>
+                                  }
+                                  <span class="version-item__size text-gray-400 text-xs ml-2">{{ formatFileSize(v.file_size) }}</span>
+                                </div>
+                                <div class="version-item__actions">
+                                  <button nz-button nzSize="small" nzType="text"
+                                          nz-tooltip nzTooltipTitle="Download versi ini"
+                                          (click)="downloadVersion(v.version_number)">
+                                    <span nz-icon nzType="download"></span>
+                                  </button>
+                                  @if (!v.is_current) {
+                                    <button nz-button nzSize="small" nzType="text" nzDanger
+                                            nz-tooltip nzTooltipTitle="Restore ke versi ini"
+                                            (click)="restoreVersion(v.version_number)">
+                                      <span nz-icon nzType="rollback"></span>
+                                    </button>
+                                  }
+                                </div>
+                              </div>
+                              <div class="version-item__meta">
+                                @if (v.creator) {
+                                  <span class="version-item__user">
+                                    <span class="w-4 h-4 rounded-full bg-blue-100 text-blue-600 inline-flex items-center justify-center text-[9px] font-bold mr-1">
+                                      {{ v.creator.name.charAt(0).toUpperCase() }}
+                                    </span>
+                                    {{ v.creator.name }}
+                                  </span>
+                                }
+                                <span class="version-item__date">{{ formatDate(v.created_at) }}</span>
+                              </div>
+                              @if (v.change_summary) {
+                                <div class="version-item__summary">{{ v.change_summary }}</div>
+                              }
+                            </div>
+                          </nz-timeline-item>
+                        }
+                      </nz-timeline>
+                      <ng-template #currentDot>
+                        <span nz-icon nzType="check-circle" nzTheme="fill" style="color: #1890ff; font-size: 14px;"></span>
+                      </ng-template>
+                    </div>
+                  }
+                </nz-tab>
+
                 <!-- Tab: Parameter -->
                 <nz-tab nzTitle="Parameter">
                   @if (document()!.template?.id) {

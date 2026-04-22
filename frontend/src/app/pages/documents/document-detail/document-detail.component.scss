@@ -585,3 +585,34 @@
       .doc-info-item:nth-child(2n) { border-right: none; }
       .info-stat-cards { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* ===== Version History Tab ===== */
+    .version-history {
+      padding: 12px 0;
+    }
+    .version-item {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #f0f0f0;
+      background: #fafafa;
+      margin-bottom: 4px;
+      transition: all .15s;
+    }
+    .version-item:hover { background: #f5f5ff; border-color: #d9d9ff; }
+    .version-item--current { background: #f0f5ff; border-color: #91caff; }
+    .version-item__header {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .version-item__title { display: flex; align-items: center; gap: 4px; }
+    .version-tag { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+    .version-item__actions { display: flex; gap: 2px; }
+    .version-item__meta {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 4px; font-size: 11px; color: #8c8c8c;
+    }
+    .version-item__user { display: flex; align-items: center; }
+    .version-item__summary {
+      margin-top: 4px; font-size: 11px; color: #595959;
+      padding: 4px 8px; background: white; border-radius: 4px;
+      border-left: 2px solid #1890ff;
+    }
