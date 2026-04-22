@@ -119,79 +119,95 @@
       background: #fff;
       border: 1px solid #e5e7eb;
       border-radius: 10px;
-      padding: 14px 18px;
+      padding: 16px 20px;
     }
 
     .wf-flow__top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 14px;
     }
 
     .wf-flow__title {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
+      gap: 7px;
+      font-size: 13px;
       font-weight: 600;
-      color: #374151;
+      color: #1f2937;
     }
 
     .wf-flow__tag { margin: 0 !important; }
-
-    .wf-flow__hint {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: #92400e;
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      border-radius: 6px;
-      padding: 5px 10px;
-      margin-bottom: 10px;
-    }
 
     .wf-flow__empty {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      padding: 16px 0;
+      padding: 20px 0;
       font-size: 12px;
       color: #a1a1aa;
     }
 
-    /* ===== Horizontal Track (scrollable) ===== */
-    .wf-track {
+    /* ===== Card Pipeline (scrollable) ===== */
+    .wf-pipeline {
       display: flex;
-      align-items: flex-start;
+      align-items: stretch;
       overflow-x: auto;
-      padding-bottom: 4px;
       gap: 0;
+      padding-bottom: 4px;
       scrollbar-width: thin;
-      scrollbar-color: #d1d5db transparent;
+      scrollbar-color: #e5e7eb transparent;
 
-      &::-webkit-scrollbar { height: 4px; }
+      &::-webkit-scrollbar { height: 5px; }
       &::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
       &::-webkit-scrollbar-track { background: transparent; }
     }
 
-    .wf-node {
+    /* Arrow connector between cards */
+    .wf-arrow {
       display: flex;
-      flex-direction: column;
       align-items: center;
       flex-shrink: 0;
-      position: relative;
-      min-width: 80px;
-      max-width: 110px;
+      padding: 0 2px;
+      color: #d1d5db;
+      font-size: 12px;
+
+      &[data-status="approved"] { color: #22c55e; }
+      &[data-status="rejected"] { color: #ef4444; }
     }
 
-    /* Dot */
-    .wf-node__dot {
-      width: 32px;
-      height: 32px;
+    /* Each step card */
+    .wf-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      min-width: 160px;
+      max-width: 220px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1.5px solid #e5e7eb;
+      background: #fafafa;
+      transition: all .2s ease;
+    }
+
+    .wf-card__icon {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #9ca3af;
+    }
+
+    .wf-card__num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -200,101 +216,113 @@
       font-weight: 700;
       color: #9ca3af;
       background: #f3f4f6;
-      border: 2px solid #d1d5db;
-      position: relative;
-      z-index: 2;
-      transition: all .25s ease;
+      border: 1.5px solid #e5e7eb;
     }
 
-    /* Connector line — positioned between dots using absolute */
-    .wf-node__line {
-      position: absolute;
-      top: 15px;
-      left: calc(50% + 16px);
-      right: 0;
-      width: calc(100% - 32px);
-      height: 2px;
-      background: #e5e7eb;
-      z-index: 1;
-    }
-    /* Make last node's line extend to fill gap to next node */
-    .wf-node:not(:last-child) .wf-node__line {
-      width: calc(100%);
-      left: calc(50% + 16px);
-    }
-
-    /* Labels below dot */
-    .wf-node__label {
-      margin-top: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #374151;
-      text-align: center;
-      line-height: 1.3;
-      word-break: break-word;
-      max-width: 100%;
-    }
-
-    .wf-node__sub {
-      font-size: 10px;
+    .wf-card__step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
       color: #9ca3af;
-      text-align: center;
+      background: #f3f4f6;
+      border: 1.5px solid #e5e7eb;
+    }
+
+    .wf-card__body {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .wf-card__name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1f2937;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wf-card__meta {
+      font-size: 11px;
+      color: #6b7280;
       line-height: 1.3;
       margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
 
       &--active {
         color: #2563eb;
-        font-weight: 600;
+        font-weight: 500;
       }
     }
 
-    /* ===== Status Styles ===== */
-    .wf-node[data-status="approved"] .wf-node__dot {
-      background: #dcfce7;
-      border-color: #22c55e;
-      color: #16a34a;
-    }
-    .wf-node[data-status="approved"] .wf-node__line { background: #86efac; }
-    .wf-node[data-status="approved"] .wf-node__label { color: #15803d; }
+    /* ===== Card Status Variants ===== */
 
-    .wf-node[data-status="active"] .wf-node__dot {
-      background: #dbeafe;
-      border-color: #3b82f6;
-      color: #2563eb;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, .12);
-      animation: wf-pulse 2s ease-in-out infinite;
-    }
-    .wf-node[data-status="active"] .wf-node__label { color: #1d4ed8; font-weight: 700; }
+    /* Approved — green left accent */
+    .wf-card[data-status="approved"] {
+      border-color: #bbf7d0;
+      background: linear-gradient(135deg, #f0fdf4, #fafafa);
+      border-left: 3px solid #22c55e;
 
-    .wf-node[data-status="rejected"] .wf-node__dot {
-      background: #fee2e2;
-      border-color: #ef4444;
-      color: #dc2626;
+      .wf-card__icon { color: #16a34a; }
+      .wf-card__name { color: #15803d; }
     }
-    .wf-node[data-status="rejected"] .wf-node__line { background: #fca5a5; }
-    .wf-node[data-status="rejected"] .wf-node__label { color: #b91c1c; }
 
-    .wf-node[data-status="skipped"] .wf-node__dot {
-      background: #fff7ed;
-      border-color: #f97316;
-      color: #ea580c;
+    /* Active — blue glow */
+    .wf-card[data-status="active"] {
+      border-color: #93c5fd;
+      background: linear-gradient(135deg, #eff6ff, #f8faff);
+      border-left: 3px solid #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .08), 0 1px 3px rgba(0,0,0,.04);
+
+      .wf-card__icon { color: #2563eb; }
+      .wf-card__name { color: #1d4ed8; }
     }
-    .wf-node[data-status="skipped"] .wf-node__label { color: #9a3412; }
 
-    .wf-node[data-status="preview"] .wf-node__dot {
+    /* Rejected — red accent */
+    .wf-card[data-status="rejected"] {
+      border-color: #fecaca;
+      background: linear-gradient(135deg, #fef2f2, #fafafa);
+      border-left: 3px solid #ef4444;
+
+      .wf-card__icon { color: #dc2626; }
+      .wf-card__name { color: #b91c1c; }
+    }
+
+    /* Skipped — orange subtle */
+    .wf-card[data-status="skipped"] {
+      border-color: #fed7aa;
+      background: #fffbeb;
+      border-left: 3px solid #f97316;
+      opacity: .7;
+
+      .wf-card__icon { color: #ea580c; }
+      .wf-card__name { color: #9a3412; }
+    }
+
+    /* Pending — gray default */
+    .wf-card[data-status="pending"] {
+      opacity: .55;
+    }
+
+    /* Preview — dashed border, muted */
+    .wf-card--preview {
       border-style: dashed;
       border-color: #d1d5db;
-      color: #9ca3af;
       background: #fafafa;
-    }
-    .wf-node[data-status="preview"] .wf-node__line {
-      background: repeating-linear-gradient(90deg, #d1d5db 0 4px, transparent 4px 8px);
-      height: 2px;
-    }
+      opacity: .75;
 
-    @keyframes wf-pulse {
-      0%, 100% { box-shadow: 0 0 0 4px rgba(59, 130, 246, .12); }
-      50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, .06); }
+      .wf-card__num {
+        border-style: dashed;
+        color: #9ca3af;
+      }
     }
 
     /* ===== Stat Cards ===== */

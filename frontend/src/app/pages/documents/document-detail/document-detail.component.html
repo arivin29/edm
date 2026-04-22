@@ -88,11 +88,11 @@
                 <nz-tab nzTitle="Informasi">
                   <div class="doc-info-section">
 
-                    <!-- Approval Flow — Horizontal inline summary -->
+                    <!-- Approval Flow — Card pipeline -->
                     <div class="wf-flow">
                       <div class="wf-flow__top">
                         <div class="wf-flow__title">
-                          <span nz-icon nzType="node-index" nzTheme="outline"></span>
+                          <span nz-icon nzType="audit" nzTheme="outline"></span>
                           Alur Persetujuan
                         </div>
                         @if (workflow()?.workflow_name) {
@@ -106,49 +106,53 @@
                       @if (workflowLoading()) {
                         <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
                       } @else if (workflow()?.is_preview && workflow()?.preview_steps?.length) {
-                        <!-- Preview mode (draft) -->
-                        <div class="wf-flow__hint">
-                          <span nz-icon nzType="bulb" nzTheme="outline"></span>
-                          Akan aktif saat disubmit
-                        </div>
-                        <div class="wf-track">
+                        <div class="wf-pipeline">
                           @for (step of workflow()!.preview_steps!; track step.id; let i = $index; let last = $last) {
-                            <div class="wf-node" data-status="preview">
-                              <div class="wf-node__dot">{{ i + 1 }}</div>
-                              @if (!last) { <div class="wf-node__line" data-status="preview"></div> }
-                              <div class="wf-node__label">{{ step.name }}</div>
-                              <div class="wf-node__sub">{{ getStepTypeLabel(step.step_type) }}</div>
+                            <div class="wf-card wf-card--preview">
+                              <div class="wf-card__num">{{ i + 1 }}</div>
+                              <div class="wf-card__body">
+                                <div class="wf-card__name">{{ step.name }}</div>
+                                <div class="wf-card__meta">{{ getStepTypeLabel(step.step_type) }}</div>
+                              </div>
                             </div>
+                            @if (!last) {
+                              <div class="wf-arrow"><span nz-icon nzType="right" nzTheme="outline"></span></div>
+                            }
                           }
                         </div>
                       } @else if (workflow()?.steps?.length) {
-                        <!-- Active workflow — horizontal scroll -->
-                        <div class="wf-track">
+                        <div class="wf-pipeline">
                           @for (step of workflow()!.steps; track step.id; let i = $index; let last = $last) {
-                            <div class="wf-node" [attr.data-status]="step.status">
-                              <div class="wf-node__dot">
+                            <div class="wf-card" [attr.data-status]="step.status">
+                              <div class="wf-card__icon">
                                 @if (step.status === 'approved') {
-                                  <span nz-icon nzType="check" nzTheme="outline"></span>
+                                  <span nz-icon nzType="check-circle" nzTheme="fill"></span>
                                 } @else if (step.status === 'rejected') {
-                                  <span nz-icon nzType="close" nzTheme="outline"></span>
+                                  <span nz-icon nzType="close-circle" nzTheme="fill"></span>
                                 } @else if (step.status === 'active') {
                                   <span nz-icon nzType="sync" nzSpin></span>
                                 } @else if (step.status === 'skipped') {
-                                  <span nz-icon nzType="forward" nzTheme="outline"></span>
+                                  <span nz-icon nzType="minus-circle" nzTheme="fill"></span>
                                 } @else {
-                                  {{ i + 1 }}
+                                  <span class="wf-card__step-num">{{ i + 1 }}</span>
                                 }
                               </div>
-                              @if (!last) { <div class="wf-node__line" [attr.data-status]="step.status"></div> }
-                              <div class="wf-node__label">{{ step.name }}</div>
-                              @if (step.status === 'approved' || step.status === 'rejected') {
-                                <div class="wf-node__sub">{{ step.actor?.name || '-' }}</div>
-                              } @else if (step.status === 'active') {
-                                <div class="wf-node__sub wf-node__sub--active">Menunggu</div>
-                              } @else {
-                                <div class="wf-node__sub">{{ getStepTypeLabel(step.step_type) }}</div>
-                              }
+                              <div class="wf-card__body">
+                                <div class="wf-card__name">{{ step.name }}</div>
+                                @if (step.status === 'approved' || step.status === 'rejected') {
+                                  <div class="wf-card__meta">{{ step.actor?.name || '-' }}</div>
+                                } @else if (step.status === 'active') {
+                                  <div class="wf-card__meta wf-card__meta--active">Menunggu persetujuan</div>
+                                } @else {
+                                  <div class="wf-card__meta">{{ getStepTypeLabel(step.step_type) }}</div>
+                                }
+                              </div>
                             </div>
+                            @if (!last) {
+                              <div class="wf-arrow" [attr.data-status]="step.status">
+                                <span nz-icon nzType="right" nzTheme="outline"></span>
+                              </div>
+                            }
                           }
                         </div>
                       } @else {
@@ -329,6 +333,7 @@
                     (fileDelete)="onFmDelete($event)"
                     (folderCreate)="onFmCreateFolder($event)"
                     (fileUpload)="onFmUpload($event)"
+                    (fileOcr)="onFmOcr($event)"
                   ></app-file-manager>
                 </nz-tab>
 
