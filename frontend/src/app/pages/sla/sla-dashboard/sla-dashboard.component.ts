@@ -57,6 +57,8 @@ export class SLADashboardPage implements OnInit {
   stats = signal<SLAStats | null>(null);
   breachedItems = signal<SLABreachedItem[]>([]);
   loading = signal(true);
+  error = signal(false);
+  breachedError = signal(false);
 
   ngOnInit() {
     this.loadData();
@@ -64,17 +66,23 @@ export class SLADashboardPage implements OnInit {
 
   loadData() {
     this.loading.set(true);
+    this.error.set(false);
+    this.breachedError.set(false);
+
     this.http.get<any>(`${environment.apiUrl}/sla/dashboard`).subscribe({
       next: (res) => {
         this.stats.set(res.data);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false)
+      error: () => {
+        this.loading.set(false);
+        this.error.set(true);
+      }
     });
 
     this.http.get<any>(`${environment.apiUrl}/sla/breached?include_at_risk=true`).subscribe({
       next: (res) => this.breachedItems.set(res.data || []),
-      error: () => {}
+      error: () => this.breachedError.set(true)
     });
   }
 

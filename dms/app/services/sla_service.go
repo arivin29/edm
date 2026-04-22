@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"math"
 	"time"
 
@@ -47,6 +46,8 @@ type SLABreachedItem struct {
 // GetDashboardStats returns SLA statistics
 func (s *SLAService) GetDashboardStats() (*SLADashboardStats, error) {
 	stats := &SLADashboardStats{}
+	now := time.Now()
+	riskThreshold := now.Add(24 * time.Hour)
 
 	// Count active steps with deadlines
 	count, err := facades.Orm().Query().
@@ -58,31 +59,30 @@ func (s *SLAService) GetDashboardStats() (*SLADashboardStats, error) {
 	}
 	stats.TotalActive = count
 
-	// Count on track (active, deadline > now)
+	// On track: deadline > riskThreshold (safe margin > 24h)
 	count, err = facades.Orm().Query().
 		Model(&models.WorkflowStepInstance{}).
-		Where("status = 'active' AND deadline IS NOT NULL AND deadline > ?", time.Now()).
+		Where("status = 'active' AND deadline IS NOT NULL AND deadline > ?", riskThreshold).
 		Count()
 	if err != nil {
 		return nil, err
 	}
 	stats.OnTrack = count
 
-	// Count at risk (active, deadline within 24 hours)
-	riskThreshold := time.Now().Add(24 * time.Hour)
+	// At risk: deadline within 24h but not yet breached
 	count, err = facades.Orm().Query().
 		Model(&models.WorkflowStepInstance{}).
-		Where("status = 'active' AND deadline IS NOT NULL AND deadline <= ? AND deadline > ?", riskThreshold, time.Now()).
+		Where("status = 'active' AND deadline IS NOT NULL AND deadline <= ? AND deadline > ?", riskThreshold, now).
 		Count()
 	if err != nil {
 		return nil, err
 	}
 	stats.AtRisk = count
 
-	// Count breached (active, deadline < now)
+	// Breached: deadline already passed
 	count, err = facades.Orm().Query().
 		Model(&models.WorkflowStepInstance{}).
-		Where("status = 'active' AND deadline IS NOT NULL AND deadline < ?", time.Now()).
+		Where("status = 'active' AND deadline IS NOT NULL AND deadline < ?", now).
 		Count()
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func (s *SLAService) GetDashboardStats() (*SLADashboardStats, error) {
 		stats.ComplianceRate = math.Round(float64(stats.CompletedOnTime)/float64(stats.TotalCompleted)*10000) / 100
 	}
 
-	// Average completion hours (from raw SQL)
+	// Average completion hours
 	var avgResult struct {
 		AvgHours *float64
 	}
@@ -132,20 +132,14 @@ func (s *SLAService) GetBreachedSteps(includeAtRisk bool) ([]SLABreachedItem, er
 	now := time.Now()
 	riskThreshold := now.Add(24 * time.Hour)
 
-	var condition string
+	var threshold time.Time
 	if includeAtRisk {
-		condition = fmt.Sprintf(
-			"wsi.status = 'active' AND wsi.deadline IS NOT NULL AND wsi.deadline <= '%s'",
-			riskThreshold.Format("2006-01-02 15:04:05"),
-		)
+		threshold = riskThreshold
 	} else {
-		condition = fmt.Sprintf(
-			"wsi.status = 'active' AND wsi.deadline IS NOT NULL AND wsi.deadline < '%s'",
-			now.Format("2006-01-02 15:04:05"),
-		)
+		threshold = now
 	}
 
-	query := fmt.Sprintf(`
+	query := `
 		SELECT 
 			wsi.id as step_instance_id,
 			ws.name as step_name,
@@ -154,7 +148,7 @@ func (s *SLAService) GetBreachedSteps(includeAtRisk bool) ([]SLABreachedItem, er
 			d.title as document_title,
 			d.document_number,
 			w.name as workflow_name,
-			COALESCE(u.name, ws.assignee_id, 'Tidak diketahui') as assignee_name,
+			COALESCE(u.name, 'Tidak diketahui') as assignee_name,
 			wsi.deadline,
 			wsi.activated_at,
 			wsi.escalated
@@ -163,10 +157,10 @@ func (s *SLAService) GetBreachedSteps(includeAtRisk bool) ([]SLABreachedItem, er
 		JOIN workflow_steps ws ON ws.id = wsi.workflow_step_id
 		JOIN documents d ON d.id = wi.document_id
 		JOIN workflows w ON w.id = wi.workflow_id
-		LEFT JOIN users u ON u.id = ws.assignee_id
-		WHERE %s
+		LEFT JOIN users u ON u.id = ws.assignee_user_id
+		WHERE wsi.status = 'active' AND wsi.deadline IS NOT NULL AND wsi.deadline <= $1
 		ORDER BY wsi.deadline ASC
-	`, condition)
+	`
 
 	type rawRow struct {
 		StepInstanceID string
@@ -183,7 +177,7 @@ func (s *SLAService) GetBreachedSteps(includeAtRisk bool) ([]SLABreachedItem, er
 	}
 
 	var rows []rawRow
-	if err := facades.Orm().Query().Raw(query).Scan(&rows); err != nil {
+	if err := facades.Orm().Query().Raw(query, threshold).Scan(&rows); err != nil {
 		return nil, err
 	}
 

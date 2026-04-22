@@ -46,6 +46,7 @@ export class SLABreachedPage implements OnInit {
 
   items = signal<SLABreachedItem[]>([]);
   loading = signal(true);
+  error = signal(false);
   filterStatus = '';
 
   get breachedCount(): number { return this.items().filter(i => i.status === 'breached').length; }
@@ -57,6 +58,7 @@ export class SLABreachedPage implements OnInit {
 
   loadData() {
     this.loading.set(true);
+    this.error.set(false);
     this.http.get<any>(`${environment.apiUrl}/sla/breached?include_at_risk=true`).subscribe({
       next: (res) => {
         this.items.set(res.data || []);
@@ -65,6 +67,7 @@ export class SLABreachedPage implements OnInit {
       error: () => {
         this.items.set([]);
         this.loading.set(false);
+        this.error.set(true);
       }
     });
   }

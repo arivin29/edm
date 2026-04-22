@@ -1,10 +1,12 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -110,23 +112,12 @@ func (s *OCRService) GetOCRText(documentID string) (string, error) {
 		return "", nil
 	}
 
-	// Extract ocr_text from metadata JSON
-	// Simple approach: parse and look for ocr_text field
-	metadata := *doc.Metadata
-	idx := strings.Index(metadata, `"ocr_text":"`)
-	if idx == -1 {
+	var metaMap map[string]interface{}
+	if err := json.Unmarshal([]byte(*doc.Metadata), &metaMap); err != nil {
 		return "", nil
 	}
-	start := idx + len(`"ocr_text":"`)
-	end := strings.Index(metadata[start:], `"`)
-	if end == -1 {
-		return "", nil
-	}
-	text := metadata[start : start+end]
-	// Unescape basic JSON escapes
-	text = strings.ReplaceAll(text, `\n`, "\n")
-	text = strings.ReplaceAll(text, `\t`, "\t")
-	text = strings.ReplaceAll(text, `\\`, "\\")
+
+	text, _ := metaMap["ocr_text"].(string)
 	return text, nil
 }
 
@@ -150,11 +141,12 @@ func (s *OCRService) ocrPDF(pdfPath string) (string, error) {
 		}
 	}
 
-	// Find generated images
+	// Find generated images and sort numerically
 	matches, err := filepath.Glob(filepath.Join(tmpDir, "page*.png"))
 	if err != nil || len(matches) == 0 {
 		return "", fmt.Errorf("no page images generated")
 	}
+	sort.Strings(matches)
 
 	var allText strings.Builder
 	for i, imgPath := range matches {
@@ -190,83 +182,29 @@ func (s *OCRService) ocrImage(imagePath string) (string, error) {
 
 // buildOCRMetadata merges OCR text into existing metadata JSON
 func (s *OCRService) buildOCRMetadata(existingMeta *string, ocrText string) string {
-	// Escape OCR text for JSON
-	escaped := strings.ReplaceAll(ocrText, "\\", "\\\\")
-	escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
-	escaped = strings.ReplaceAll(escaped, "\n", "\\n")
-	escaped = strings.ReplaceAll(escaped, "\t", "\\t")
-	escaped = strings.ReplaceAll(escaped, "\r", "")
+	var metaMap map[string]interface{}
 
-	// Truncate if too long (keep first 50KB for metadata)
-	if len(escaped) > 50000 {
-		escaped = escaped[:50000] + "...[truncated]"
-	}
-
-	ocrField := fmt.Sprintf(`"ocr_text":"%s","ocr_at":"%s"`, escaped, time.Now().Format(time.RFC3339))
-
-	if existingMeta == nil || *existingMeta == "" || *existingMeta == "{}" || *existingMeta == "null" {
-		return fmt.Sprintf(`{%s}`, ocrField)
-	}
-
-	// Remove existing ocr fields and append new ones
-	meta := *existingMeta
-	meta = s.removeJSONField(meta, "ocr_text")
-	meta = s.removeJSONField(meta, "ocr_at")
-
-	// Insert before closing brace
-	if strings.HasSuffix(strings.TrimSpace(meta), "}") {
-		trimmed := strings.TrimSpace(meta)
-		inner := trimmed[1 : len(trimmed)-1]
-		inner = strings.TrimSpace(inner)
-		if inner != "" {
-			return fmt.Sprintf(`{%s,%s}`, inner, ocrField)
+	if existingMeta != nil && *existingMeta != "" && *existingMeta != "null" {
+		if err := json.Unmarshal([]byte(*existingMeta), &metaMap); err != nil {
+			metaMap = make(map[string]interface{})
 		}
-		return fmt.Sprintf(`{%s}`, ocrField)
+	} else {
+		metaMap = make(map[string]interface{})
 	}
-	return fmt.Sprintf(`{%s}`, ocrField)
-}
 
-func (s *OCRService) removeJSONField(json, field string) string {
-	// Simple removal of "field":"value" patterns (handles basic cases)
-	patterns := []string{
-		fmt.Sprintf(`"%s":"`, field),
+	// Truncate if too long (keep first 50KB)
+	if len(ocrText) > 50000 {
+		ocrText = ocrText[:50000] + "...[truncated]"
 	}
-	for _, pattern := range patterns {
-		idx := strings.Index(json, pattern)
-		if idx == -1 {
-			continue
-		}
-		// Find end of value
-		start := idx
-		valStart := idx + len(pattern)
-		end := valStart
-		escaped := false
-		for end < len(json) {
-			if escaped {
-				escaped = false
-				end++
-				continue
-			}
-			if json[end] == '\\' {
-				escaped = true
-				end++
-				continue
-			}
-			if json[end] == '"' {
-				end++ // include closing quote
-				break
-			}
-			end++
-		}
-		// Remove trailing comma if present
-		if end < len(json) && json[end] == ',' {
-			end++
-		} else if start > 0 && json[start-1] == ',' {
-			start--
-		}
-		json = json[:start] + json[end:]
+
+	metaMap["ocr_text"] = ocrText
+	metaMap["ocr_at"] = time.Now().Format(time.RFC3339)
+
+	result, err := json.Marshal(metaMap)
+	if err != nil {
+		return fmt.Sprintf(`{"ocr_text":"%s"}`, "error marshaling metadata")
 	}
-	return json
+	return string(result)
 }
 
 // updateSearchVector adds OCR text to the full-text search vector
@@ -275,9 +213,10 @@ func (s *OCRService) updateSearchVector(documentID, ocrText string) {
 	if len(ocrText) > 100000 {
 		ocrText = ocrText[:100000]
 	}
+	// Use 'simple' config to match document_repository search queries
 	sql := `UPDATE documents SET search_vector = 
-		setweight(to_tsvector('indonesian', coalesce(document_number, '') || ' ' || coalesce(title, '')), 'A') ||
-		setweight(to_tsvector('indonesian', coalesce(description, '') || ' ' || $1), 'C')
+		setweight(to_tsvector('simple', coalesce(document_number, '') || ' ' || coalesce(title, '')), 'A') ||
+		setweight(to_tsvector('simple', coalesce(description, '') || ' ' || $1), 'C')
 		WHERE id = $2`
 	facades.Orm().Query().Exec(sql, ocrText, documentID)
 }
@@ -292,16 +231,24 @@ func (s *OCRService) countPages(text string) int {
 	return count
 }
 
-// CheckTesseract verifies if Tesseract is installed
+// CheckTesseract verifies if Tesseract and PDF tools are installed
 func (s *OCRService) CheckTesseract() (bool, string) {
 	cmd := exec.Command("tesseract", "--version")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return false, "Tesseract not installed"
 	}
+	version := "installed"
 	lines := strings.Split(string(output), "\n")
 	if len(lines) > 0 {
-		return true, strings.TrimSpace(lines[0])
+		version = strings.TrimSpace(lines[0])
 	}
-	return true, "installed"
+
+	// Check pdftoppm for PDF support
+	cmd2 := exec.Command("pdftoppm", "-v")
+	if _, err := cmd2.CombinedOutput(); err != nil {
+		return true, version + " (tanpa PDF support - install poppler-utils)"
+	}
+
+	return true, version
 }

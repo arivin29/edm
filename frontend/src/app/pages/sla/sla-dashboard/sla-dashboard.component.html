@@ -15,6 +15,14 @@
 
   @if (loading()) {
     <div class="text-center py-12"><nz-spin nzSimple nzSize="large"></nz-spin></div>
+  } @else if (error()) {
+    <div class="text-center py-12">
+      <span nz-icon nzType="warning" nzTheme="fill" class="text-4xl text-red-400 mb-2 block"></span>
+      <div class="text-gray-500 text-sm mb-2">Gagal memuat data SLA</div>
+      <button nz-button nzSize="small" nzType="primary" (click)="loadData()">
+        <span nz-icon nzType="reload"></span> Coba Lagi
+      </button>
+    </div>
   } @else if (stats(); as s) {
     <!-- Stats Cards -->
     <div class="grid grid-cols-4 gap-3 mb-4">
@@ -74,7 +82,14 @@
     </div>
 
     <!-- Breached/At Risk Table -->
-    @if (breachedItems().length > 0) {
+    @if (breachedError()) {
+      <nz-card nzSize="small">
+        <div class="text-center py-4">
+          <span nz-icon nzType="warning" class="text-orange-400 mr-1"></span>
+          <span class="text-gray-500 text-sm">Gagal memuat data SLA terlewat</span>
+        </div>
+      </nz-card>
+    } @else if (breachedItems().length > 0) {
       <nz-card nzSize="small" [nzTitle]="breachedTitle">
         <ng-template #breachedTitle>
           <div class="flex items-center gap-2">
