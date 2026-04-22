@@ -199,6 +199,17 @@ export class AuthStateService {
     this.saveToStorage();
   }
 
+  /** Set token and user from SSO login response */
+  setTokenAndUser(token: string, user: any): void {
+    this.setTokens(token, '', '');
+    if (user) {
+      this._user.set(user);
+      this.saveToStorage();
+    } else {
+      this.loadUserProfile();
+    }
+  }
+
   private clearAuth(): void {
     this._user.set(null);
     this._token.set(null);

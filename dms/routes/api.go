@@ -47,6 +47,8 @@ return ctx.Response().Status(http.StatusNotFound).Json(http.Json{"error": "Not F
 facades.Route().Prefix("/api/v1").Middleware(middleware.Cors()).Group(func(router route.Router) {
 // Public auth routes
 router.Post("/auth/login", authController.Login)
+router.Post("/auth/sso", authController.SSOLogin)
+router.Get("/auth/sso/config", authController.SSOConfig)
 
 // OnlyOffice callback (no auth - called by OnlyOffice server)
 router.Post("/onlyoffice/callback", onlyofficeController.Callback)
@@ -57,6 +59,7 @@ router.Post("/auth/logout", authController.Logout)
 router.Post("/auth/refresh", authController.Refresh)
 router.Get("/auth/me", authController.Me)
 router.Put("/auth/password", authController.ChangePassword)
+router.Get("/auth/sso/status", authController.SSOStatus)
 })
 
 // Organization routes (auth + data scope)

@@ -91,6 +91,82 @@
       </div>
     </nz-card>
 
+    <!-- SSO / Active Directory Configuration -->
+    <nz-card nzSize="small" class="mb-3">
+      <div class="flex items-center gap-2 mb-3">
+        <span nz-icon nzType="lock" class="text-purple-500"></span>
+        <span class="font-semibold text-sm">SSO / Active Directory</span>
+        <span class="text-xs text-gray-400">— Single Sign-On melalui LDAP/SAML/Azure AD</span>
+      </div>
+
+      @if (ssoLoading()) {
+        <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+      } @else {
+        <div class="grid grid-cols-3 gap-3">
+          <div class="border rounded-lg p-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-medium text-xs">Status</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <nz-switch nzSize="small" [(ngModel)]="ssoEnabled"
+                (ngModelChange)="updateSSOSetting('enabled', $event ? 'true' : 'false')"></nz-switch>
+              <span class="text-xs">{{ ssoEnabled ? 'Aktif' : 'Nonaktif' }}</span>
+            </div>
+            <div class="text-[10px] text-gray-400 mt-1">Tampilkan tombol "Login dengan SSO" di halaman login</div>
+          </div>
+
+          <div class="border rounded-lg p-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-medium text-xs">Provider</span>
+            </div>
+            <nz-select nzSize="small" [(ngModel)]="ssoProvider" (ngModelChange)="updateSSOSetting('provider', $event)" class="w-full">
+              <nz-option nzValue="ldap" nzLabel="LDAP / Active Directory"></nz-option>
+              <nz-option nzValue="saml" nzLabel="SAML 2.0"></nz-option>
+              <nz-option nzValue="azure_ad" nzLabel="Azure AD (OAuth)"></nz-option>
+            </nz-select>
+            <div class="text-[10px] text-gray-400 mt-1">Protokol autentikasi yang digunakan</div>
+          </div>
+
+          <div class="border rounded-lg p-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-medium text-xs">Auto Provision</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <nz-switch nzSize="small" [(ngModel)]="ssoAutoProvision"
+                (ngModelChange)="updateSSOSetting('auto_provision', $event ? 'true' : 'false')"></nz-switch>
+              <span class="text-xs">{{ ssoAutoProvision ? 'Aktif' : 'Nonaktif' }}</span>
+            </div>
+            <div class="text-[10px] text-gray-400 mt-1">Buat akun otomatis untuk user baru dari SSO</div>
+          </div>
+        </div>
+
+        @if (ssoProvider === 'ldap') {
+          <div class="grid grid-cols-3 gap-3 mt-3">
+            <div class="border rounded-lg p-3">
+              <span class="font-medium text-xs block mb-1">LDAP Host</span>
+              <input nz-input nzSize="small" [(ngModel)]="ssoLdapHost" placeholder="ldap.company.com"
+                     (blur)="updateSSOSetting('ldap_host', ssoLdapHost)" class="text-xs" />
+            </div>
+            <div class="border rounded-lg p-3">
+              <span class="font-medium text-xs block mb-1">LDAP Port</span>
+              <input nz-input nzSize="small" [(ngModel)]="ssoLdapPort" placeholder="389"
+                     (blur)="updateSSOSetting('ldap_port', ssoLdapPort)" class="text-xs" />
+            </div>
+            <div class="border rounded-lg p-3">
+              <span class="font-medium text-xs block mb-1">Base DN</span>
+              <input nz-input nzSize="small" [(ngModel)]="ssoLdapBaseDN" placeholder="dc=company,dc=com"
+                     (blur)="updateSSOSetting('ldap_base_dn', ssoLdapBaseDN)" class="text-xs" />
+            </div>
+          </div>
+        }
+
+        <div class="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700">
+          <strong>💡 Demo Mode:</strong> SSO login menggunakan autentikasi lokal.
+          Untuk production, hubungkan ke LDAP/SAML/Azure AD server.
+        </div>
+      }
+    </nz-card>
+
     <nz-card nzSize="small">
       <div class="mb-2">
         <nz-input-group nzSize="small" [nzPrefix]="searchIcon" class="w-64">

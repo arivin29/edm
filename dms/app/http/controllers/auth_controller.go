@@ -9,11 +9,13 @@ import (
 
 type AuthController struct {
 	authService *services.AuthService
+	ssoService  *services.SSOService
 }
 
 func NewAuthController() *AuthController {
 	return &AuthController{
 		authService: services.NewAuthService(),
+		ssoService:  services.NewSSOService(),
 	}
 }
 
@@ -168,5 +170,80 @@ func (c *AuthController) ChangePassword(ctx http.Context) http.Response {
 
 	return ctx.Response().Success().Json(http.Json{
 		"message": "Password changed successfully",
+	})
+}
+
+// SSOLogin handles SSO authentication
+func (c *AuthController) SSOLogin(ctx http.Context) http.Response {
+	provider := ctx.Request().Input("provider", "ldap")
+	username := ctx.Request().Input("username")
+	password := ctx.Request().Input("password")
+	token := ctx.Request().Input("token")
+
+	user, jwtToken, err := c.ssoService.Login(ctx, services.SSOLoginRequest{
+		Provider: provider,
+		Username: username,
+		Password: password,
+		Token:    token,
+	})
+	if err != nil {
+		return ctx.Response().Json(http.StatusUnauthorized, http.Json{
+			"error": err.Error(),
+		})
+	}
+
+	permissions := []string{}
+	roleNames := []string{}
+	for _, role := range user.Roles {
+		roleNames = append(roleNames, role.Name)
+		for _, perm := range role.Permissions {
+			permissions = append(permissions, perm.Name)
+		}
+	}
+
+	return ctx.Response().Success().Json(http.Json{
+		"data": http.Json{
+			"user": http.Json{
+				"id":          user.ID,
+				"name":        user.Name,
+				"email":       user.Email,
+				"employee_id": user.EmployeeID,
+				"company":     user.Company,
+				"office":      user.Office,
+				"department":  user.Department,
+				"section":     user.Section,
+				"position":    user.Position,
+				"roles":       roleNames,
+				"permissions": permissions,
+			},
+			"token": jwtToken,
+		},
+		"message": "Login SSO berhasil",
+	})
+}
+
+// SSOConfig returns SSO configuration (public — login page needs to know if SSO is enabled)
+func (c *AuthController) SSOConfig(ctx http.Context) http.Response {
+	config, err := c.ssoService.GetConfig()
+	if err != nil {
+		return ctx.Response().Json(http.StatusInternalServerError, http.Json{
+			"error": err.Error(),
+		})
+	}
+
+	// Only expose safe fields to public endpoint
+	return ctx.Response().Success().Json(http.Json{
+		"data": http.Json{
+			"enabled":  config.Enabled,
+			"provider": config.Provider,
+		},
+	})
+}
+
+// SSOStatus returns full SSO status (admin only)
+func (c *AuthController) SSOStatus(ctx http.Context) http.Response {
+	status := c.ssoService.GetStatus()
+	return ctx.Response().Success().Json(http.Json{
+		"data": status,
 	})
 }

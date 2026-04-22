@@ -9,6 +9,7 @@ type SettingRepository interface {
 	List(filters map[string]any) ([]models.SystemSetting, error)
 	FindByID(id string) (*models.SystemSetting, error)
 	FindByKey(companyID, officeID *string, key string) (*models.SystemSetting, error)
+	GetByPrefix(companyID, officeID *string, prefix string) ([]models.SystemSetting, error)
 	Upsert(setting *models.SystemSetting) error
 	Delete(id string) error
 }
@@ -83,4 +84,25 @@ func (r *settingRepository) Upsert(setting *models.SystemSetting) error {
 func (r *settingRepository) Delete(id string) error {
 	_, err := facades.Orm().Query().Where("id = ?", id).Delete(&models.SystemSetting{})
 	return err
+}
+
+func (r *settingRepository) GetByPrefix(companyID, officeID *string, prefix string) ([]models.SystemSetting, error) {
+	q := facades.Orm().Query()
+
+	if companyID != nil && *companyID != "" {
+		q = q.Where("company_id = ?", *companyID)
+	} else {
+		q = q.Where("company_id IS NULL")
+	}
+	if officeID != nil && *officeID != "" {
+		q = q.Where("office_id = ?", *officeID)
+	} else {
+		q = q.Where("office_id IS NULL")
+	}
+
+	var items []models.SystemSetting
+	if err := q.Where("key LIKE ?", prefix+"%").Get(&items); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

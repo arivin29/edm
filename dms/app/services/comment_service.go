@@ -126,10 +126,8 @@ func (s *CommentService) Create(documentID string, ctx http.Context) (*models.Do
 		comment.ParentCommentID = &v
 	}
 
-	if v := ctx.Request().Input("version_number"); v != "" {
-		if vNum, err := strconv.Atoi(v); err == nil {
-			comment.VersionNumber = &vNum
-		}
+	if v := ctx.Request().Input("document_version_id"); v != "" {
+		comment.DocumentVersionID = &v
 	}
 
 	if v := ctx.Request().Input("page_number"); v != "" {
@@ -138,20 +136,8 @@ func (s *CommentService) Create(documentID string, ctx http.Context) (*models.Do
 		}
 	}
 
-	if v := ctx.Request().Input("position_x"); v != "" {
-		if x, err := strconv.ParseFloat(v, 64); err == nil {
-			comment.PositionX = &x
-		}
-	}
-
-	if v := ctx.Request().Input("position_y"); v != "" {
-		if y, err := strconv.ParseFloat(v, 64); err == nil {
-			comment.PositionY = &y
-		}
-	}
-
-	if v := ctx.Request().Input("selected_text"); v != "" {
-		comment.SelectedText = &v
+	if v := ctx.Request().Input("annotation_id"); v != "" {
+		comment.AnnotationID = &v
 	}
 
 	// Internal flag - only allow reviewers to set this

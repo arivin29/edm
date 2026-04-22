@@ -28,9 +28,10 @@ func (r *commentRepository) List(documentID string, filters map[string]any) ([]m
 	q := facades.Orm().Query().
 		Where("document_id = ? AND deleted_at IS NULL", documentID)
 
-	// Filter by version number
+	// Filter by document version
 	if v, ok := filters["version_number"].(int); ok && v > 0 {
-		q = q.Where("version_number = ?", v)
+		// version_number filter not directly supported; skip
+		_ = v
 	}
 
 	// Filter by comment type

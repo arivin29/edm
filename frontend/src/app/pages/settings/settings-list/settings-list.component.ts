@@ -113,11 +113,21 @@ export class SettingsPage implements OnInit {
   tteProvider = 'internal';
   tteEnabled = false;
 
+  // SSO config
+  ssoEnabled = false;
+  ssoProvider = 'ldap';
+  ssoLdapHost = '';
+  ssoLdapPort = '389';
+  ssoLdapBaseDN = '';
+  ssoAutoProvision = false;
+  ssoLoading = signal(false);
+
   ngOnInit() {
     this.loadSettings();
     this.loadDropdowns();
     this.loadWatermarkConfig();
     this.loadTTEConfig();
+    this.loadSSOConfig();
   }
 
   loadSettings() {
@@ -284,6 +294,28 @@ export class SettingsPage implements OnInit {
     this.http.put<any>(`${environment.apiUrl}/settings`, { key, value }).subscribe({
       next: () => this.message.success('Pengaturan TTE diperbarui'),
       error: () => this.message.error('Gagal memperbarui pengaturan TTE')
+    });
+  }
+
+  loadSSOConfig() {
+    this.ssoLoading.set(true);
+    this.http.get<any>(`${this.apiUrl}/auth/sso/status`).subscribe({
+      next: (res) => {
+        const data = res.data || {};
+        this.ssoEnabled = data.enabled || false;
+        this.ssoProvider = data.provider || 'ldap';
+        this.ssoLdapHost = data.host || '';
+        this.ssoLdapPort = data.port || '389';
+        this.ssoLoading.set(false);
+      },
+      error: () => this.ssoLoading.set(false)
+    });
+  }
+
+  updateSSOSetting(key: string, value: string) {
+    this.http.put<any>(`${this.apiUrl}/settings`, { key: `sso_${key}`, value }).subscribe({
+      next: () => this.message.success('Pengaturan SSO diperbarui'),
+      error: () => this.message.error('Gagal memperbarui pengaturan SSO')
     });
   }
 }
