@@ -31,13 +31,10 @@
           </button>
         }
         @if (config.showUpload) {
-          <button nz-button nzSize="small" nzType="primary" nz-tooltip nzTooltipTitle="Upload File" (click)="fileInput.click()">
+          <button nz-button nzSize="small" nzType="primary" nz-tooltip nzTooltipTitle="Upload File" (click)="openUploadDrawer()">
             <span nz-icon nzType="upload"></span>
             <span>Upload</span>
           </button>
-          <input #fileInput type="file" hidden multiple
-                 accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.png,.jpg,.jpeg,.gif,.zip,.rar,.csv,.txt"
-                 (change)="onFileSelected($event)" />
         }
       }
 
@@ -187,6 +184,11 @@
                       <li nz-menu-item (click)="onDownload(node)">
                         <span nz-icon nzType="download" nzTheme="outline"></span> Download
                       </li>
+                      @if (isOcrEligible(node)) {
+                        <li nz-menu-item (click)="onRunOcr(node)">
+                          <span nz-icon nzType="scan" nzTheme="outline"></span> OCR
+                        </li>
+                      }
                       @if (!config.readonly) {
                         <li nz-menu-divider></li>
                         <li nz-menu-item nzDanger (click)="onDelete(node)">
@@ -323,12 +325,26 @@
               <button nz-button nzSize="small" nzBlock (click)="onDownload(selectedNode()!)">
                 <span nz-icon nzType="download"></span> Download
               </button>
+              @if (isOcrEligible(selectedNode()!)) {
+                <button nz-button nzSize="small" nzBlock
+                        [nzLoading]="selectedNode()!.ocrProcessing || false"
+                        (click)="onRunOcr(selectedNode()!)">
+                  <span nz-icon nzType="scan"></span> OCR Ekstrak Teks
+                </button>
+              }
               @if (!config.readonly) {
                 <button nz-button nzSize="small" nzBlock nzDanger (click)="onDelete(selectedNode()!)">
                   <span nz-icon nzType="delete"></span> Hapus
                 </button>
               }
             </div>
+
+            @if (selectedNode()!.ocrText) {
+              <div class="fm-detail__ocr">
+                <div class="fm-detail__meta-label">Hasil OCR</div>
+                <pre class="fm-detail__ocr-text">{{ selectedNode()!.ocrText }}</pre>
+              </div>
+            }
           }
         </div>
       </div>
@@ -480,5 +496,61 @@
         }
       </div>
     }
+  </div>
+</nz-drawer>
+
+<!-- Upload Drawer -->
+<nz-drawer
+  [nzVisible]="showUploadDrawer()"
+  [nzWidth]="420"
+  nzPlacement="right"
+  nzTitle="Upload File Pendukung"
+  (nzOnClose)="closeUploadDrawer()"
+  [nzClosable]="true"
+>
+  <div *nzDrawerContent class="fm-upload-drawer">
+    <!-- File Picker -->
+    <div class="fm-upload-field">
+      <label class="fm-upload-label">File <span class="text-red-500">*</span></label>
+      @if (uploadFile()) {
+        <div class="fm-upload-file-info">
+          <span nz-icon nzType="paper-clip" nzTheme="outline"></span>
+          <span class="fm-upload-file-name">{{ uploadFile()!.name }}</span>
+          <span class="fm-upload-file-size">({{ formatFileSize(uploadFile()!.size) }})</span>
+          <button class="fm-action-btn" (click)="uploadFile.set(null)" nz-tooltip nzTooltipTitle="Ganti file">
+            <span nz-icon nzType="close" nzTheme="outline"></span>
+          </button>
+        </div>
+      }
+      <button nz-button nzSize="small" (click)="drawerFileInput.click()">
+        <span nz-icon nzType="upload"></span>
+        {{ uploadFile() ? 'Ganti File' : 'Pilih File' }}
+      </button>
+      <input #drawerFileInput type="file" hidden
+             accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.png,.jpg,.jpeg,.gif,.zip,.rar,.csv,.txt"
+             (change)="onUploadDrawerFileChange($event)" />
+    </div>
+
+    <!-- Reference Number -->
+    <div class="fm-upload-field">
+      <label class="fm-upload-label">Nomor Referensi</label>
+      <input nz-input nzSize="small" placeholder="Contoh: INV-2026-001, SK/002/IV/2026..."
+             [(ngModel)]="uploadRefNumber" />
+    </div>
+
+    <!-- Description -->
+    <div class="fm-upload-field">
+      <label class="fm-upload-label">Keterangan</label>
+      <textarea nz-input nzSize="small" placeholder="Deskripsi singkat tentang file ini..."
+                [(ngModel)]="uploadDescription" [nzAutosize]="{ minRows: 2, maxRows: 4 }"></textarea>
+    </div>
+
+    <!-- Submit -->
+    <div class="fm-upload-actions">
+      <button nz-button nzSize="small" (click)="closeUploadDrawer()">Batal</button>
+      <button nz-button nzSize="small" nzType="primary" [disabled]="!uploadFile()" (click)="submitUpload()">
+        <span nz-icon nzType="upload"></span> Upload
+      </button>
+    </div>
   </div>
 </nz-drawer>

@@ -15,6 +15,14 @@ export interface FileNode {
   parentId?: string;
   icon?: string;
   expanded?: boolean;
+  ocrText?: string;
+  ocrProcessing?: boolean;
+}
+
+export interface FileUploadData {
+  file: File;
+  description?: string;
+  referenceNumber?: string;
 }
 
 export interface FileManagerConfig {

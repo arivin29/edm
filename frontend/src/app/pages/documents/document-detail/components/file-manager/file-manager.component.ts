@@ -26,13 +26,14 @@ import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import {
   FileNode,
   FileManagerConfig,
+  FileUploadData,
   BreadcrumbNode,
   ViewMode,
   SortField,
   SortOrder
 } from './file-manager.types';
 
-export type { FileNode, FileManagerConfig } from './file-manager.types';
+export type { FileNode, FileManagerConfig, FileUploadData } from './file-manager.types';
 
 @Component({
   selector: 'app-file-manager',
@@ -62,9 +63,10 @@ export class FileManagerComponent implements OnInit, OnChanges {
   @Output() fileDownload = new EventEmitter<FileNode>();
   @Output() filePreview = new EventEmitter<FileNode>();
   @Output() fileDelete = new EventEmitter<FileNode>();
-  @Output() fileUpload = new EventEmitter<{ parentId: string; file: File }>();
+  @Output() fileUpload = new EventEmitter<FileUploadData>();
   @Output() folderCreate = new EventEmitter<{ parentId: string; name: string }>();
   @Output() nodeRename = new EventEmitter<{ node: FileNode; newName: string }>();
+  @Output() fileOcr = new EventEmitter<FileNode>();
 
   viewMode = signal<ViewMode>('list');
   searchQuery = signal('');
@@ -81,6 +83,12 @@ export class FileManagerComponent implements OnInit, OnChanges {
   showDetailPanel = signal(false);
   showPreviewDrawer = signal(false);
   previewNode = signal<FileNode | null>(null);
+
+  // Upload drawer state
+  showUploadDrawer = signal(false);
+  uploadFile = signal<File | null>(null);
+  uploadDescription = '';
+  uploadRefNumber = '';
 
   currentFiles = computed(() => {
     const folder = this.currentFolder();
@@ -249,12 +257,56 @@ export class FileManagerComponent implements OnInit, OnChanges {
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (!input.files) return;
-    const parentId = this.currentFolder()?.id || 'root';
-    for (let i = 0; i < input.files.length; i++) {
-      this.fileUpload.emit({ parentId, file: input.files[i] });
+    if (!input.files || input.files.length === 0) return;
+    this.uploadFile.set(input.files[0]);
+    this.uploadDescription = '';
+    this.uploadRefNumber = '';
+    this.showUploadDrawer.set(true);
+    input.value = '';
+  }
+
+  openUploadDrawer() {
+    this.uploadFile.set(null);
+    this.uploadDescription = '';
+    this.uploadRefNumber = '';
+    this.showUploadDrawer.set(true);
+  }
+
+  onUploadDrawerFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.uploadFile.set(input.files[0]);
     }
     input.value = '';
+  }
+
+  submitUpload() {
+    const file = this.uploadFile();
+    if (!file) return;
+    this.fileUpload.emit({
+      file,
+      description: this.uploadDescription.trim() || undefined,
+      referenceNumber: this.uploadRefNumber.trim() || undefined
+    });
+    this.closeUploadDrawer();
+  }
+
+  closeUploadDrawer() {
+    this.showUploadDrawer.set(false);
+    this.uploadFile.set(null);
+    this.uploadDescription = '';
+    this.uploadRefNumber = '';
+  }
+
+  // --- OCR ---
+  isOcrEligible(node: FileNode): boolean {
+    if (node.type !== 'file') return false;
+    const mime = node.mimeType || '';
+    return mime.includes('pdf') || mime.includes('image');
+  }
+
+  onRunOcr(node: FileNode) {
+    this.fileOcr.emit(node);
   }
 
   toggleViewMode() {

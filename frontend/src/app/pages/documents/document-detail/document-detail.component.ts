@@ -25,7 +25,7 @@ import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
-import { FileManagerComponent, FileNode } from './components/file-manager/file-manager.component';
+import { FileManagerComponent, FileNode, FileUploadData } from './components/file-manager/file-manager.component';
 import { DocParametersComponent } from './components/doc-parameters/doc-parameters.component';
 import { DocPreviewComponent, PreviewFile } from './components/doc-preview/doc-preview.component';
 import { DocEditorComponent } from './components/doc-editor/doc-editor.component';
@@ -652,7 +652,7 @@ export class DocumentDetailPage implements OnInit {
     this.message.info('Pembuatan folder tidak didukung — file dikelola berdasarkan kategori otomatis');
   }
 
-  onFmUpload(event: { parentId: string; file: File }) {
+  onFmUpload(event: { file: File }) {
     this.uploadingAttachment.set(true);
     const formData = new FormData();
     formData.append('file', event.file);
