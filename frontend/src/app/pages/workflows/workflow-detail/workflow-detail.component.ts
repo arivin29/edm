@@ -200,8 +200,8 @@ export class WorkflowDetailComponent implements OnInit {
     [current[index], current[targetIndex]] = [current[targetIndex], current[index]];
     this.steps.set(current);
 
-    const stepOrders = current.map((s, i) => ({ id: s.id, step_order: i + 1 }));
-    this.http.put<any>(`${environment.apiUrl}/workflows/${wfId}/steps/reorder`, { steps: stepOrders }).subscribe({
+    const stepIds = current.map(s => s.id);
+    this.http.put<any>(`${environment.apiUrl}/workflows/${wfId}/steps/reorder`, { steps: stepIds }).subscribe({
       next: (res) => {
         if (res.data) {
           const sorted = res.data.sort((a: WorkflowStep, b: WorkflowStep) => a.step_order - b.step_order);

@@ -240,6 +240,15 @@ func (r *workflowRepository) DeleteStep(id string) error {
 }
 
 func (r *workflowRepository) ReorderSteps(workflowID string, stepIDs []string) error {
+	// First offset all step_orders to avoid unique constraint violations
+	if _, err := facades.Orm().Query().Exec(
+		"UPDATE workflow_steps SET step_order = step_order + 10000 WHERE workflow_id = $1",
+		workflowID,
+	); err != nil {
+		return err
+	}
+
+	// Then set correct order
 	for order, stepID := range stepIDs {
 		if _, err := facades.Orm().Query().Model(&models.WorkflowStep{}).
 			Where("id = ? AND workflow_id = ?", stepID, workflowID).

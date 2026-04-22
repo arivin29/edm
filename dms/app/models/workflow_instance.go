@@ -54,6 +54,8 @@ type WorkflowAction struct {
 	Comment            *string   `json:"comment"`
 	IsPublic           bool      `gorm:"default:true;column:is_comment_public" json:"is_public"`
 	SignatureImage     *string   `gorm:"column:signature_path" json:"signature_image"`
+	IPAddress          *string   `gorm:"column:ip_address" json:"ip_address,omitempty"`
+	UserAgent          *string   `gorm:"column:user_agent" json:"user_agent,omitempty"`
 	CreatedAt          time.Time `json:"created_at"`
 
 	// Relations

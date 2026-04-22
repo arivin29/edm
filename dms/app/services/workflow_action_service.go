@@ -226,12 +226,16 @@ func (s *WorkflowActionService) ProcessAction(documentID, actionType string, ctx
 	}
 
 	// Create action record
+	ip := ctx.Request().Ip()
+	ua := ctx.Request().Header("User-Agent", "")
 	action := &models.WorkflowAction{
 		WorkflowInstanceID: stepInstance.WorkflowInstanceID,
 		StepInstanceID:     stepInstance.ID,
 		ActorID:            user.ID,
 		ActionType:         actionType,
 		IsPublic:           true,
+		IPAddress:          &ip,
+		UserAgent:          &ua,
 		CreatedAt:          time.Now(),
 	}
 	if comment != "" {
@@ -529,12 +533,16 @@ func (s *WorkflowActionService) Delegate(documentID string, ctx http.Context) (*
 	}
 
 	// Create action record
+	ip := ctx.Request().Ip()
+	ua := ctx.Request().Header("User-Agent", "")
 	action := &models.WorkflowAction{
 		WorkflowInstanceID: stepInstance.WorkflowInstanceID,
 		StepInstanceID:     stepInstance.ID,
 		ActorID:            user.ID,
 		ActionType:         "delegate",
 		IsPublic:           true,
+		IPAddress:          &ip,
+		UserAgent:          &ua,
 		CreatedAt:          now,
 	}
 	comment := "Delegated to user: " + delegateUser.Name
@@ -753,6 +761,8 @@ func (s *WorkflowActionService) AddComment(documentID string, ctx http.Context) 
 	}
 
 	// Create action record
+	ip := ctx.Request().Ip()
+	ua := ctx.Request().Header("User-Agent", "")
 	action := &models.WorkflowAction{
 		WorkflowInstanceID: stepInstance.WorkflowInstanceID,
 		StepInstanceID:     stepInstance.ID,
@@ -760,6 +770,8 @@ func (s *WorkflowActionService) AddComment(documentID string, ctx http.Context) 
 		ActionType:         "comment",
 		Comment:            &comment,
 		IsPublic:           isPublic,
+		IPAddress:          &ip,
+		UserAgent:          &ua,
 		CreatedAt:          time.Now(),
 	}
 
