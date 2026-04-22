@@ -664,6 +664,97 @@
                     }
                   </div>
                 </nz-tab>
+
+                <!-- Tab: Tanda Tangan Digital -->
+                <nz-tab nzTitle="Tanda Tangan">
+                  <div class="p-3">
+                    <div class="flex justify-between items-center mb-3">
+                      <div>
+                        <h4 class="text-sm font-semibold m-0">
+                          <span nz-icon nzType="safety-certificate" class="mr-1 text-blue-500"></span>
+                          Tanda Tangan Digital
+                        </h4>
+                        <p class="text-xs text-gray-400 m-0">Daftar tanda tangan pada dokumen ini</p>
+                      </div>
+                      <button nz-button nzType="primary" nzSize="small" [nzLoading]="signing()" (click)="signDocument()">
+                        <span nz-icon nzType="edit"></span> Tanda Tangani
+                      </button>
+                    </div>
+
+                    @if (signaturesLoading()) {
+                      <div class="text-center py-8"><nz-spin nzSimple></nz-spin></div>
+                    } @else if (signatures().length > 0) {
+                      <div class="space-y-3">
+                        @for (sig of signatures(); track sig.id) {
+                          <div class="bg-white border rounded-lg p-3" [class.border-red-200]="sig.status === 'revoked'" [class.opacity-60]="sig.status === 'revoked'">
+                            <div class="flex items-start gap-3">
+                              <!-- Signature Image -->
+                              <div class="w-24 h-16 border rounded flex items-center justify-center bg-gray-50 flex-shrink-0">
+                                @if (sig.signature_image_path) {
+                                  <img [src]="sig.signature_image_path" alt="Signature" class="max-w-full max-h-full object-contain">
+                                } @else {
+                                  <span nz-icon nzType="edit" class="text-2xl text-gray-300"></span>
+                                }
+                              </div>
+
+                              <!-- Info -->
+                              <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                  <span class="text-sm font-semibold">{{ sig.signer_name }}</span>
+                                  <nz-tag [nzColor]="getSignatureStatusColor(sig.status)" class="text-[10px]">
+                                    {{ getSignatureStatusLabel(sig.status) }}
+                                  </nz-tag>
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                  @if (sig.signer_position) { <span>{{ sig.signer_position }}</span> }
+                                  @if (sig.signer_position && sig.signer_department) { <span> — </span> }
+                                  @if (sig.signer_department) { <span>{{ sig.signer_department }}</span> }
+                                </div>
+                                <div class="text-[10px] text-gray-400 mt-1">
+                                  <span nz-icon nzType="clock-circle" class="mr-0.5"></span>
+                                  {{ formatDate(sig.signed_at) }}
+                                  · Versi {{ sig.version_number }}
+                                  · {{ sig.provider === 'internal' ? 'Internal' : sig.provider }}
+                                </div>
+                                @if (sig.document_hash) {
+                                  <div class="text-[10px] text-gray-300 mt-0.5 font-mono truncate">
+                                    SHA-256: {{ sig.document_hash }}
+                                  </div>
+                                }
+                                @if (sig.status === 'revoked' && sig.revoke_reason) {
+                                  <div class="text-[10px] text-red-400 mt-1">
+                                    <span nz-icon nzType="close-circle" class="mr-0.5"></span>
+                                    Dicabut: {{ sig.revoke_reason }}
+                                  </div>
+                                }
+                              </div>
+
+                              <!-- Actions -->
+                              <div class="flex gap-1 flex-shrink-0">
+                                @if (sig.status !== 'revoked') {
+                                  <button nz-button nzSize="small" nzType="text" nz-tooltip="Verifikasi" (click)="verifySignature(sig.id)">
+                                    <span nz-icon nzType="check-circle" class="text-green-500"></span>
+                                  </button>
+                                  <button nz-button nzSize="small" nzType="text" nz-tooltip="Cabut" nzDanger
+                                          nz-popconfirm nzPopconfirmTitle="Yakin ingin mencabut tanda tangan ini?"
+                                          (nzOnConfirm)="revokeSignature(sig.id)">
+                                    <span nz-icon nzType="close-circle"></span>
+                                  </button>
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <div class="text-center py-8">
+                        <span nz-icon nzType="safety-certificate" class="text-4xl text-gray-300 mb-2 block"></span>
+                        <div class="text-gray-400 text-sm">Belum ada tanda tangan digital</div>
+                        <div class="text-gray-300 text-xs">Klik "Tanda Tangani" untuk menandatangani dokumen</div>
+                      </div>
+                    }
+                  </div>
+                </nz-tab>
               </nz-tabset>
             </div>
           </div>

@@ -21,6 +21,7 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzListModule } from 'ng-zorro-antd/list';
+import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
@@ -30,7 +31,7 @@ import { DocPreviewComponent, PreviewFile } from './components/doc-preview/doc-p
 import { DocEditorComponent } from './components/doc-editor/doc-editor.component';
 import {
   DocumentDetail, DocumentVersion, Comment, WorkflowStep, WorkflowStatus, WorkflowStepInstance, WorkflowTemplateStep,
-  Distribution, Attachment,
+  Distribution, Attachment, DigitalSignature,
   getStatusColor, getStatusLabel, getPriorityColor, getPriorityLabel,
   getConfidentialityLabel, getClassificationColor, getClassificationLabel, getClassificationIcon,
   formatDate, formatFileSize, getFileIcon
@@ -45,7 +46,8 @@ import {
     NzDescriptionsModule, NzTabsModule, NzTimelineModule,
     NzCommentModule, NzAvatarModule, NzInputModule, NzSpinModule,
     NzModalModule, NzBadgeModule, NzToolTipModule, NzTableModule, NzEmptyModule,
-    NzUploadModule, NzListModule, NzAlertModule, FileManagerComponent, DocParametersComponent, DocPreviewComponent, DocEditorComponent
+    NzUploadModule, NzListModule, NzAlertModule, NzPopconfirmModule,
+    FileManagerComponent, DocParametersComponent, DocPreviewComponent, DocEditorComponent
   ],
   templateUrl: './document-detail.component.html',
   styleUrls: ['./document-detail.component.scss']
@@ -87,6 +89,11 @@ export class DocumentDetailPage implements OnInit {
   ocrRunning = signal(false);
   ocrResult = signal<{ text: string; page_count: number; engine: string; duration: string } | null>(null);
   ocrText = signal<string>('');
+
+  // TTE (Digital Signatures) state
+  signatures = signal<DigitalSignature[]>([]);
+  signaturesLoading = signal(false);
+  signing = signal(false);
 
   // Expose helpers to template
   getStatusColor = getStatusColor;
@@ -279,6 +286,10 @@ export class DocumentDetailPage implements OnInit {
     if (index === 8 && !this.ocrStatus()) {
       this.loadOCRStatus();
       this.loadOCRText();
+    }
+    // Signatures tab (index 9)
+    if (index === 9 && this.signatures().length === 0 && !this.signaturesLoading()) {
+      this.loadSignatures();
     }
   }
 
@@ -661,5 +672,74 @@ export class DocumentDetailPage implements OnInit {
         this.message.error(err.error?.error || 'OCR gagal');
       }
     });
+  }
+
+  // TTE (Digital Signature) methods
+  loadSignatures() {
+    this.signaturesLoading.set(true);
+    this.http.get<any>(`${environment.apiUrl}/documents/${this.documentId}/signatures`).subscribe({
+      next: (res) => {
+        this.signatures.set(res.data || []);
+        this.signaturesLoading.set(false);
+      },
+      error: () => this.signaturesLoading.set(false)
+    });
+  }
+
+  signDocument() {
+    this.signing.set(true);
+    this.http.post<any>(`${environment.apiUrl}/documents/${this.documentId}/sign`, {}).subscribe({
+      next: (res) => {
+        this.signing.set(false);
+        this.message.success(res.message || 'Dokumen berhasil ditandatangani');
+        this.loadSignatures();
+      },
+      error: (err) => {
+        this.signing.set(false);
+        this.message.error(err.error?.error || 'Gagal menandatangani dokumen');
+      }
+    });
+  }
+
+  verifySignature(sigId: string) {
+    this.http.post<any>(`${environment.apiUrl}/signatures/${sigId}/verify`, {}).subscribe({
+      next: (res) => {
+        if (res.valid) {
+          this.message.success(res.message);
+        } else {
+          this.message.warning(res.message);
+        }
+        this.loadSignatures();
+      },
+      error: (err) => this.message.error(err.error?.error || 'Gagal memverifikasi')
+    });
+  }
+
+  revokeSignature(sigId: string) {
+    this.http.post<any>(`${environment.apiUrl}/signatures/${sigId}/revoke`, { reason: 'Dicabut oleh pengguna' }).subscribe({
+      next: () => {
+        this.message.success('Tanda tangan berhasil dicabut');
+        this.loadSignatures();
+      },
+      error: (err) => this.message.error(err.error?.error || 'Gagal mencabut tanda tangan')
+    });
+  }
+
+  getSignatureStatusColor(status: string): string {
+    switch (status) {
+      case 'signed': return 'blue';
+      case 'verified': return 'green';
+      case 'revoked': return 'red';
+      default: return 'default';
+    }
+  }
+
+  getSignatureStatusLabel(status: string): string {
+    switch (status) {
+      case 'signed': return 'Ditandatangani';
+      case 'verified': return 'Terverifikasi';
+      case 'revoked': return 'Dicabut';
+      default: return status;
+    }
   }
 }

@@ -59,9 +59,9 @@ func (r *commentRepository) List(documentID string, filters map[string]any) ([]m
 	// Filter by parent (null = top-level comments only)
 	if v, ok := filters["parent_id"].(string); ok {
 		if v == "null" || v == "" {
-			q = q.Where("parent_id IS NULL")
+			q = q.Where("parent_comment_id IS NULL")
 		} else {
-			q = q.Where("parent_id = ?", v)
+			q = q.Where("parent_comment_id = ?", v)
 		}
 	}
 

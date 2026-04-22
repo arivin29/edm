@@ -93,7 +93,14 @@ import {
   NumberOutline,
   ThunderboltOutline,
   MessageOutline,
-  LoadingOutline
+  LoadingOutline,
+  AlertOutline,
+  PieChartOutline,
+  FieldTimeOutline,
+  FontSizeOutline,
+  AlignLeftOutline,
+  CheckSquareOutline,
+  TagsOutline
 } from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
@@ -187,7 +194,14 @@ const icons = [
   NumberOutline,
   ThunderboltOutline,
   MessageOutline,
-  LoadingOutline
+  LoadingOutline,
+  AlertOutline,
+  PieChartOutline,
+  FieldTimeOutline,
+  FontSizeOutline,
+  AlignLeftOutline,
+  CheckSquareOutline,
+  TagsOutline
 ];
 
 export const appConfig: ApplicationConfig = {

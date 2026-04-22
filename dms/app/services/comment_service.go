@@ -123,7 +123,7 @@ func (s *CommentService) Create(documentID string, ctx http.Context) (*models.Do
 		if parent.DocumentID != documentID {
 			return nil, errors.New("parent comment belongs to different document")
 		}
-		comment.ParentID = &v
+		comment.ParentCommentID = &v
 	}
 
 	if v := ctx.Request().Input("version_number"); v != "" {

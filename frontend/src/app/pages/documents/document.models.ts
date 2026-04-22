@@ -275,3 +275,24 @@ export function getFileIcon(mimeType: string): string {
 }
 
 export const DRAFT_KEY = 'dms_document_draft';
+
+export interface DigitalSignature {
+  id: string;
+  document_id: string;
+  version_number: number;
+  signer_id: string;
+  signer_name: string;
+  signer_position?: string;
+  signer_department?: string;
+  signature_type: string;
+  signature_image_path?: string;
+  provider: string;
+  hash_algorithm: string;
+  document_hash?: string;
+  status: string;
+  signed_at: string;
+  verified_at?: string;
+  revoked_at?: string;
+  revoke_reason?: string;
+  signer?: { id: string; name: string; avatar_path?: string; signature_path?: string };
+}

@@ -16,6 +16,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzCollapseModule } from 'ng-zorro-antd/collapse';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 import { environment } from '../../../../environments/environment';
 import { SystemSetting, DropdownItem, CategoryGroup } from '../settings.models';
 import { SettingsFormComponent } from '../settings-form/settings-form.component';
@@ -37,7 +38,7 @@ interface WatermarkConfigItem {
     CommonModule, FormsModule,
     NzTableModule, NzButtonModule, NzIconModule, NzCardModule,
     NzInputModule, NzDrawerModule, NzModalModule, NzTagModule,
-    NzSpinModule, NzToolTipModule, NzCollapseModule, NzSwitchModule,
+    NzSpinModule, NzToolTipModule, NzCollapseModule, NzSwitchModule, NzSelectModule,
     SettingsFormComponent
   ],
   templateUrl: './settings-list.component.html',
@@ -108,10 +109,15 @@ export class SettingsPage implements OnInit {
     secret: '#ef4444'
   };
 
+  // TTE config
+  tteProvider = 'internal';
+  tteEnabled = false;
+
   ngOnInit() {
     this.loadSettings();
     this.loadDropdowns();
     this.loadWatermarkConfig();
+    this.loadTTEConfig();
   }
 
   loadSettings() {
@@ -262,5 +268,22 @@ export class SettingsPage implements OnInit {
 
   getClassifications(): string[] {
     return ['public', 'internal', 'confidential', 'secret'];
+  }
+
+  loadTTEConfig() {
+    this.http.get<any>(`${environment.apiUrl}/tte/config`).subscribe({
+      next: (res) => {
+        this.tteProvider = res.data?.provider || 'internal';
+        this.tteEnabled = res.data?.enabled || false;
+      },
+      error: () => {}
+    });
+  }
+
+  updateTTESetting(key: string, value: string) {
+    this.http.put<any>(`${environment.apiUrl}/settings`, { key, value }).subscribe({
+      next: () => this.message.success('Pengaturan TTE diperbarui'),
+      error: () => this.message.error('Gagal memperbarui pengaturan TTE')
+    });
   }
 }

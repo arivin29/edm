@@ -28,6 +28,7 @@ distributionController := controllers.NewDistributionController()
 slaController := controllers.NewSLAController()
 	attachmentController := controllers.NewAttachmentController()
 	relationController := controllers.NewDocumentRelationController()
+	tteController := controllers.NewTTEController()
 
 // Global CORS preflight handler - must be before other routes
 facades.Route().Fallback(func(ctx http.Context) http.Response {
@@ -186,6 +187,13 @@ router.Get("/sla/breached", slaController.Breached)
 router.Middleware(middleware.RequirePermission("document.view")).Post("/documents/{id}/ocr", documentController.RunOCR)
 router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/ocr", documentController.GetOCRText)
 router.Get("/ocr/status", documentController.OCRStatus)
+
+// TTE (Digital Signatures)
+router.Middleware(middleware.RequirePermission("document.approve")).Post("/documents/{id}/sign", tteController.Sign)
+router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/signatures", tteController.ListSignatures)
+router.Post("/signatures/{id}/verify", tteController.Verify)
+router.Middleware(middleware.RequirePermission("document.approve")).Post("/signatures/{id}/revoke", tteController.Revoke)
+router.Get("/tte/config", tteController.GetConfig)
 
 // Document Attachments
 router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/attachments", attachmentController.ListAttachments)

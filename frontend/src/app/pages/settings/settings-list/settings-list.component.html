@@ -45,6 +45,52 @@
       }
     </nz-card>
 
+    <!-- TTE (Digital Signature) Configuration -->
+    <nz-card nzSize="small" class="mb-3">
+      <div class="flex items-center gap-2 mb-3">
+        <span nz-icon nzType="safety-certificate" class="text-green-500"></span>
+        <span class="font-semibold text-sm">Tanda Tangan Elektronik (TTE)</span>
+        <span class="text-xs text-gray-400">— Konfigurasi provider tanda tangan digital</span>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <div class="border rounded-lg p-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-medium text-xs">Provider</span>
+          </div>
+          <nz-select nzSize="small" [(ngModel)]="tteProvider" (ngModelChange)="updateTTESetting('tte_provider', $event)" class="w-full">
+            <nz-option nzValue="internal" nzLabel="Internal (Tanda Tangan Gambar)"></nz-option>
+            <nz-option nzValue="privy" nzLabel="Privy ID" nzDisabled></nz-option>
+            <nz-option nzValue="vida" nzLabel="VIDA" nzDisabled></nz-option>
+            <nz-option nzValue="peruri" nzLabel="Peruri" nzDisabled></nz-option>
+          </nz-select>
+          <div class="text-[10px] text-gray-400 mt-1">Provider PSrE akan tersedia setelah integrasi vendor</div>
+        </div>
+
+        <div class="border rounded-lg p-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-medium text-xs">Status</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <nz-switch nzSize="small" [(ngModel)]="tteEnabled" (ngModelChange)="updateTTESetting('tte_enabled', $event ? 'true' : 'false')"></nz-switch>
+            <span class="text-xs">{{ tteEnabled ? 'Aktif' : 'Nonaktif' }}</span>
+          </div>
+          <div class="text-[10px] text-gray-400 mt-1">Aktifkan fitur tanda tangan digital</div>
+        </div>
+
+        <div class="border rounded-lg p-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-medium text-xs">Info</span>
+          </div>
+          <div class="text-xs text-gray-500">
+            <div class="mb-1">· Hash: SHA-256</div>
+            <div class="mb-1">· Verifikasi integritas dokumen</div>
+            <div>· Riwayat penandatanganan</div>
+          </div>
+        </div>
+      </div>
+    </nz-card>
+
     <nz-card nzSize="small">
       <div class="mb-2">
         <nz-input-group nzSize="small" [nzPrefix]="searchIcon" class="w-64">
