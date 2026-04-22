@@ -27,6 +27,7 @@ import { environment } from '../../../../environments/environment';
 import { FileManagerComponent, FileNode } from './components/file-manager/file-manager.component';
 import { DocParametersComponent } from './components/doc-parameters/doc-parameters.component';
 import { DocPreviewComponent, PreviewFile } from './components/doc-preview/doc-preview.component';
+import { DocEditorComponent } from './components/doc-editor/doc-editor.component';
 import {
   DocumentDetail, DocumentVersion, Comment, WorkflowStep, WorkflowStatus, WorkflowStepInstance, WorkflowTemplateStep,
   Distribution, Attachment,
@@ -44,7 +45,7 @@ import {
     NzDescriptionsModule, NzTabsModule, NzTimelineModule,
     NzCommentModule, NzAvatarModule, NzInputModule, NzSpinModule,
     NzModalModule, NzBadgeModule, NzToolTipModule, NzTableModule, NzEmptyModule,
-    NzUploadModule, NzListModule, NzAlertModule, FileManagerComponent, DocParametersComponent, DocPreviewComponent
+    NzUploadModule, NzListModule, NzAlertModule, FileManagerComponent, DocParametersComponent, DocPreviewComponent, DocEditorComponent
   ],
   templateUrl: './document-detail.component.html',
   styleUrls: ['./document-detail.component.scss']

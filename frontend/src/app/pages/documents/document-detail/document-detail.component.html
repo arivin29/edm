@@ -300,6 +300,13 @@
                   </div>
                 </nz-tab>
 
+                <!-- Tab: Editor -->
+                <nz-tab nzTitle="Editor">
+                  @if (document()) {
+                    <app-doc-editor [documentId]="document()!.id"></app-doc-editor>
+                  }
+                </nz-tab>
+
                 <!-- Tab: Berkas -->
                 <nz-tab nzTitle="Berkas">
                   <app-file-manager
