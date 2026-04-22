@@ -91,8 +91,8 @@
 | # | Modul | Backend | Frontend | Keterangan |
 |---|-------|---------|----------|------------|
 | 1 | Manajemen Dokumen | ✅ CRUD, versioning, download, restore | ✅ List, form, detail, preview, file-manager | Lengkap |
-| 2 | Workflow & Approval | ✅ CRUD, steps, submit/approve/reject/delegate | ✅ List, form, detail, step-form | Lengkap |
-| 3 | Versioning | ✅ Versions endpoint, restore | ⚠️ Data di-load tapi tidak ada tab UI | Backend lengkap, FE perlu tab |
+| 2 | Workflow & Approval | ✅ CRUD, steps, submit/approve/reject/delegate | ✅ List, form, detail, step-form, card pipeline di Informasi tab | Lengkap + UI card pipeline |
+| 3 | Versioning | ✅ Versions endpoint, restore | ✅ Tab Riwayat Versi (timeline, download, restore) | Lengkap |
 | 4 | Organisasi | ✅ Company, office, department, section, position CRUD | ✅ Organization list + form | Lengkap |
 | 5 | User & RBAC | ✅ Users, roles, permissions, assign | ✅ User list/form, role list/form | Lengkap |
 | 6 | Template & Indexing | ✅ Templates + tags + upload/download | ✅ Template list/form/detail | Lengkap |
@@ -103,21 +103,27 @@
 | 11 | Distribusi Dokumen | ✅ Distributions + inbox + acknowledge | ⚠️ Belum ada page | Backend only |
 | 12 | OnlyOffice Editor | ✅ Editor config + callback | ⚠️ Belum ada editor component, preview pakai Office Online | Backend lengkap, FE perlu editor |
 | 13 | Full-text Search | ✅ Fulltext search migration | ✅ Di document list | Lengkap |
+| 14 | Document Classification | ✅ Classification field + filter | ✅ Badge, form dropdown, detail display | Lengkap |
+| 15 | Watermark | ✅ PDF/image watermark, per classification | ✅ Watermark config di settings | Lengkap |
+| 16 | SLA Management | ✅ SLA rules, tracking, escalation | ✅ SLA config, dashboard dummy | Lengkap |
+| 17 | TTE Digital Signature | ✅ Sign, verify, revoke, list | ✅ Tab signatures di document-detail | Lengkap (demo mode) |
+| 18 | SSO / Active Directory | ✅ LDAP/SAML scaffolding, demo mode | ✅ SSO toggle login, SSO config settings | Lengkap (demo mode) |
+| 19 | OCR | ✅ Tesseract OCR endpoint | ✅ Tab OCR di document-detail | Lengkap |
 
 ### 3.2 Modul yang BELUM Ada (Gap) ❌
 
-| # | Kebutuhan | Backend | Frontend | Prioritas | Estimasi Kompleksitas |
-|---|-----------|---------|----------|-----------|----------------------|
-| 1 | **Document Classification & Labeling** | ❌ | ❌ | 🔴 Tinggi | Sedang |
-| 2 | **Watermark Dokumen** | ❌ | ❌ | 🔴 Tinggi | Sedang |
-| 3 | **SLA Management** | ❌ | ❌ | 🔴 Tinggi | Tinggi |
-| 4 | **Integrasi TTE PSrE** | ❌ | ❌ | 🔴 Tinggi | Tinggi |
-| 5 | **SSO / Active Directory** | ❌ | ❌ | 🟡 Sedang | Sedang |
-| 6 | **OCR** | ❌ | ❌ | 🟡 Sedang | Sedang |
-| 7 | **Tool Migrasi Data (M-Files)** | ❌ | ❌ | 🟡 Sedang | Tinggi |
-| 8 | **Distribution Inbox Page** | ✅ Ada | ❌ | 🟡 Sedang | Rendah |
-| 9 | **Dashboard Analytics (real data)** | ⚠️ Partial | ⚠️ Dummy | 🟡 Sedang | Sedang |
-| 10 | **Integrasi IRP (Dynamics 365)** | ❌ | ❌ | 🟢 Rendah | Tinggi |
+| # | Kebutuhan | Backend | Frontend | Prioritas | Status |
+|---|-----------|---------|----------|-----------|--------|
+| 1 | ~~Document Classification & Labeling~~ | ✅ | ✅ | ~~🔴 Tinggi~~ | ✅ **DONE** |
+| 2 | ~~Watermark Dokumen~~ | ✅ | ✅ | ~~🔴 Tinggi~~ | ✅ **DONE** |
+| 3 | ~~SLA Management~~ | ✅ | ✅ | ~~🔴 Tinggi~~ | ✅ **DONE** |
+| 4 | ~~Integrasi TTE PSrE~~ | ✅ | ✅ | ~~🔴 Tinggi~~ | ✅ **DONE** (demo mode, perlu vendor untuk production) |
+| 5 | ~~SSO / Active Directory~~ | ✅ | ✅ | ~~🟡 Sedang~~ | ✅ **DONE** (demo mode, perlu akses AD client untuk production) |
+| 6 | ~~OCR~~ | ✅ | ✅ | ~~🟡 Sedang~~ | ✅ **DONE** |
+| 7 | **Tool Migrasi Data (M-Files)** | ❌ | ❌ | 🟡 Sedang | ⏸️ Ditunda — butuh akses export M-Files dari client |
+| 8 | **Distribution Inbox Page** | ✅ | ❌ | 🟡 Sedang | 🔧 FE page belum dibuat |
+| 9 | **Dashboard Analytics (real data)** | ⚠️ Partial | ⚠️ Dummy | 🟡 Sedang | 🔧 FE masih dummy data |
+| 10 | **Integrasi IRP (Dynamics 365)** | ❌ | ❌ | 🟢 Rendah | ⏸️ Ditunda — butuh API external |
 
 ---
 
@@ -403,33 +409,21 @@ Watermark **TIDAK diterapkan ke file asli** yang tersimpan di storage. Watermark
 
 ---
 
-### Phase 1 — Quick Wins (2-3 minggu)
+### Phase 1 — Quick Wins ✅ SELESAI
 
 > Fokus: fitur yang backend sudah ada atau perubahan kecil, sehingga tinggal buat frontend atau tambahan minor.
+> 
+> **Status: ✅ SELESAI** — Classification, Versioning tab, Workflow UI selesai. Distribution Inbox & OnlyOffice Editor masih outstanding.
 
-#### 1.1 Document Classification & Labeling
-**Prioritas:** 🔴 Tinggi
+#### 1.1 Document Classification & Labeling ✅ DONE
+**Prioritas:** 🔴 Tinggi — **SELESAI**
 
-| Layer | Status | Yang Perlu Dikerjakan |
-|-------|--------|----------------------|
-| Database | 🔧 BE | Tambah migration: kolom `classification` (enum: `confidential`, `internal`, `public`) di tabel `documents` |
-| Model | 🔧 BE | Update model `Document` → tambah field `Classification` |
-| API | 🔧 BE | Update endpoint `POST/PUT /api/v1/documents` → terima field `classification` |
-| API | 🔧 BE | Update endpoint `GET /api/v1/documents` → tambah filter `?classification=` |
-| API SDK | 🔧 FE | Re-generate `npm run generate-api` setelah backend update |
-| Document Form | 🔧 FE | Tambah dropdown classification di `pages/documents/document-form/` |
-| Document List | 🔧 FE | Tambah badge classification + filter di `pages/documents/document-list/` |
-| Document Detail | 🔧 FE | Tampilkan badge classification di `pages/documents/document-detail/` |
-| Shared | 🔧 FE | Buat `ClassificationBadge` component di `shared/components/` |
-| RBAC | 🔧 BE | (Opsional) Access control: confidential hanya visible untuk role tertentu |
-
-**Angular pages yang terdampak:**
-```
-pages/documents/document-form/     → edit template, tambah dropdown
-pages/documents/document-list/     → tambah kolom + filter
-pages/documents/document-detail/   → tampilkan badge
-shared/components/status-badge/    → extend untuk classification
-```
+**Implementasi:**
+- ✅ BE: Migration kolom `classification` di tabel `documents`
+- ✅ BE: Filter `?classification=` di endpoint list
+- ✅ FE: Dropdown classification di document form
+- ✅ FE: Badge classification di document list + detail
+- ✅ FE: Warna & icon per level (Rahasia/Internal/Publik)
 
 #### 1.2 Distribution Inbox Page
 **Prioritas:** 🟡 Sedang
@@ -486,46 +480,25 @@ dashboard := api.Group("/dashboard")
 pages/dashboard/dashboard-page/    → update: ganti dummy → API call
 ```
 
-#### 1.4 Tab Riwayat Versi (Document Detail)
-**Prioritas:** 🔴 Tinggi — Backend sudah 100% siap, frontend belum ada UI-nya
+#### 1.4 Tab Riwayat Versi (Document Detail) ✅ DONE
+**Prioritas:** 🔴 Tinggi — **SELESAI**
 
-**Status saat ini:**
-- ✅ BE: `GET /documents/{id}/versions` (list), `POST /documents/{id}/versions` (upload), `GET /documents/{id}/versions/{ver}` (detail), `GET /documents/{id}/versions/{ver}/download`, `POST /documents/{id}/versions/{ver}/restore`
-- ✅ BE: Model `DocumentVersion` sudah lengkap (version_number, major/minor, change_summary, change_type, source, file_size, file_hash)
-- ⚠️ FE: `loadVersions()` sudah dipanggil & data tersimpan di signal `versions()`, tapi **tidak ditampilkan di UI manapun**
-- ⚠️ FE: `downloadVersion()` method sudah ada, belum ada tombol di UI
-- ❌ FE: **Tidak ada tab "Riwayat Versi"** di document-detail tabset
+**Implementasi:**
+- ✅ BE: Semua endpoint versioning (`list`, `upload`, `detail`, `download`, `restore`)
+- ✅ FE: Tab "Riwayat Versi" di document-detail dengan `nz-timeline`
+- ✅ FE: Setiap versi menampilkan: nomor versi (vX.Y), creator avatar + nama, tanggal, file size, change summary
+- ✅ FE: Tombol download per versi → `GET /documents/{id}/versions/{ver}/download`
+- ✅ FE: Tombol restore + konfirmasi modal → `POST /documents/{id}/versions/{ver}/restore`
+- ✅ FE: Badge "Saat Ini" untuk versi aktif, warna biru highlight
 
-| Layer | Status | Yang Perlu Dikerjakan |
-|-------|--------|----------------------|
-| API | ✅ BE | Semua endpoint versioning sudah ada dan berfungsi |
-| Tab Versi | 🔧 FE | Tambah tab baru "Riwayat Versi" di `document-detail.component.html` (setelah tab Informasi) |
-| Version List UI | 🔧 FE | Tabel/timeline: version_number, major.minor, created_by, change_summary, change_type, source, created_at |
-| Upload Versi Baru | 🔧 FE | Tombol + dialog upload file → `POST /documents/{id}/versions` dengan field `change_summary` |
-| Download Per Versi | 🔧 FE | Tombol download di setiap baris versi → `GET /documents/{id}/versions/{ver}/download` |
-| Restore Versi | 🔧 FE | Tombol restore + konfirmasi modal → `POST /documents/{id}/versions/{ver}/restore` |
-| Compare Versi | 🔧 FE | (Opsional) Tombol compare 2 versi → buka OnlyOffice document comparison |
+**Yang masih bisa ditambahkan (enhancement):**
 
-**Angular pages yang terdampak:**
-```
-pages/documents/document-detail/document-detail.component.html  → tambah nz-tab "Riwayat Versi"
-pages/documents/document-detail/document-detail.component.ts    → method sudah ada, tambah upload & restore
-pages/documents/document-detail/document-detail.component.scss  → styling tabel versi
-```
-
-**Contoh UI yang perlu dibuat di tab:**
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ [Upload Versi Baru]                                                     │
-├──────┬──────────┬────────────────────┬──────────┬──────────┬───────────┤
-│ Versi│ Pembuat  │ Catatan Perubahan   │ Sumber   │ Tanggal  │ Aksi      │
-├──────┼──────────┼────────────────────┼──────────┼──────────┼───────────┤
-│ v1.2 │ Siti A.  │ Koreksi nama vendor│ editor   │ 10 Apr   │ ⬇ 🔄     │
-│ v1.1 │ Budi S.  │ Perbaikan nominal  │ editor   │ 08 Apr   │ ⬇ 🔄     │
-│ v1.0 │ Budi S.  │ Draft awal         │ template │ 05 Apr   │ ⬇ 🔄     │
-└──────┴──────────┴────────────────────┴──────────┴──────────┴───────────┘
-  ⬇ = Download    🔄 = Restore ke versi ini
-```
+| Fitur | Deskripsi | Prioritas |
+|-------|-----------|-----------|
+| Upload Versi Baru | Tombol + dialog untuk upload file baru sebagai versi baru (saat ini upload hanya via document form) | 🟡 Sedang |
+| Compare Versi | Buka 2 versi side-by-side (butuh OnlyOffice comparison mode) | 🟢 Rendah |
+| Change Type Tag | Tampilkan tag `change_type` (edit/revision/restore) per versi | 🟢 Rendah |
+| Version Diff | Highlight perbedaan antar versi (text diff) | 🟢 Rendah |
 
 #### 1.5 OnlyOffice Editor Component (Document Detail)
 **Prioritas:** 🔴 Tinggi — Backend sudah 100% siap, frontend belum ada editor
@@ -600,9 +573,11 @@ ngOnInit() {
 
 ---
 
-### Phase 2 — Core Compliance (4-6 minggu)
+### Phase 2 — Core Compliance ✅ SELESAI
 
 > Fokus: fitur compliance yang diminta client (watermark, SLA, OCR). Backend berat, frontend sedang.
+> 
+> **Status: ✅ SELESAI** — Watermark, SLA management, dan OCR semuanya sudah diimplementasi BE+FE.
 
 #### 2.1 Watermark Dokumen
 **Prioritas:** 🔴 Tinggi
@@ -699,73 +674,42 @@ app/jobs/ocr_job.go                → NEW: async OCR via queue
 
 ---
 
-### Phase 3 — Security & Integration (4-6 minggu)
+### Phase 3 — Security & Integration ✅ SELESAI (demo mode)
 
 > Fokus: integrasi sistem external (TTE provider, Active Directory). Perlu koordinasi dengan vendor.
+> 
+> **Status: ✅ SELESAI (demo mode)** — TTE dan SSO diimplementasi dengan demo/scaffolding mode. Untuk production perlu vendor TTE (Privy/VIDA/Peruri) dan akses AD dari IT LRT Jakarta.
 
-#### 3.1 Integrasi TTE PSrE
+#### 3.1 Integrasi TTE PSrE ✅ DONE (demo mode)
 **Prioritas:** 🔴 Tinggi | 🔌 Butuh vendor (Privy / VIDA / Peruri)
 
-| Layer | Status | Yang Perlu Dikerjakan |
-|-------|--------|----------------------|
-| Vendor | 🔌 EXT | Pilih provider PSrE, buat akun, dapatkan API credentials |
-| Backend Lib | 🔧 BE | Implementasi adapter untuk API provider TTE |
-| Database | 🔧 BE | Migration: tabel `digital_signatures` (user_id, certificate_id, provider, signed_at, document_id, version) |
-| API | 🔧 BE | **Buat endpoint baru:** `POST /api/v1/documents/{id}/sign` → trigger signing |
-| API | 🔧 BE | **Buat endpoint baru:** `POST /api/v1/tte/callback` → callback dari provider |
-| API | 🔧 BE | **Buat endpoint baru:** `GET /api/v1/documents/{id}/signatures` → list tanda tangan |
-| API | 🔧 BE | **Buat endpoint baru:** `POST /api/v1/users/{id}/certificate` → register sertifikat user |
-| Workflow | 🔧 BE | Update workflow approval → trigger TTE saat step tertentu |
-| Document Detail | 🔧 FE | Tambah panel "Tanda Tangan Digital" di document detail |
-| Document Detail | 🔧 FE | Tambah tombol "Sign Document" → redirect ke provider / OTP |
-| User Profile | 🔧 FE | Tambah section "Sertifikat Digital" di profile page |
-| Settings | 🔧 FE | Konfigurasi TTE provider di settings page |
+**Implementasi:**
+- ✅ BE: `tte_service.go` — sign, verify, revoke, list signatures
+- ✅ BE: `tte_controller.go` — 5 API endpoints
+- ✅ BE: Model `DigitalSignature` dengan hash verification
+- ✅ FE: Tab "Tanda Tangan" di document-detail (list, sign button, verify)
+- ⚠️ Mode demo: signing menggunakan local hash, bukan provider PSrE
+- 🔌 Untuk production: perlu integrasi API Privy/VIDA/Peruri
 
-**Angular pages yang terdampak:**
-```
-pages/documents/document-detail/    → tambah panel signatures + tombol sign
-pages/profile/profile-page/         → tambah section sertifikat digital
-pages/settings/settings-list/       → tambah TTE provider config
-```
-
-**Backend yang perlu dibuat:**
-```
-app/services/tte_service.go            → NEW: TTE signing logic
-app/http/controllers/tte_controller.go → NEW: TTE endpoints
-app/models/digital_signature.go        → NEW: model
-```
-
-#### 3.2 SSO / Active Directory
+#### 3.2 SSO / Active Directory ✅ DONE (demo mode)
 **Prioritas:** 🟡 Sedang | 🔌 Butuh akses AD client
 
-| Layer | Status | Yang Perlu Dikerjakan |
-|-------|--------|----------------------|
-| Infra | 🔌 EXT | Dapatkan akses LDAP/SAML config dari IT LRT Jakarta |
-| Backend Lib | 🔧 BE | Implementasi LDAP/SAML authentication (Go: `go-ldap` atau SAML library) |
-| API | 🔧 BE | **Buat endpoint baru:** `POST /api/v1/auth/sso` → SSO login |
-| API | 🔧 BE | **Buat endpoint baru:** `GET /api/v1/auth/sso/callback` → SAML callback |
-| Config | 🔧 BE | Tambah SSO config di `system_settings` (LDAP host, base DN, mapping) |
-| User Sync | 🔧 BE | Auto-provisioning user dari AD → tabel users |
-| Login Page | 🔧 FE | Tambah tombol "Login dengan SSO" di login page |
-| Settings | 🔧 FE | Konfigurasi SSO/LDAP di settings page |
-
-**Angular pages yang terdampak:**
-```
-pages/auth/login.page.ts           → tambah tombol SSO
-pages/settings/settings-list/       → tambah SSO/LDAP config section
-```
-
-**Backend yang perlu dibuat:**
-```
-app/services/sso_service.go        → NEW: LDAP/SAML logic
-app/jobs/user_sync_job.go          → NEW: periodic sync dari AD
-```
+**Implementasi:**
+- ✅ BE: `sso_service.go` — LDAP/SAML/Azure AD scaffolding, demo mode login via local DB
+- ✅ BE: SSO endpoints: `POST /auth/sso`, `GET /auth/sso/config`, `GET /auth/sso/status`
+- ✅ BE: `GetByPrefix` di SettingRepository untuk SSO config
+- ✅ FE: Toggle SSO/Standard di login page, SSO form
+- ✅ FE: SSO config section di settings page (provider, LDAP host/port, auto-provision)
+- ⚠️ Mode demo: autentikasi menggunakan local DB
+- 🔌 Untuk production: perlu akses LDAP/SAML config dari IT LRT Jakarta
 
 ---
 
-### Phase 4 — Migration & External System (3-4 minggu)
+### Phase 4 — Migration & External System ⏸️ DITUNDA
 
 > Fokus: migrasi data dari M-Files dan integrasi Dynamics 365. Butuh koordinasi dengan IT client.
+> 
+> **Status: ⏸️ DITUNDA** — Butuh akses export M-Files dan API Dynamics 365 dari client.
 
 #### 4.1 Tool Migrasi Data (M-Files)
 **Prioritas:** 🟡 Sedang | 🔌 Butuh akses export M-Files
@@ -935,6 +879,39 @@ export class SlaService {
   }
 }
 ```
+
+---
+
+---
+
+## 6.5 Ringkasan Progress Implementasi
+
+> **Update terakhir:** 23 April 2026
+
+| Phase | Status | Detail |
+|-------|--------|--------|
+| **Phase 1 — Quick Wins** | ✅ Sebagian besar selesai | Classification ✅, Riwayat Versi ✅, Workflow UI ✅. Outstanding: Distribution Inbox page, OnlyOffice Editor |
+| **Phase 2 — Core Compliance** | ✅ Selesai | Watermark ✅, SLA Management ✅, OCR ✅ |
+| **Phase 3 — Security & Integration** | ✅ Demo mode | TTE ✅ (demo), SSO ✅ (demo). Butuh vendor untuk production |
+| **Phase 4 — Migration & External** | ⏸️ Ditunda | Butuh akses M-Files & Dynamics 365 dari client |
+
+**Workflow improvements (tambahan):**
+- ✅ Fix workflow bugs: reorder constraint, IP tracking, delegation table
+- ✅ Normalize workflow API data di frontend (flatten nested step.step.name)
+- ✅ Action buttons menggunakan `can_approve`/`can_reject` dari API
+- ✅ Card pipeline stepper di tab Informasi (horizontal scroll, status colors, icons)
+- ✅ Vertical detail stepper di tab Workflow (timeline + action history)
+- ✅ Mini stepper di sidebar
+
+**Sisa pekerjaan yang direkomendasikan:**
+1. 🔧 Distribution Inbox Page (FE) — backend sudah lengkap
+2. 🔧 OnlyOffice Editor Component (FE) — backend sudah lengkap
+3. 🔧 Dashboard Analytics — ganti dummy data → real API
+4. 🔧 Upload Versi Baru dari tab Riwayat Versi (enhancement)
+5. 🔌 Integrasi TTE production (butuh vendor)
+6. 🔌 Integrasi SSO production (butuh akses AD)
+7. 🔌 Migrasi M-Files (butuh akses client)
+8. 🔌 Integrasi IRP Dynamics 365 (butuh API)
 
 ---
 
