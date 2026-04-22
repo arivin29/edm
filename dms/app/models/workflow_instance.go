@@ -33,6 +33,8 @@ type WorkflowStepInstance struct {
 	CompletedAt        *time.Time `json:"completed_at"`
 	RequiredApprovals  int        `gorm:"default:1" json:"required_approvals"`
 	CurrentApprovals   int        `gorm:"default:0" json:"current_approvals"`
+	Escalated          bool       `gorm:"default:false" json:"escalated"`
+	EscalatedAt        *time.Time `json:"escalated_at"`
 
 	// Relations
 	WorkflowInstance *WorkflowInstance `json:"workflow_instance,omitempty"`

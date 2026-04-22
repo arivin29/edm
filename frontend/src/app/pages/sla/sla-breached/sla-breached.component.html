@@ -1,0 +1,115 @@
+<div class="p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h1 class="text-lg font-semibold m-0">
+        <span nz-icon nzType="warning" nzTheme="fill" class="mr-2 text-red-500"></span>
+        SLA Terlewat
+      </h1>
+      <p class="text-gray-500 text-xs m-0">Daftar step workflow yang melewati deadline SLA</p>
+    </div>
+    <div class="flex gap-2">
+      <nz-select nzSize="small" [(ngModel)]="filterStatus" nzPlaceHolder="Semua" nzAllowClear class="w-36">
+        <nz-option nzValue="breached" nzLabel="🔴 Terlewat"></nz-option>
+        <nz-option nzValue="at_risk" nzLabel="🟡 Berisiko"></nz-option>
+      </nz-select>
+      <a nz-button nzSize="small" routerLink="/sla/dashboard">
+        <span nz-icon nzType="dashboard"></span> Dashboard SLA
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Summary -->
+  <div class="grid grid-cols-3 gap-3 mb-4">
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-blue-500">
+      <div class="text-xs text-gray-500">Total</div>
+      <div class="text-xl font-bold text-gray-800">{{ items().length }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-red-500">
+      <div class="text-xs text-gray-500">Terlewat</div>
+      <div class="text-xl font-bold text-red-600">{{ breachedCount }}</div>
+    </div>
+    <div class="bg-white rounded-lg border p-3 border-l-4 border-l-orange-400">
+      <div class="text-xs text-gray-500">Berisiko</div>
+      <div class="text-xl font-bold text-orange-500">{{ atRiskCount }}</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <nz-card nzSize="small">
+    <nz-table #slaTable [nzData]="filteredItems()" [nzLoading]="loading()"
+              nzSize="small" [nzFrontPagination]="true" [nzPageSize]="20">
+      <thead>
+        <tr>
+          <th nzWidth="130px">No. Dokumen</th>
+          <th>Dokumen</th>
+          <th nzWidth="130px">Step</th>
+          <th nzWidth="110px">Penanggung Jawab</th>
+          <th nzWidth="130px">Deadline</th>
+          <th nzWidth="130px">Aktif Sejak</th>
+          <th nzWidth="90px" nzAlign="center">Status</th>
+          <th nzWidth="100px" nzAlign="center">Keterlambatan</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of slaTable.data; track item.step_instance_id) {
+          <tr [class.bg-red-50]="item.status === 'breached'" [class.bg-orange-50]="item.status === 'at_risk'">
+            <td>
+              <a [routerLink]="['/documents', item.document_id]" class="text-blue-600 font-mono text-[11px] hover:underline">
+                {{ item.document_number || '-' }}
+              </a>
+            </td>
+            <td>
+              <div class="text-xs font-medium truncate" [nz-tooltip]="item.document_title">{{ item.document_title }}</div>
+              <div class="text-[10px] text-gray-400">{{ item.workflow_name }}</div>
+            </td>
+            <td>
+              <div class="text-xs">
+                <nz-tag nzColor="default" class="mr-0">{{ item.step_order }}</nz-tag>
+                {{ item.step_name }}
+              </div>
+            </td>
+            <td>
+              <div class="flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                  {{ item.assignee_name.charAt(0).toUpperCase() }}
+                </span>
+                <span class="text-xs truncate max-w-[80px]" [nz-tooltip]="item.assignee_name">{{ item.assignee_name }}</span>
+              </div>
+            </td>
+            <td class="text-xs text-gray-500">{{ formatDate(item.deadline) }}</td>
+            <td class="text-xs text-gray-500">{{ formatDate(item.activated_at) }}</td>
+            <td nzAlign="center">
+              @if (item.status === 'breached') {
+                <nz-tag nzColor="red">
+                  <span nz-icon nzType="close-circle" class="mr-0.5"></span> Terlewat
+                </nz-tag>
+              } @else {
+                <nz-tag nzColor="orange">
+                  <span nz-icon nzType="warning" class="mr-0.5"></span> Berisiko
+                </nz-tag>
+              }
+            </td>
+            <td nzAlign="center">
+              @if (item.overdue_hours > 0) {
+                <span class="text-red-600 text-xs font-semibold">+{{ formatHours(item.overdue_hours) }}</span>
+              } @else {
+                <span class="text-gray-400 text-xs">-</span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="8" class="text-center py-8">
+              <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="emptyContent">
+                <ng-template #emptyContent>
+                  <span class="text-gray-400">Tidak ada SLA yang terlewat 🎉</span>
+                </ng-template>
+              </nz-empty>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </nz-card>
+</div>

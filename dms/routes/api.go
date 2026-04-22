@@ -25,6 +25,7 @@ commentController := controllers.NewCommentController()
 notificationController := controllers.NewNotificationController()
 onlyofficeController := controllers.NewOnlyOfficeController()
 distributionController := controllers.NewDistributionController()
+slaController := controllers.NewSLAController()
 	attachmentController := controllers.NewAttachmentController()
 	relationController := controllers.NewDocumentRelationController()
 
@@ -176,6 +177,10 @@ router.Middleware(middleware.RequirePermission("document.view")).Get("/documents
 // Watermark Configuration
 router.Get("/watermark/config", documentController.GetWatermarkConfig)
 router.Middleware(middleware.RequirePermission("setting.edit")).Put("/watermark/config", documentController.UpdateWatermarkConfig)
+
+// SLA Monitoring
+router.Get("/sla/dashboard", slaController.Dashboard)
+router.Get("/sla/breached", slaController.Breached)
 
 // Document Attachments
 router.Middleware(middleware.RequirePermission("document.view")).Get("/documents/{id}/attachments", attachmentController.ListAttachments)

@@ -174,6 +174,29 @@ export const routes: Routes = [
           import('./pages/settings/settings-list/settings-list.component').then(m => m.SettingsPage),
         title: 'Pengaturan - DMS'
       },
+      // SLA Monitoring
+      {
+        path: 'sla',
+        children: [
+          {
+            path: 'dashboard',
+            loadComponent: () =>
+              import('./pages/sla/sla-dashboard/sla-dashboard.component').then(m => m.SLADashboardPage),
+            title: 'SLA Monitoring - DMS'
+          },
+          {
+            path: 'breached',
+            loadComponent: () =>
+              import('./pages/sla/sla-breached/sla-breached.component').then(m => m.SLABreachedPage),
+            title: 'SLA Terlewat - DMS'
+          },
+          {
+            path: '',
+            redirectTo: 'dashboard',
+            pathMatch: 'full'
+          }
+        ]
+      },
       // Audit Logs
       {
         path: 'audit-logs',

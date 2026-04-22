@@ -60,6 +60,15 @@ export const MENU_ITEMS: MenuItem[] = [
     ]
   },
   {
+    key: 'sla-group',
+    label: 'SLA Monitoring',
+    icon: 'field-time',
+    children: [
+      { key: 'sla-dashboard', label: 'Dashboard SLA', route: '/sla/dashboard' },
+      { key: 'sla-breached', label: 'SLA Terlewat', route: '/sla/breached' }
+    ]
+  },
+  {
     key: 'settings',
     label: 'Pengaturan',
     icon: 'setting',

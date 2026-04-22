@@ -1,0 +1,159 @@
+<div class="p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h1 class="text-lg font-semibold m-0">
+        <span nz-icon nzType="dashboard" class="mr-2 text-blue-500"></span>
+        SLA Monitoring
+      </h1>
+      <p class="text-gray-500 text-xs m-0">Pantau kepatuhan SLA workflow dokumen</p>
+    </div>
+    <a nz-button nzSize="small" routerLink="/sla/breached">
+      <span nz-icon nzType="warning"></span> Lihat SLA Terlewat
+    </a>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-12"><nz-spin nzSimple nzSize="large"></nz-spin></div>
+  } @else if (stats(); as s) {
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-4 gap-3 mb-4">
+      <div class="bg-white rounded-lg border p-4 border-l-4 border-l-blue-500">
+        <div class="text-xs text-gray-500 mb-1">Step Aktif</div>
+        <div class="text-2xl font-bold text-gray-800">{{ s.total_active }}</div>
+        <div class="text-[10px] text-gray-400 mt-1">Sedang berjalan dengan SLA</div>
+      </div>
+      <div class="bg-white rounded-lg border p-4 border-l-4 border-l-green-500">
+        <div class="text-xs text-gray-500 mb-1">Tepat Waktu</div>
+        <div class="text-2xl font-bold text-green-600">{{ s.on_track }}</div>
+        <div class="text-[10px] text-gray-400 mt-1">Masih dalam batas SLA</div>
+      </div>
+      <div class="bg-white rounded-lg border p-4 border-l-4 border-l-orange-400">
+        <div class="text-xs text-gray-500 mb-1">Berisiko</div>
+        <div class="text-2xl font-bold text-orange-500">{{ s.at_risk }}</div>
+        <div class="text-[10px] text-gray-400 mt-1">Deadline &lt; 24 jam</div>
+      </div>
+      <div class="bg-white rounded-lg border p-4 border-l-4 border-l-red-500">
+        <div class="text-xs text-gray-500 mb-1">Terlewat</div>
+        <div class="text-2xl font-bold text-red-600">{{ s.breached }}</div>
+        <div class="text-[10px] text-gray-400 mt-1">Melewati deadline SLA</div>
+      </div>
+    </div>
+
+    <!-- Compliance & Performance -->
+    <div class="grid grid-cols-3 gap-3 mb-4">
+      <nz-card nzSize="small">
+        <div class="text-center">
+          <div class="text-xs text-gray-500 mb-2">Tingkat Kepatuhan SLA</div>
+          <nz-progress [nzPercent]="s.compliance_rate" nzType="circle" [nzWidth]="100"
+                       [nzStrokeColor]="getComplianceColor(s.compliance_rate)"
+                       [nzFormat]="percentFormat">
+          </nz-progress>
+          <ng-template #percentFormat let-percent>
+            <span class="text-lg font-bold">{{ percent }}%</span>
+          </ng-template>
+          <div class="text-[10px] text-gray-400 mt-2">{{ s.completed_on_time }} / {{ s.total_completed }} step tepat waktu</div>
+        </div>
+      </nz-card>
+
+      <nz-card nzSize="small">
+        <div class="text-center py-4">
+          <div class="text-xs text-gray-500 mb-2">Rata-rata Waktu Penyelesaian</div>
+          <div class="text-3xl font-bold text-blue-600">{{ formatHours(s.avg_completion_hours) }}</div>
+          <div class="text-[10px] text-gray-400 mt-2">Per step workflow</div>
+        </div>
+      </nz-card>
+
+      <nz-card nzSize="small">
+        <div class="text-center py-4">
+          <div class="text-xs text-gray-500 mb-2">Total Step Selesai</div>
+          <div class="text-3xl font-bold text-gray-700">{{ s.total_completed }}</div>
+          <div class="text-[10px] text-gray-400 mt-2">Dengan tracking SLA</div>
+        </div>
+      </nz-card>
+    </div>
+
+    <!-- Breached/At Risk Table -->
+    @if (breachedItems().length > 0) {
+      <nz-card nzSize="small" [nzTitle]="breachedTitle">
+        <ng-template #breachedTitle>
+          <div class="flex items-center gap-2">
+            <span nz-icon nzType="warning" nzTheme="fill" class="text-orange-500"></span>
+            <span class="text-sm font-semibold">Perlu Perhatian ({{ breachedItems().length }})</span>
+          </div>
+        </ng-template>
+
+        <nz-table #slaTable [nzData]="breachedItems()" nzSize="small"
+                  [nzFrontPagination]="true" [nzPageSize]="10">
+          <thead>
+            <tr>
+              <th nzWidth="130px">No. Dokumen</th>
+              <th>Dokumen</th>
+              <th nzWidth="130px">Step</th>
+              <th nzWidth="110px">Penanggung Jawab</th>
+              <th nzWidth="130px">Deadline</th>
+              <th nzWidth="90px" nzAlign="center">Status</th>
+              <th nzWidth="100px" nzAlign="center">Keterlambatan</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of slaTable.data; track item.step_instance_id) {
+              <tr [class.bg-red-50]="item.status === 'breached'">
+                <td>
+                  <a [routerLink]="['/documents', item.document_id]" class="text-blue-600 font-mono text-[11px] hover:underline">
+                    {{ item.document_number || '-' }}
+                  </a>
+                </td>
+                <td>
+                  <div class="text-xs font-medium truncate" [nz-tooltip]="item.document_title">{{ item.document_title }}</div>
+                  <div class="text-[10px] text-gray-400">{{ item.workflow_name }}</div>
+                </td>
+                <td>
+                  <div class="text-xs">
+                    <nz-tag nzColor="default" class="mr-0">{{ item.step_order }}</nz-tag>
+                    {{ item.step_name }}
+                  </div>
+                </td>
+                <td>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                      {{ item.assignee_name.charAt(0).toUpperCase() }}
+                    </span>
+                    <span class="text-xs truncate max-w-[80px]" [nz-tooltip]="item.assignee_name">{{ item.assignee_name }}</span>
+                  </div>
+                </td>
+                <td class="text-xs text-gray-500">{{ formatDate(item.deadline) }}</td>
+                <td nzAlign="center">
+                  @if (item.status === 'breached') {
+                    <nz-tag nzColor="red">
+                      <span nz-icon nzType="close-circle" class="mr-0.5"></span> Terlewat
+                    </nz-tag>
+                  } @else {
+                    <nz-tag nzColor="orange">
+                      <span nz-icon nzType="warning" class="mr-0.5"></span> Berisiko
+                    </nz-tag>
+                  }
+                </td>
+                <td nzAlign="center">
+                  @if (item.overdue_hours > 0) {
+                    <span class="text-red-600 text-xs font-semibold">+{{ formatHours(item.overdue_hours) }}</span>
+                  } @else {
+                    <span class="text-gray-400 text-xs">-</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </nz-table>
+      </nz-card>
+    } @else {
+      <nz-card nzSize="small">
+        <div class="text-center py-8">
+          <span nz-icon nzType="check-circle" nzTheme="fill" class="text-4xl text-green-400 mb-2 block"></span>
+          <div class="text-gray-500 text-sm">Semua step workflow dalam kondisi baik</div>
+          <div class="text-gray-400 text-xs">Tidak ada SLA yang terlewat atau berisiko</div>
+        </div>
+      </nz-card>
+    }
+  }
+</div>
