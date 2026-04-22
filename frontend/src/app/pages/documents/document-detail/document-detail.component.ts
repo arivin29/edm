@@ -31,7 +31,8 @@ import {
   DocumentDetail, DocumentVersion, Comment, WorkflowStep, WorkflowStatus, WorkflowStepInstance, WorkflowTemplateStep,
   Distribution, Attachment,
   getStatusColor, getStatusLabel, getPriorityColor, getPriorityLabel,
-  getConfidentialityLabel, formatDate, formatFileSize, getFileIcon
+  getConfidentialityLabel, getClassificationColor, getClassificationLabel, getClassificationIcon,
+  formatDate, formatFileSize, getFileIcon
 } from '../document.models';
 
 @Component({
@@ -86,6 +87,9 @@ export class DocumentDetailPage implements OnInit {
   getPriorityColor = getPriorityColor;
   getPriorityLabel = getPriorityLabel;
   getConfidentialityLabel = getConfidentialityLabel;
+  getClassificationColor = getClassificationColor;
+  getClassificationLabel = getClassificationLabel;
+  getClassificationIcon = getClassificationIcon;
   formatDate = formatDate;
   formatFileSize = formatFileSize;
   getFileIcon = getFileIcon;

@@ -16,7 +16,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { DocumentItem, DocumentDetail, WorkflowStep, getStatusColor, getStatusLabel, getPriorityColor, getPriorityLabel, formatDate } from '../document.models';
+import { DocumentItem, DocumentDetail, WorkflowStep, getStatusColor, getStatusLabel, getPriorityColor, getPriorityLabel, getClassificationColor, getClassificationLabel, getClassificationIcon, formatDate } from '../document.models';
 
 @Component({
   selector: 'app-document-list',
@@ -54,12 +54,16 @@ export class DocumentListPage implements OnInit {
   filterType: string | null = null;
   filterCategory: string | null = null;
   filterPriority: string | null = null;
+  filterClassification: string | null = null;
 
   // Expose helper functions to template
   getStatusColor = getStatusColor;
   getStatusLabel = getStatusLabel;
   getPriorityColor = getPriorityColor;
   getPriorityLabel = getPriorityLabel;
+  getClassificationColor = getClassificationColor;
+  getClassificationLabel = getClassificationLabel;
+  getClassificationIcon = getClassificationIcon;
   formatDate = formatDate;
 
   // Expand row state (signals for proper change detection)
@@ -97,6 +101,7 @@ export class DocumentListPage implements OnInit {
     if (this.filterType) params.document_type_id = this.filterType;
     if (this.filterCategory) params.category_id = this.filterCategory;
     if (this.filterPriority) params.priority = this.filterPriority;
+    if (this.filterClassification) params.classification = this.filterClassification;
 
     this.http.get<any>(`${environment.apiUrl}/documents`, { params }).subscribe({
       next: (res) => {

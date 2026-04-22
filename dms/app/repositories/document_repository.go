@@ -88,6 +88,11 @@ func (r *documentRepository) List(filters map[string]any) ([]models.Document, in
 		q = q.Where("confidentiality = ?", v)
 	}
 
+	// Classification filter
+	if v, ok := filters["classification"].(string); ok && v != "" {
+		q = q.Where("classification = ?", v)
+	}
+
 	// Created by filter
 	if v, ok := filters["created_by"].(string); ok && v != "" {
 		q = q.Where("created_by = ?", v)

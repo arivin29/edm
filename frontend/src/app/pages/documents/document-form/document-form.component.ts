@@ -135,7 +135,8 @@ export class DocumentFormPage implements OnInit, OnDestroy {
       description: [''],
       section_id: [null],
       priority: ['normal'],
-      confidentiality: ['internal']
+      confidentiality: ['internal'],
+      classification: ['internal']
     });
 
     this.subscriptions.push(

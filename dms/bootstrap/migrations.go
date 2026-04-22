@@ -27,5 +27,6 @@ func Migrations() []schema.Migration {
 		&migrations.M20250414000016AddFulltextSearch{},
 		&migrations.M20250414000017AddDocumentRelationsIndexes{},
 		&migrations.M20250416000018FixWorkflowStepInstancesDeadline{},
+		&migrations.M20250422000019AddClassificationToDocuments{},
 	}
 }

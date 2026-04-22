@@ -224,6 +224,18 @@
                     </nz-select>
                   </nz-form-control>
                 </nz-form-item>
+
+                <nz-form-item>
+                  <nz-form-label>Klasifikasi Dokumen</nz-form-label>
+                  <nz-form-control>
+                    <nz-select nzSize="small" formControlName="classification" nzPlaceHolder="Pilih klasifikasi">
+                      <nz-option nzValue="public" nzLabel="🌐 Publik — Dapat diakses semua pihak"></nz-option>
+                      <nz-option nzValue="internal" nzLabel="👥 Internal — Hanya untuk internal perusahaan"></nz-option>
+                      <nz-option nzValue="confidential" nzLabel="🔒 Rahasia — Akses terbatas"></nz-option>
+                      <nz-option nzValue="secret" nzLabel="🛡️ Sangat Rahasia — Hanya pihak berwenang"></nz-option>
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
               </form>
             </nz-card>
           }
@@ -473,6 +485,10 @@
                 <div class="review-row">
                   <span class="review-label">Kerahasiaan</span>
                   <span class="review-value">{{ form.value.confidentiality || 'internal' }}</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-label">Klasifikasi</span>
+                  <span class="review-value">{{ form.value.classification || 'internal' }}</span>
                 </div>
               </div>
 

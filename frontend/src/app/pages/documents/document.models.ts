@@ -6,24 +6,7 @@ export interface DocumentItem {
   status: string;
   priority: string;
   confidentiality: string;
-  current_version: number;
-  revision_count: number;
-  created_at: string;
-  updated_at: string;
-  document_type?: { id: string; name: string; code: string };
-  category?: { id: string; name: string; code: string };
-  creator?: { id: string; name: string; email: string };
-  department?: { id: string; name: string };
-}
-
-export interface DocumentDetail {
-  id: string;
-  document_number: string;
-  title: string;
-  description?: string;
-  status: string;
-  priority: string;
-  confidentiality: string;
+  classification: string;
   current_version: number;
   major_version: number;
   minor_version: number;
@@ -42,6 +25,8 @@ export interface DocumentDetail {
   office?: { id: string; name: string };
   template?: { id: string; name: string };
 }
+
+export type DocumentDetail = DocumentItem;
 
 export interface DocumentVersion {
   id: string;
@@ -238,6 +223,27 @@ export function getConfidentialityLabel(level: string): string {
     public: 'Publik', internal: 'Internal', confidential: 'Rahasia', secret: 'Sangat Rahasia'
   };
   return labels[level] || level;
+}
+
+export function getClassificationColor(classification: string): string {
+  const colors: Record<string, string> = {
+    public: 'green', internal: 'blue', confidential: 'orange', secret: 'red'
+  };
+  return colors[classification] || 'default';
+}
+
+export function getClassificationLabel(classification: string): string {
+  const labels: Record<string, string> = {
+    public: 'Publik', internal: 'Internal', confidential: 'Rahasia', secret: 'Sangat Rahasia'
+  };
+  return labels[classification] || classification;
+}
+
+export function getClassificationIcon(classification: string): string {
+  const icons: Record<string, string> = {
+    public: 'global', internal: 'team', confidential: 'lock', secret: 'safety-certificate'
+  };
+  return icons[classification] || 'file';
 }
 
 export function formatDate(dateStr: string): string {

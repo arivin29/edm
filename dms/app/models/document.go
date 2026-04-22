@@ -35,6 +35,8 @@ type Document struct {
 	Priority        string `gorm:"size:20;default:'normal'" json:"priority"`
 	Confidentiality string `gorm:"size:50;default:'internal'" json:"confidentiality"`
 	AccessLevel     string `gorm:"size:50;default:'raw'" json:"access_level"`
+	Classification  string `gorm:"size:50;default:'internal'" json:"classification"`
+	// Classification: public, internal, confidential, secret
 
 	Metadata *string `gorm:"type:jsonb" json:"metadata"`
 

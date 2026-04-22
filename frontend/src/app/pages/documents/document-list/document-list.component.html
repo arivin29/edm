@@ -74,6 +74,14 @@
         <nz-option nzValue="high" nzLabel="Tinggi"></nz-option>
         <nz-option nzValue="urgent" nzLabel="Mendesak"></nz-option>
       </nz-select>
+
+      <nz-select nzSize="small" [(ngModel)]="filterClassification" (ngModelChange)="onFilter()"
+                 nzPlaceHolder="Klasifikasi" nzAllowClear class="w-40">
+        <nz-option nzValue="public" nzLabel="🌐 Publik"></nz-option>
+        <nz-option nzValue="internal" nzLabel="👥 Internal"></nz-option>
+        <nz-option nzValue="confidential" nzLabel="🔒 Rahasia"></nz-option>
+        <nz-option nzValue="secret" nzLabel="🛡️ Sangat Rahasia"></nz-option>
+      </nz-select>
     </div>
   </nz-card>
 
@@ -104,6 +112,7 @@
           <th nzWidth="110px">Tipe</th>
           <th nzWidth="80px" nzAlign="center">Versi</th>
           <th nzWidth="90px" nzAlign="center">Status</th>
+          <th nzWidth="100px" nzAlign="center">Klasifikasi</th>
           <th nzWidth="80px" nzAlign="center">Prioritas</th>
           <th nzWidth="100px">Pembuat</th>
           <th nzWidth="90px">Tanggal</th>
@@ -142,6 +151,12 @@
             </td>
             <td nzAlign="center">
               <nz-tag [nzColor]="getStatusColor(doc.status)">{{ getStatusLabel(doc.status) }}</nz-tag>
+            </td>
+            <td nzAlign="center">
+              <nz-tag [nzColor]="getClassificationColor(doc.classification)">
+                <span nz-icon [nzType]="getClassificationIcon(doc.classification)" class="mr-0.5"></span>
+                {{ getClassificationLabel(doc.classification) }}
+              </nz-tag>
             </td>
             <td nzAlign="center">
               <nz-tag [nzColor]="getPriorityColor(doc.priority)">{{ getPriorityLabel(doc.priority) }}</nz-tag>

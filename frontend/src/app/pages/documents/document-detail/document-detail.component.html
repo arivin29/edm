@@ -20,6 +20,10 @@
                   </span>
                   <span class="doc-meta-tag" [attr.data-priority]="document()!.priority">{{ getPriorityLabel(document()!.priority) }}</span>
                   <span class="doc-meta-tag">{{ getConfidentialityLabel(document()!.confidentiality) }}</span>
+                  <nz-tag [nzColor]="getClassificationColor(document()!.classification)" class="ml-1">
+                    <span nz-icon [nzType]="getClassificationIcon(document()!.classification)" class="mr-0.5"></span>
+                    {{ getClassificationLabel(document()!.classification) }}
+                  </nz-tag>
                 </div>
               </div>
               <div class="doc-header__subtitle">
@@ -566,6 +570,13 @@
                   <div class="doc-side__row">
                     <span class="doc-side__label">Prioritas</span>
                     <span class="doc-meta-tag doc-meta-tag--sm" [attr.data-priority]="document()!.priority">{{ getPriorityLabel(document()!.priority) }}</span>
+                  </div>
+                  <div class="doc-side__row">
+                    <span class="doc-side__label">Klasifikasi</span>
+                    <nz-tag [nzColor]="getClassificationColor(document()!.classification)" style="margin:0">
+                      <span nz-icon [nzType]="getClassificationIcon(document()!.classification)" class="mr-0.5"></span>
+                      {{ getClassificationLabel(document()!.classification) }}
+                    </nz-tag>
                   </div>
                   <div class="doc-side__row">
                     <span class="doc-side__label">Pembuat</span>

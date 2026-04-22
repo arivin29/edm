@@ -36,7 +36,7 @@ func (s *DocumentService) List(ctx http.Context) ([]models.Document, map[string]
 	filters := buildFilters(ctx, []string{
 		"search", "status", "document_type_id", "category_id",
 		"office_id", "department_id", "section_id",
-		"created_by", "priority", "confidentiality", "from_module",
+		"created_by", "priority", "confidentiality", "classification", "from_module",
 		"date_from", "date_to",
 		"sort_by", "sort_dir",
 	})
@@ -201,9 +201,10 @@ func (s *DocumentService) Create(ctx http.Context) (*models.Document, error) {
 		CurrentVersion: 1,
 		MajorVersion:   1,
 		MinorVersion:   0,
-		Priority:       "normal",
+		Priority:        "normal",
 		Confidentiality: "internal",
-		AccessLevel:    "raw",
+		AccessLevel:     "raw",
+		Classification:  "internal",
 		DraftFilePath:  &dstPath,
 		CreatedBy:      user.ID,
 	}
@@ -220,6 +221,9 @@ func (s *DocumentService) Create(ctx http.Context) (*models.Document, error) {
 	}
 	if v := ctx.Request().Input("confidentiality"); v != "" {
 		doc.Confidentiality = v
+	}
+	if v := ctx.Request().Input("classification"); v != "" {
+		doc.Classification = v
 	}
 	if v := ctx.Request().Input("from_module"); v != "" {
 		doc.FromModule = &v
@@ -306,6 +310,9 @@ func (s *DocumentService) Update(id string, ctx http.Context) (*models.Document,
 	}
 	if v, ok := data["access_level"].(string); ok && v != "" {
 		doc.AccessLevel = v
+	}
+	if v, ok := data["classification"].(string); ok && v != "" {
+		doc.Classification = v
 	}
 	if v, ok := data["section_id"].(string); ok {
 		if v == "" {
