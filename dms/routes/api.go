@@ -53,6 +53,8 @@ func Api() {
 
 		// OnlyOffice callback (no auth - called by OnlyOffice server)
 		router.Post("/onlyoffice/callback", onlyofficeController.Callback)
+		// OnlyOffice signed download (no auth - uses HMAC signature)
+		router.Get("/onlyoffice/download/{id}", onlyofficeController.Download)
 
 		// Protected auth routes
 		router.Middleware(middleware.Auth()).Group(func(router route.Router) {

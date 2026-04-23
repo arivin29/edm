@@ -1,11 +1,15 @@
 package services
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"dms/app/models"
@@ -98,7 +102,9 @@ func (s *OnlyOfficeService) GetEditorConfig(documentID string, userID string, us
 
 	// Get base URL from config
 	baseURL := facades.Config().GetString("app.url", "http://localhost:3000")
-	fileURL := fmt.Sprintf("%s/api/v1/documents/%s/download", baseURL, doc.ID)
+
+	// Generate signed download URL (OnlyOffice can't send JWT auth)
+	fileURL := s.generateSignedDownloadURL(baseURL, doc.ID)
 
 	// Callback URL for save events
 	callbackURL := fmt.Sprintf("%s/api/v1/onlyoffice/callback", baseURL)
@@ -287,4 +293,39 @@ func (s *OnlyOfficeService) signJWT(config *EditorConfig, secret string) (string
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
+}
+
+// generateSignedDownloadURL creates a time-limited signed URL for OnlyOffice to download the file
+func (s *OnlyOfficeService) generateSignedDownloadURL(baseURL, documentID string) string {
+	expires := strconv.FormatInt(time.Now().Add(24*time.Hour).Unix(), 10)
+	sig := s.signDownload(documentID, expires)
+	return fmt.Sprintf("%s/api/v1/onlyoffice/download/%s?expires=%s&sig=%s", baseURL, documentID, expires, sig)
+}
+
+func (s *OnlyOfficeService) signDownload(documentID, expires string) string {
+	secret := facades.Config().GetString("app.key", "default-secret")
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(documentID + ":" + expires))
+	return hex.EncodeToString(mac.Sum(nil))
+}
+
+// ValidateDownloadSignature checks if the signed download URL is valid
+func (s *OnlyOfficeService) ValidateDownloadSignature(documentID, expires, sig string) bool {
+	// Check expiry
+	expTime, err := strconv.ParseInt(expires, 10, 64)
+	if err != nil {
+		return false
+	}
+	if time.Now().Unix() > expTime {
+		return false
+	}
+	// Verify signature
+	expected := s.signDownload(documentID, expires)
+	return hmac.Equal([]byte(expected), []byte(sig))
+}
+
+// ServeDocument serves the document file for OnlyOffice download
+func (s *OnlyOfficeService) ServeDocument(documentID string) (string, string, error) {
+	docService := NewDocumentService()
+	return docService.GetFilePath(documentID)
 }
