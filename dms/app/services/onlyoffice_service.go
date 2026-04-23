@@ -168,8 +168,8 @@ func (s *OnlyOfficeService) getOrCreateKey(doc *models.Document) string {
 	if doc.OnlyofficeKey != nil && *doc.OnlyofficeKey != "" {
 		return *doc.OnlyofficeKey
 	}
-	// Generate new key: doc-<id>-ver<version>-<timestamp>
-	key := fmt.Sprintf("doc-%s-ver%d-%d", doc.ID, doc.CurrentVersion, time.Now().Unix())
+	// Generate unique key using UUID format
+	key := fmt.Sprintf("oo%d%d", doc.CurrentVersion, time.Now().UnixNano())
 	doc.OnlyofficeKey = &key
 	s.documentRepo.Update(doc)
 	return key
@@ -245,7 +245,7 @@ func (s *OnlyOfficeService) saveDocument(key, downloadURL string) error {
 	}
 
 	// Generate new key for next session
-	newKey := fmt.Sprintf("doc-%s-ver%d-%d", doc.ID, doc.CurrentVersion, time.Now().Unix())
+	newKey := fmt.Sprintf("oo%d%d", doc.CurrentVersion, time.Now().UnixNano())
 	doc.OnlyofficeKey = &newKey
 
 	// Update document
@@ -278,7 +278,7 @@ func (s *OnlyOfficeService) InvalidateKey(documentID string) error {
 		return fmt.Errorf("document not found")
 	}
 
-	newKey := fmt.Sprintf("doc-%s-ver%d-%d", doc.ID, doc.CurrentVersion, time.Now().Unix())
+	newKey := fmt.Sprintf("oo%d%d", doc.CurrentVersion, time.Now().UnixNano())
 	doc.OnlyofficeKey = &newKey
 
 	return s.documentRepo.Update(doc)
