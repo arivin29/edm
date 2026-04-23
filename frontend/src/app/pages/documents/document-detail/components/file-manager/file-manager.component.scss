@@ -3,6 +3,10 @@
   background: #fff;
   border-radius: 6px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 /* ===== Toolbar ===== */
@@ -122,7 +126,9 @@
 .fm-content {
   display: grid;
   grid-template-columns: 200px 1fr;
-  min-height: 380px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .fm-content--detail-open {
@@ -133,7 +139,6 @@
 .fm-tree {
   border-right: 1px solid #f0f0f0;
   overflow-y: auto;
-  max-height: 440px;
 }
 
 .fm-tree__header {
@@ -216,7 +221,6 @@
 /* ===== File List ===== */
 .fm-files {
   overflow-y: auto;
-  max-height: 440px;
 }
 
 .fm-list {
@@ -461,7 +465,6 @@
 .fm-detail {
   border-left: 1px solid #f0f0f0;
   overflow-y: auto;
-  max-height: 440px;
 }
 
 .fm-detail__header {

@@ -158,6 +158,13 @@
                     <nz-tag class="fm-tag-sm">{{ tag }}</nz-tag>
                   }
                 }
+                @if (node.ocrProcessing) {
+                  <nz-tag nzColor="processing" class="fm-tag-sm">
+                    <span nz-icon nzType="loading" nzTheme="outline"></span> OCR...
+                  </nz-tag>
+                } @else if (node.ocrText) {
+                  <nz-tag nzColor="green" class="fm-tag-sm">OCR ✓</nz-tag>
+                }
               </div>
               <div class="fm-list-col fm-list-col--size">{{ node.type === 'file' ? formatFileSize(node.size) : (node.children?.length || 0) + ' item' }}</div>
               <div class="fm-list-col fm-list-col--type">{{ getFileTypeLabel(node) }}</div>

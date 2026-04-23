@@ -155,7 +155,11 @@
 
 // Content area
 .doc-content {
-  @apply flex-1 p-4 md:p-6 bg-white overflow-auto;
+  @apply flex-1 p-4 md:p-6 bg-white;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
 }
 
 // Responsive
