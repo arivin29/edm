@@ -119,9 +119,9 @@ func (s *SearchService) searchDocuments(query string, limit int) (*SearchGroup, 
 	searchSQL := fmt.Sprintf(`SELECT DISTINCT ON (d.id) d.id, d.document_number, d.title, d.description, d.status,
 		dt.name as type_name, dep.name as dept_name,
 		CASE
-			WHEN LOWER(d.document_number) LIKE $1 OR LOWER(d.title) LIKE $1 THEN 'direct'
-			WHEN d.search_vector @@ websearch_to_tsquery('simple', $2) THEN 'fulltext'
-			WHEN LOWER(COALESCE(fs.ocr_text,'')) LIKE $1 THEN 'ocr'
+			WHEN LOWER(d.document_number) LIKE ? OR LOWER(d.title) LIKE ? THEN 'direct'
+			WHEN d.search_vector @@ websearch_to_tsquery('simple', ?) THEN 'fulltext'
+			WHEN LOWER(COALESCE(fs.ocr_text,'')) LIKE ? THEN 'ocr'
 			ELSE 'other'
 		END as match_source
 		FROM documents d
@@ -129,18 +129,22 @@ func (s *SearchService) searchDocuments(query string, limit int) (*SearchGroup, 
 		LEFT JOIN departments dep ON dep.id = d.department_id
 		LEFT JOIN file_storage fs ON fs.entity_type = 'document' AND fs.entity_id = d.id AND fs.deleted_at IS NULL
 		WHERE d.deleted_at IS NULL AND (
-			LOWER(d.document_number) LIKE $1 OR LOWER(d.title) LIKE $1 OR LOWER(COALESCE(d.description,'')) LIKE $1
-			OR d.search_vector @@ websearch_to_tsquery('simple', $2)
-			OR LOWER(COALESCE(fs.ocr_text,'')) LIKE $1
+			LOWER(d.document_number) LIKE ? OR LOWER(d.title) LIKE ? OR LOWER(COALESCE(d.description,'')) LIKE ?
+			OR d.search_vector @@ websearch_to_tsquery('simple', ?)
+			OR LOWER(COALESCE(fs.ocr_text,'')) LIKE ?
 		)
 		ORDER BY d.id,
-			CASE WHEN LOWER(d.document_number) LIKE $1 THEN 0 ELSE 1 END,
-			CASE WHEN LOWER(d.title) LIKE $1 THEN 0 ELSE 1 END,
+			CASE WHEN LOWER(d.document_number) LIKE ? THEN 0 ELSE 1 END,
+			CASE WHEN LOWER(d.title) LIKE ? THEN 0 ELSE 1 END,
 			d.updated_at DESC
 		LIMIT %d`, limit)
 
 	var rows []docRow
-	if err := facades.Orm().Query().Raw(searchSQL, likePattern, query).Scan(&rows); err != nil {
+	if err := facades.Orm().Query().Raw(searchSQL,
+		likePattern, likePattern, query, likePattern,
+		likePattern, likePattern, likePattern, query, likePattern,
+		likePattern, likePattern,
+	).Scan(&rows); err != nil {
 		return nil, err
 	}
 
@@ -204,10 +208,10 @@ func (s *SearchService) searchUsers(query string, limit int) (*SearchGroup, erro
 
 	searchSQL := fmt.Sprintf(`SELECT u.id, u.name, u.email, u.employee_id, d.name as dept_name
 		FROM users u LEFT JOIN departments d ON d.id = u.department_id
-		WHERE u.deleted_at IS NULL AND (LOWER(u.name) LIKE $1 OR LOWER(u.email) LIKE $1 OR LOWER(COALESCE(u.employee_id,'')) LIKE $1)
+		WHERE u.deleted_at IS NULL AND (LOWER(u.name) LIKE ? OR LOWER(u.email) LIKE ? OR LOWER(COALESCE(u.employee_id,'')) LIKE ?)
 		ORDER BY u.name LIMIT %d`, limit)
 
-	if err := facades.Orm().Query().Raw(searchSQL, likePattern).Scan(&rows); err != nil {
+	if err := facades.Orm().Query().Raw(searchSQL, likePattern, likePattern, likePattern).Scan(&rows); err != nil {
 		return nil, err
 	}
 
@@ -242,8 +246,8 @@ func (s *SearchService) searchWorkflows(query string, limit int) (*SearchGroup, 
 
 	_ = facades.Orm().Query().Raw(`SELECT COUNT(*) FROM workflows WHERE deleted_at IS NULL AND (LOWER(name) LIKE ? OR LOWER(COALESCE(description,'')) LIKE ?)`, likePattern, likePattern).Scan(&total)
 
-	searchSQL := fmt.Sprintf(`SELECT id, name, description FROM workflows WHERE deleted_at IS NULL AND (LOWER(name) LIKE $1 OR LOWER(COALESCE(description,'')) LIKE $1) ORDER BY name LIMIT %d`, limit)
-	if err := facades.Orm().Query().Raw(searchSQL, likePattern).Scan(&rows); err != nil {
+	searchSQL := fmt.Sprintf(`SELECT id, name, description FROM workflows WHERE deleted_at IS NULL AND (LOWER(name) LIKE ? OR LOWER(COALESCE(description,'')) LIKE ?) ORDER BY name LIMIT %d`, limit)
+	if err := facades.Orm().Query().Raw(searchSQL, likePattern, likePattern).Scan(&rows); err != nil {
 		return nil, err
 	}
 
@@ -278,8 +282,8 @@ func (s *SearchService) searchDocumentTypes(query string, limit int) (*SearchGro
 
 	_ = facades.Orm().Query().Raw(`SELECT COUNT(*) FROM document_types WHERE deleted_at IS NULL AND (LOWER(name) LIKE ? OR LOWER(COALESCE(code,'')) LIKE ?)`, likePattern, likePattern).Scan(&total)
 
-	searchSQL := fmt.Sprintf(`SELECT id, name, code FROM document_types WHERE deleted_at IS NULL AND (LOWER(name) LIKE $1 OR LOWER(COALESCE(code,'')) LIKE $1) ORDER BY name LIMIT %d`, limit)
-	if err := facades.Orm().Query().Raw(searchSQL, likePattern).Scan(&rows); err != nil {
+	searchSQL := fmt.Sprintf(`SELECT id, name, code FROM document_types WHERE deleted_at IS NULL AND (LOWER(name) LIKE ? OR LOWER(COALESCE(code,'')) LIKE ?) ORDER BY name LIMIT %d`, limit)
+	if err := facades.Orm().Query().Raw(searchSQL, likePattern, likePattern).Scan(&rows); err != nil {
 		return nil, err
 	}
 
@@ -310,7 +314,7 @@ func (s *SearchService) searchTemplates(query string, limit int) (*SearchGroup, 
 
 	_ = facades.Orm().Query().Raw(`SELECT COUNT(*) FROM document_templates WHERE deleted_at IS NULL AND LOWER(name) LIKE ?`, likePattern).Scan(&total)
 
-	searchSQL := fmt.Sprintf(`SELECT t.id, t.name, dt.name as type_name FROM document_templates t LEFT JOIN document_types dt ON dt.id = t.document_type_id WHERE t.deleted_at IS NULL AND LOWER(t.name) LIKE $1 ORDER BY t.name LIMIT %d`, limit)
+	searchSQL := fmt.Sprintf(`SELECT t.id, t.name, dt.name as type_name FROM document_templates t LEFT JOIN document_types dt ON dt.id = t.document_type_id WHERE t.deleted_at IS NULL AND LOWER(t.name) LIKE ? ORDER BY t.name LIMIT %d`, limit)
 	if err := facades.Orm().Query().Raw(searchSQL, likePattern).Scan(&rows); err != nil {
 		return nil, err
 	}
