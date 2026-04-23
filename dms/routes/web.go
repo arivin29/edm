@@ -2,21 +2,12 @@ package routes
 
 import (
 	"github.com/goravel/framework/contracts/http"
-	"github.com/goravel/framework/support"
 
-	"dms/app/http/controllers"
 	"dms/app/facades"
 )
 
 func Web() {
 	facades.Route().Get("/", func(ctx http.Context) http.Response {
-		return ctx.Response().View().Make("welcome.tmpl", map[string]any{
-			"version": support.Version,
-		})
+		return ctx.Response().Redirect(http.StatusFound, "https://dms-devetek.web.app")
 	})
-
-	facades.Route().Static("public", "./public")
-
-	userController := controllers.NewUserController()
-	facades.Route().Get("/users", userController.Index)
 }
