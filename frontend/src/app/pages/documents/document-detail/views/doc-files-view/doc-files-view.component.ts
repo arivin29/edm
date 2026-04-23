@@ -64,6 +64,9 @@ export class DocFilesViewComponent implements OnInit {
   }
 
   onOcr(file: any) {
-    console.log('OCR:', file);
+    if (file.id.startsWith('att-')) {
+      const attId = file.id.replace('att-', '');
+      this.docService.runAttachmentOCR(attId, file.id);
+    }
   }
 }

@@ -1,8 +1,9 @@
 <div class="ocr-view">
+  <!-- Header -->
   <div class="ocr-view__header">
     <div>
       <h4 class="ocr-view__title">Hasil OCR (Optical Character Recognition)</h4>
-      <p class="ocr-view__sub">Ekstrak teks dari dokumen scan (PDF/gambar)</p>
+      <p class="ocr-view__sub">Gabungan teks dari dokumen utama &amp; file pendukung</p>
     </div>
     <div class="ocr-view__actions">
       @if (docService.ocrStatus()?.available) {
@@ -16,34 +17,98 @@
           Tesseract tidak tersedia
         </nz-tag>
       }
-      <button nz-button nzType="primary" nzSize="small"
+    </div>
+  </div>
+
+  <!-- Section: Dokumen Utama -->
+  <div class="ocr-section">
+    <div class="ocr-section__header">
+      <div class="ocr-section__title">
+        <span nz-icon nzType="file-pdf" nzTheme="outline"></span>
+        Dokumen Utama
+      </div>
+      <button nz-button nzType="primary" nzSize="small" nzGhost
         [nzLoading]="docService.ocrRunning()"
         (click)="runOCR()"
         [disabled]="!docService.ocrStatus()?.available">
         <span nz-icon nzType="scan" nzTheme="outline"></span> Jalankan OCR
       </button>
     </div>
+
+    @if (docService.ocrRunning()) {
+      <div class="ocr-section__loading">
+        <nz-spin nzSimple></nz-spin>
+        <span>Memproses...</span>
+      </div>
+    } @else if (docService.ocrResult()) {
+      <div class="ocr-section__meta">
+        <nz-tag nzColor="blue">{{ docService.ocrResult()!.page_count }} halaman</nz-tag>
+        <nz-tag nzColor="default">{{ docService.ocrResult()!.engine }}</nz-tag>
+        <nz-tag nzColor="default">{{ docService.ocrResult()!.duration }}</nz-tag>
+      </div>
+      <pre class="ocr-text">{{ docService.ocrResult()!.text || '(tidak ada teks terdeteksi)' }}</pre>
+    } @else if (docService.ocrText()) {
+      <pre class="ocr-text">{{ docService.ocrText() }}</pre>
+    } @else {
+      <div class="ocr-section__empty">
+        <span nz-icon nzType="file-search" nzTheme="outline"></span>
+        Belum di-OCR — klik "Jalankan OCR"
+      </div>
+    }
   </div>
 
-  @if (docService.ocrRunning()) {
-    <div class="ocr-view__loading">
-      <nz-spin nzSimple nzSize="large"></nz-spin>
-      <div class="ocr-view__loading-text">Memproses OCR, mohon tunggu...</div>
+  <!-- Section: File Pendukung -->
+  @if (attachmentOcrItems().length > 0) {
+    <div class="ocr-section">
+      <div class="ocr-section__header">
+        <div class="ocr-section__title">
+          <span nz-icon nzType="paper-clip" nzTheme="outline"></span>
+          File Pendukung ({{ attachmentOcrItems().length }} file)
+        </div>
+      </div>
+
+      @for (att of attachmentOcrItems(); track att.id) {
+        <div class="ocr-attachment">
+          <div class="ocr-attachment__header">
+            <div class="ocr-attachment__name">
+              <span nz-icon [nzType]="att.mimeType.includes('pdf') ? 'file-pdf' : 'file-image'" nzTheme="outline"></span>
+              {{ att.name }}
+            </div>
+            <div class="ocr-attachment__actions">
+              @if (att.ocrText) {
+                <nz-tag nzColor="green" style="margin:0">
+                  <span nz-icon nzType="check" nzTheme="outline"></span> Sudah OCR
+                </nz-tag>
+              }
+              <button nz-button nzSize="small" nzType="text"
+                [nzLoading]="att.processing"
+                (click)="runAttachmentOCR(att.id, att.nodeId)"
+                [disabled]="!docService.ocrStatus()?.available || att.processing">
+                <span nz-icon nzType="scan" nzTheme="outline"></span>
+                {{ att.ocrText ? 'Ulang OCR' : 'Jalankan OCR' }}
+              </button>
+            </div>
+          </div>
+
+          @if (att.processing) {
+            <div class="ocr-section__loading">
+              <nz-spin nzSimple></nz-spin>
+              <span>Memproses {{ att.name }}...</span>
+            </div>
+          } @else if (att.ocrText) {
+            <pre class="ocr-text ocr-text--sm">{{ att.ocrText }}</pre>
+          }
+        </div>
+      }
     </div>
-  } @else if (docService.ocrResult()) {
-    <div class="ocr-view__meta">
-      <nz-tag nzColor="blue">{{ docService.ocrResult()!.page_count }} halaman</nz-tag>
-      <nz-tag nzColor="default">{{ docService.ocrResult()!.engine }}</nz-tag>
-      <nz-tag nzColor="default">{{ docService.ocrResult()!.duration }}</nz-tag>
-    </div>
-    <pre class="ocr-view__text">{{ docService.ocrResult()!.text || '(tidak ada teks terdeteksi)' }}</pre>
-  } @else if (docService.ocrText()) {
-    <pre class="ocr-view__text">{{ docService.ocrText() }}</pre>
-  } @else {
+  }
+
+  <!-- Empty state when nothing at all -->
+  @if (!hasAnyOcr() && !docService.ocrRunning() && attachmentOcrItems().length === 0) {
     <div class="ocr-view__empty">
       <span nz-icon nzType="file-search" nzTheme="outline" class="ocr-view__empty-icon"></span>
       <div class="ocr-view__empty-title">Belum ada hasil OCR</div>
-      <div class="ocr-view__empty-sub">Klik "Jalankan OCR" untuk mengekstrak teks</div>
+      <div class="ocr-view__empty-sub">Jalankan OCR pada dokumen utama atau file pendukung di tab Files</div>
     </div>
   }
 </div>

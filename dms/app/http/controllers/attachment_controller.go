@@ -269,6 +269,13 @@ func (c *AttachmentController) RunAttachmentOCR(ctx http.Context) http.Response 
 		return badRequestError(ctx, err.Error())
 	}
 
+	// Save OCR text to attachment record
+	if result.Text != "" {
+		if err := c.attachmentRepo.UpdateOCRText(attachmentID, result.Text); err != nil {
+			fmt.Printf("Warning: could not save OCR text to attachment: %v\n", err)
+		}
+	}
+
 	return ctx.Response().Success().Json(http.Json{
 		"data":    result,
 		"message": "OCR completed successfully",

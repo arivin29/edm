@@ -13,6 +13,7 @@ type AttachmentRepository interface {
 	Create(attachment *models.FileStorage) error
 	Delete(id string) error
 	CountByEntity(entityType string, entityID string) (int64, error)
+	UpdateOCRText(id string, ocrText string) error
 }
 
 type attachmentRepository struct{}
@@ -65,4 +66,12 @@ func (r *attachmentRepository) CountByEntity(entityType string, entityID string)
 		Where("entity_type = ? AND entity_id = ? AND deleted_at IS NULL", entityType, entityID).
 		Count()
 	return count, err
+}
+
+func (r *attachmentRepository) UpdateOCRText(id string, ocrText string) error {
+	_, err := facades.Orm().Query().
+		Model(&models.FileStorage{}).
+		Where("id = ?", id).
+		Update("ocr_text", ocrText)
+	return err
 }

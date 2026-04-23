@@ -100,7 +100,7 @@ export class DocumentDetailService {
         modifiedAt: att.created_at,
         createdAt: att.created_at,
         parentId: 'folder-lampiran',
-        ocrText: ocr?.ocrText,
+        ocrText: ocr?.ocrText || att.ocr_text || undefined,
         ocrProcessing: ocr?.ocrProcessing
       };
     });
@@ -269,6 +269,36 @@ export class DocumentDetailService {
           this.ocrRunning.set(false);
           this.message.error('Gagal menjalankan OCR');
           reject();
+        }
+      });
+    });
+  }
+
+  runAttachmentOCR(attachmentId: string, nodeId: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const id = this.documentId();
+      if (!id) { reject(''); return; }
+
+      // Update processing state
+      const state = new Map(this.attachmentOcrState());
+      state.set(nodeId, { ...(state.get(nodeId) || {}), ocrProcessing: true });
+      this.attachmentOcrState.set(state);
+
+      this.http.post<any>(`${environment.apiUrl}/documents/${id}/attachments/${attachmentId}/ocr`, {}).subscribe({
+        next: (res) => {
+          const ocrText = res.data?.text || '';
+          const updated = new Map(this.attachmentOcrState());
+          updated.set(nodeId, { ocrProcessing: false, ocrText });
+          this.attachmentOcrState.set(updated);
+          this.message.success('OCR selesai');
+          resolve(ocrText);
+        },
+        error: () => {
+          const updated = new Map(this.attachmentOcrState());
+          updated.set(nodeId, { ...(updated.get(nodeId) || {}), ocrProcessing: false });
+          this.attachmentOcrState.set(updated);
+          this.message.error('Gagal menjalankan OCR');
+          reject('');
         }
       });
     });

@@ -19,6 +19,7 @@ type FileStorage struct {
 	EntityID      *string    `gorm:"type:uuid" json:"entity_id"`
 	StorageType   string     `gorm:"size:50;default:'local'" json:"storage_type"`
 	StorageBucket *string    `gorm:"size:100" json:"storage_bucket"`
+	OcrText       *string    `gorm:"type:text" json:"ocr_text,omitempty"`
 	UploadedBy    string     `gorm:"type:uuid;not null" json:"uploaded_by"`
 	CreatedAt     time.Time  `json:"created_at"`
 	DeletedAt     *time.Time `gorm:"index" json:"deleted_at,omitempty"`

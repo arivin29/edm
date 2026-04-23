@@ -138,6 +138,7 @@ export interface Attachment {
   module: string;
   uploaded_by: string;
   created_at: string;
+  ocr_text?: string;
   uploader?: { id: string; name: string; email: string };
 }
 
