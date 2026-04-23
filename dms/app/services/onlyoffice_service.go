@@ -310,7 +310,8 @@ func (s *OnlyOfficeService) signDownload(documentID, expires string) string {
 	secret := facades.Config().GetString("app.key", "default-secret")
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write([]byte(documentID + ":" + expires))
-	return hex.EncodeToString(mac.Sum(nil))
+	// Truncate to 32 hex chars (128 bits) to avoid Gin/Goravel routing issues with 64-char query values
+	return hex.EncodeToString(mac.Sum(nil))[:32]
 }
 
 // ValidateDownloadSignature checks if the signed download URL is valid
