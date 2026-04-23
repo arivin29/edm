@@ -11,6 +11,7 @@ import (
 	"dms/app/models"
 	"dms/app/repositories"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/goravel/framework/facades"
 
 	contractshttp "github.com/goravel/framework/contracts/http"
@@ -145,6 +146,15 @@ func (s *OnlyOfficeService) GetEditorConfig(documentID string, userID string, us
 		},
 	}
 
+	// Sign JWT token for OnlyOffice
+	secret := facades.Config().GetString("ONLYOFFICE_JWT_SECRET", "")
+	if secret != "" {
+		token, err := s.signJWT(config, secret)
+		if err == nil {
+			config.Token = token
+		}
+	}
+
 	return config, nil
 }
 
@@ -266,4 +276,15 @@ func (s *OnlyOfficeService) InvalidateKey(documentID string) error {
 	doc.OnlyofficeKey = &newKey
 
 	return s.documentRepo.Update(doc)
+}
+
+// signJWT creates a JWT token for OnlyOffice Document Server
+func (s *OnlyOfficeService) signJWT(config *EditorConfig, secret string) (string, error) {
+	claims := jwt.MapClaims{
+		"document":     config.Document,
+		"documentType": config.DocumentType,
+		"editorConfig": config.EditorConfig,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
 }
