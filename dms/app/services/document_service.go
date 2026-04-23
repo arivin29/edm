@@ -520,8 +520,9 @@ func (s *DocumentService) GetVersionFilePath(documentID string, versionNumber in
 		return "", "", errors.New("version not found")
 	}
 
+	storagePath := facades.Config().GetString("filesystems.disks.local.root", "./storage/app")
 	downloadName := fmt.Sprintf("%s_v%d.docx", s.sanitizeFolderName(doc.DocumentNumber), versionNumber)
-	return version.FilePath, downloadName, nil
+	return storagePath + "/" + version.FilePath, downloadName, nil
 }
 
 // RestoreVersion creates a new version by copying from an existing version
@@ -647,8 +648,12 @@ func (s *DocumentService) GetFilePath(id string) (string, string, error) {
 		return "", "", errors.New("no file associated with this document")
 	}
 
+	// Resolve to full path under storage/app/
+	storagePath := facades.Config().GetString("filesystems.disks.local.root", "./storage/app")
+	fullPath := storagePath + "/" + filePath
+
 	fileName := fmt.Sprintf("%s_v%d.docx", s.sanitizeFolderName(doc.DocumentNumber), doc.CurrentVersion)
-	return filePath, fileName, nil
+	return fullPath, fileName, nil
 }
 
 // ---------------------------------------------------------------------------
