@@ -53,8 +53,8 @@ func Api() {
 
 		// OnlyOffice callback (no auth - called by OnlyOffice server)
 		router.Post("/onlyoffice/callback", onlyofficeController.Callback)
-		// OnlyOffice signed download (no auth - uses JWT token)
-		router.Get("/onlyoffice/download", onlyofficeController.Download)
+		// OnlyOffice download by key (no auth - key acts as access token)
+		router.Get("/onlyoffice/download/{key}", onlyofficeController.Download)
 
 		// Protected auth routes
 		router.Middleware(middleware.Auth()).Group(func(router route.Router) {

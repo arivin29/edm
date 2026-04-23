@@ -103,8 +103,8 @@ func (s *OnlyOfficeService) GetEditorConfig(documentID string, userID string, us
 		baseURL = baseURL + ":" + port
 	}
 
-	// Generate signed download URL (OnlyOffice can't send JWT auth)
-	fileURL := s.generateSignedDownloadURL(baseURL, doc.ID)
+	// Generate download URL using OnlyOffice key (no auth needed)
+	fileURL := s.generateSignedDownloadURL(baseURL, doc)
 
 	// Callback URL for save events
 	callbackURL := fmt.Sprintf("%s/api/v1/onlyoffice/callback", baseURL)
@@ -295,48 +295,18 @@ func (s *OnlyOfficeService) signJWT(config *EditorConfig, secret string) (string
 	return token.SignedString([]byte(secret))
 }
 
-// generateSignedDownloadURL creates a time-limited signed URL for OnlyOffice to download the file
-func (s *OnlyOfficeService) generateSignedDownloadURL(baseURL, documentID string) string {
-	expires := time.Now().Add(24 * time.Hour).Unix()
-	secret := facades.Config().GetString("app.key", "default-secret")
-
-	claims := jwt.MapClaims{
-		"doc": documentID,
-		"exp": expires,
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signed, err := token.SignedString([]byte(secret))
-	if err != nil {
-		return fmt.Sprintf("%s/api/v1/onlyoffice/download?t=invalid", baseURL)
-	}
-	return fmt.Sprintf("%s/api/v1/onlyoffice/download?t=%s", baseURL, signed)
+// generateSignedDownloadURL creates a download URL using the OnlyOffice key as auth
+func (s *OnlyOfficeService) generateSignedDownloadURL(baseURL string, doc *models.Document) string {
+	key := s.getOrCreateKey(doc)
+	return fmt.Sprintf("%s/api/v1/onlyoffice/download/%s", baseURL, key)
 }
 
-// ValidateDownloadToken validates a JWT download token and returns the document ID
-func (s *OnlyOfficeService) ValidateDownloadToken(tokenStr string) (string, error) {
-	secret := facades.Config().GetString("app.key", "default-secret")
-	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method")
-		}
-		return []byte(secret), nil
-	})
-	if err != nil {
-		return "", fmt.Errorf("invalid token: %w", err)
+// ValidateDownloadKey validates a download key and returns the document
+func (s *OnlyOfficeService) ValidateDownloadKey(key string) (string, string, error) {
+	doc, err := s.documentRepo.FindByOnlyOfficeKey(key)
+	if err != nil || doc == nil {
+		return "", "", fmt.Errorf("invalid download key")
 	}
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		return "", fmt.Errorf("invalid claims")
-	}
-	docID, ok := claims["doc"].(string)
-	if !ok || docID == "" {
-		return "", fmt.Errorf("missing document ID")
-	}
-	return docID, nil
-}
-
-// ServeDocument serves the document file for OnlyOffice download
-func (s *OnlyOfficeService) ServeDocument(documentID string) (string, string, error) {
 	docService := NewDocumentService()
-	return docService.GetFilePath(documentID)
+	return docService.GetFilePath(doc.ID)
 }
