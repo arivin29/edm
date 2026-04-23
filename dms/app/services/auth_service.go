@@ -27,7 +27,7 @@ func NewAuthService() *AuthService {
 
 func (s *AuthService) Login(ctx http.Context, email, password string) (*models.User, string, error) {
 	user, err := s.userRepo.FindByEmail(email)
-	if err != nil {
+	if err != nil || user == nil {
 		return nil, "", errors.New("invalid credentials")
 	}
 
