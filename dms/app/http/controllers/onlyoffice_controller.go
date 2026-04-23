@@ -62,20 +62,19 @@ func (c *OnlyOfficeController) Callback(ctx contractshttp.Context) contractshttp
 	})
 }
 
-// Download serves a document file via signed URL (no auth required - for OnlyOffice)
-// GET /onlyoffice/download/{id}?expires=...&sig=...
+// Download serves a document file via signed JWT token (no auth required - for OnlyOffice)
+// GET /onlyoffice/download?t=<jwt_token>
 func (c *OnlyOfficeController) Download(ctx contractshttp.Context) contractshttp.Response {
-	id := ctx.Request().Route("id")
-	expires := ctx.Request().Query("expires", "")
-	sig := ctx.Request().Query("sig", "")
+	tokenStr := ctx.Request().Query("t", "")
 
-	if !c.service.ValidateDownloadSignature(id, expires, sig) {
+	docID, err := c.service.ValidateDownloadToken(tokenStr)
+	if err != nil {
 		return ctx.Response().Json(http.StatusForbidden, contractshttp.Json{
 			"error": "Invalid or expired download link",
 		})
 	}
 
-	filePath, fileName, err := c.service.ServeDocument(id)
+	filePath, fileName, err := c.service.ServeDocument(docID)
 	if err != nil {
 		return ctx.Response().Json(http.StatusNotFound, contractshttp.Json{
 			"error": err.Error(),

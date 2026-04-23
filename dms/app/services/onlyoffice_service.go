@@ -1,15 +1,11 @@
 package services
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"dms/app/models"
@@ -301,32 +297,42 @@ func (s *OnlyOfficeService) signJWT(config *EditorConfig, secret string) (string
 
 // generateSignedDownloadURL creates a time-limited signed URL for OnlyOffice to download the file
 func (s *OnlyOfficeService) generateSignedDownloadURL(baseURL, documentID string) string {
-	expires := strconv.FormatInt(time.Now().Add(24*time.Hour).Unix(), 10)
-	sig := s.signDownload(documentID, expires)
-	return fmt.Sprintf("%s/api/v1/onlyoffice/download/%s?expires=%s&sig=%s", baseURL, documentID, expires, sig)
-}
-
-func (s *OnlyOfficeService) signDownload(documentID, expires string) string {
+	expires := time.Now().Add(24 * time.Hour).Unix()
 	secret := facades.Config().GetString("app.key", "default-secret")
-	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write([]byte(documentID + ":" + expires))
-	// Truncate to 32 hex chars (128 bits) to avoid Gin/Goravel routing issues with 64-char query values
-	return hex.EncodeToString(mac.Sum(nil))[:32]
+
+	claims := jwt.MapClaims{
+		"doc": documentID,
+		"exp": expires,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return fmt.Sprintf("%s/api/v1/onlyoffice/download?t=invalid", baseURL)
+	}
+	return fmt.Sprintf("%s/api/v1/onlyoffice/download?t=%s", baseURL, signed)
 }
 
-// ValidateDownloadSignature checks if the signed download URL is valid
-func (s *OnlyOfficeService) ValidateDownloadSignature(documentID, expires, sig string) bool {
-	// Check expiry
-	expTime, err := strconv.ParseInt(expires, 10, 64)
+// ValidateDownloadToken validates a JWT download token and returns the document ID
+func (s *OnlyOfficeService) ValidateDownloadToken(tokenStr string) (string, error) {
+	secret := facades.Config().GetString("app.key", "default-secret")
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return []byte(secret), nil
+	})
 	if err != nil {
-		return false
+		return "", fmt.Errorf("invalid token: %w", err)
 	}
-	if time.Now().Unix() > expTime {
-		return false
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return "", fmt.Errorf("invalid claims")
 	}
-	// Verify signature
-	expected := s.signDownload(documentID, expires)
-	return hmac.Equal([]byte(expected), []byte(sig))
+	docID, ok := claims["doc"].(string)
+	if !ok || docID == "" {
+		return "", fmt.Errorf("missing document ID")
+	}
+	return docID, nil
 }
 
 // ServeDocument serves the document file for OnlyOffice download
