@@ -11,6 +11,10 @@ type RoleRepository interface {
 	ListRoles() ([]models.Role, error)
 	FindRoleByID(id string) (*models.Role, error)
 	ListPermissions() ([]models.Permission, error)
+	CreateRole(role *models.Role) error
+	UpdateRole(role *models.Role) error
+	DeleteRole(id string) error
+	SyncRolePermissions(roleID string, permissionIDs []string) error
 }
 
 type roleRepository struct{}
@@ -93,4 +97,39 @@ func (r *roleRepository) ListPermissions() ([]models.Permission, error) {
 		return nil, err
 	}
 	return perms, nil
+}
+
+func (r *roleRepository) CreateRole(role *models.Role) error {
+	return facades.Orm().Query().Create(role)
+}
+
+func (r *roleRepository) UpdateRole(role *models.Role) error {
+	return facades.Orm().Query().Save(role)
+}
+
+func (r *roleRepository) DeleteRole(id string) error {
+	// Delete role permissions first
+	facades.Orm().Query().Where("role_id = ?", id).Delete(&models.RolePermission{})
+	// Delete user roles
+	facades.Orm().Query().Where("role_id = ?", id).Delete(&models.UserRole{})
+	// Delete role
+	_, err := facades.Orm().Query().Where("id = ?", id).Delete(&models.Role{})
+	return err
+}
+
+func (r *roleRepository) SyncRolePermissions(roleID string, permissionIDs []string) error {
+	// Delete existing permissions
+	facades.Orm().Query().Where("role_id = ?", roleID).Delete(&models.RolePermission{})
+
+	// Insert new permissions
+	for _, permID := range permissionIDs {
+		rp := models.RolePermission{
+			RoleID:       roleID,
+			PermissionID: permID,
+		}
+		if err := facades.Orm().Query().Create(&rp); err != nil {
+			return err
+		}
+	}
+	return nil
 }

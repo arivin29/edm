@@ -72,10 +72,18 @@
 
 .expand-content {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   padding: 12px 16px;
   background: #fafafa;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .expand-module {
@@ -102,7 +110,10 @@
   }
 
   &__perms {
-    padding: 6px 12px;
+    padding: 8px 12px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }
 
@@ -110,13 +121,10 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 0;
+  padding: 4px 8px;
   font-size: 11px;
-  border-bottom: 1px solid #fafafa;
-
-  &:last-child {
-    border-bottom: none;
-  }
+  background: #fafafa;
+  border-radius: 4px;
 
   &__name {
     font-weight: 500;

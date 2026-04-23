@@ -6,9 +6,9 @@
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 64px;
   --header-height: 56px;
-  --z-dropdown: 1000;
-  --z-sticky: 1020;
-  --z-fixed: 1030;
+  --z-dropdown: 200;
+  --z-sticky: 100;
+  --z-fixed: 150;
   --z-modal-backdrop: 1040;
   --z-modal: 1050;
 }

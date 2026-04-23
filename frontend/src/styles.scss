@@ -281,3 +281,15 @@ body {
     opacity: 1;
   }
 }
+
+
+/* ============================================
+   ng-zorro overlays — above the fixed header (z-sticky: 100)
+   ============================================ */
+.ant-message {
+  z-index: 1010;
+}
+
+.ant-notification {
+  z-index: 1010;
+}

@@ -122,6 +122,9 @@ func Api() {
 			// Roles & Permissions
 			router.Middleware(middleware.RequirePermission("user.view")).Get("/roles", userController.ListRoles)
 			router.Middleware(middleware.RequirePermission("user.view")).Get("/roles/{id}", userController.ShowRole)
+			router.Middleware(middleware.RequirePermission("role.create")).Post("/roles", userController.CreateRole)
+			router.Middleware(middleware.RequirePermission("role.update")).Put("/roles/{id}", userController.UpdateRole)
+			router.Middleware(middleware.RequirePermission("role.delete")).Delete("/roles/{id}", userController.DeleteRole)
 			router.Middleware(middleware.RequirePermission("user.view")).Get("/permissions", userController.ListPermissions)
 
 			// Document Types

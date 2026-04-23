@@ -36,7 +36,7 @@ export class RoleListPage implements OnInit {
 
   drawerVisible = false;
   editRole: Role | null = null;
-  expandSet = new Set<number>();
+  expandSet = new Set<string | number>();
 
   get systemCount(): number {
     return this.roles().filter(r => r.is_system).length;
@@ -46,12 +46,34 @@ export class RoleListPage implements OnInit {
     return this.roles().filter(r => !r.is_system).length;
   }
 
-  onExpandChange(id: number, expanded: boolean) {
+  onExpandChange(id: string | number, expanded: boolean) {
     if (expanded) {
       this.expandSet.add(id);
+      // Load role detail with permissions
+      this.loadRoleDetail(id);
     } else {
       this.expandSet.delete(id);
     }
+    // Force change detection
+    this.expandSet = new Set(this.expandSet);
+  }
+
+  loadRoleDetail(id: string | number) {
+    this.http.get<any>(`${environment.apiUrl}/roles/${id}`).subscribe({
+      next: (res) => {
+        if (res.data) {
+          // Update role in the list with full permissions
+          const updatedRoles = this.roles().map(r => 
+            r.id === id ? { ...r, permissions: res.data.permissions } : r
+          );
+          this.roles.set(updatedRoles);
+        }
+      }
+    });
+  }
+
+  isExpanded(id: string | number): boolean {
+    return this.expandSet.has(id);
   }
 
   getPermModules(role: Role): string[] {

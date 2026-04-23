@@ -1,12 +1,12 @@
 export interface Permission {
-  id: number;
+  id: string;
   name: string;
   description: string;
   module: string;
 }
 
 export interface Role {
-  id: number;
+  id: string;
   name: string;
   description: string;
   is_system: boolean;

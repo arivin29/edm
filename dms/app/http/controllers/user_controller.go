@@ -309,6 +309,89 @@ func (c *UserController) ShowRole(ctx http.Context) http.Response {
 	})
 }
 
+func (c *UserController) CreateRole(ctx http.Context) http.Response {
+	name := ctx.Request().Input("name")
+	description := ctx.Request().Input("description")
+
+	if name == "" {
+		return badRequestError(ctx, "Name is required")
+	}
+
+	var permissionIDs []string
+	ctx.Request().Bind(&struct {
+		PermissionIDs []string `json:"permission_ids"`
+	}{})
+	if rawIDs := ctx.Request().All()["permission_ids"]; rawIDs != nil {
+		if ids, ok := rawIDs.([]any); ok {
+			for _, id := range ids {
+				if v, ok := id.(string); ok {
+					permissionIDs = append(permissionIDs, v)
+				}
+			}
+		}
+	}
+
+	role, err := c.userService.CreateRole(name, description, permissionIDs)
+	if err != nil {
+		return serverError(ctx, "Failed to create role")
+	}
+
+	return ctx.Response().Success().Json(http.Json{
+		"data":    role,
+		"message": "Role created successfully",
+	})
+}
+
+func (c *UserController) UpdateRole(ctx http.Context) http.Response {
+	id := ctx.Request().Route("id")
+	name := ctx.Request().Input("name")
+	description := ctx.Request().Input("description")
+
+	if name == "" {
+		return badRequestError(ctx, "Name is required")
+	}
+
+	var permissionIDs []string
+	if rawIDs := ctx.Request().All()["permission_ids"]; rawIDs != nil {
+		if ids, ok := rawIDs.([]any); ok {
+			for _, id := range ids {
+				if v, ok := id.(string); ok {
+					permissionIDs = append(permissionIDs, v)
+				}
+			}
+		}
+	}
+
+	role, err := c.userService.UpdateRole(id, name, description, permissionIDs)
+	if err != nil {
+		if err.Error() == "cannot modify system role" {
+			return badRequestError(ctx, "Cannot modify system role")
+		}
+		return serverError(ctx, "Failed to update role")
+	}
+
+	return ctx.Response().Success().Json(http.Json{
+		"data":    role,
+		"message": "Role updated successfully",
+	})
+}
+
+func (c *UserController) DeleteRole(ctx http.Context) http.Response {
+	id := ctx.Request().Route("id")
+
+	err := c.userService.DeleteRole(id)
+	if err != nil {
+		if err.Error() == "cannot delete system role" {
+			return badRequestError(ctx, "Cannot delete system role")
+		}
+		return serverError(ctx, "Failed to delete role")
+	}
+
+	return ctx.Response().Success().Json(http.Json{
+		"message": "Role deleted successfully",
+	})
+}
+
 func (c *UserController) ListPermissions(ctx http.Context) http.Response {
 	perms, err := c.userService.ListPermissions()
 	if err != nil {

@@ -137,9 +137,47 @@ export const routes: Routes = [
       // Users
       {
         path: 'users',
-        loadComponent: () =>
-          import('./pages/users/user-list/user-list.component').then(m => m.UserListPage),
-        title: 'Pengguna - DMS'
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/users/user-list/user-list.component').then(m => m.UserListPage),
+            title: 'Pengguna - DMS'
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./pages/users/user-detail/user-detail-layout.component').then(m => m.UserDetailLayoutComponent),
+            title: 'Detail User - DMS',
+            children: [
+              { path: '', redirectTo: 'overview', pathMatch: 'full' },
+              {
+                path: 'overview',
+                loadComponent: () =>
+                  import('./pages/users/user-detail/views/user-overview-view.component').then(m => m.UserOverviewViewComponent),
+                title: 'Overview User - DMS'
+              },
+              {
+                path: 'edit',
+                loadComponent: () =>
+                  import('./pages/users/user-detail/views/user-edit-view.component').then(m => m.UserEditViewComponent),
+                title: 'Edit User - DMS'
+              },
+              {
+                path: 'roles',
+                loadComponent: () =>
+                  import('./pages/users/user-detail/views/user-roles-view.component').then(m => m.UserRolesViewComponent),
+                title: 'Role User - DMS'
+              },
+              {
+                path: 'activity',
+                loadComponent: () =>
+                  import('./pages/users/user-detail/views/user-activity-view.component').then(m => m.UserActivityViewComponent),
+                title: 'Aktivitas User - DMS'
+              }
+            ]
+          }
+        ]
       },
       // Organization
       {

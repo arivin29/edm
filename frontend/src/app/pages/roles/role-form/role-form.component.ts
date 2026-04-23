@@ -37,7 +37,7 @@ export class RoleFormComponent implements OnChanges {
   @Output() saved = new EventEmitter<void>();
 
   formData: { name: string; description: string } = { name: '', description: '' };
-  selectedPermissions: Record<number, boolean> = {};
+  selectedPermissions: Record<string, boolean> = {};
   saving = signal(false);
   searchPerm = '';
 
@@ -126,7 +126,7 @@ export class RoleFormComponent implements OnChanges {
     this.saving.set(true);
     const permissionIds = Object.entries(this.selectedPermissions)
       .filter(([_, v]) => v)
-      .map(([k, _]) => +k);
+      .map(([k, _]) => k);
 
     const data = {
       ...this.formData,
@@ -143,8 +143,9 @@ export class RoleFormComponent implements OnChanges {
         this.saving.set(false);
         this.saved.emit();
       },
-      error: () => {
-        this.message.error('Gagal menyimpan role');
+      error: (err) => {
+        const msg = err.error?.error || 'Gagal menyimpan role';
+        this.message.error(msg);
         this.saving.set(false);
       }
     });

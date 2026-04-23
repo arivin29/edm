@@ -54,6 +54,9 @@ type UserService interface {
 	AssignRoles(userID string, roleIDs []string) error
 	ListRoles() ([]models.Role, error)
 	ShowRole(id string) (*models.Role, error)
+	CreateRole(name, description string, permissionIDs []string) (*models.Role, error)
+	UpdateRole(id string, name, description string, permissionIDs []string) (*models.Role, error)
+	DeleteRole(id string) error
 	ListPermissions() ([]models.Permission, error)
 }
 
@@ -379,6 +382,65 @@ func (s *userService) ShowRole(id string) (*models.Role, error) {
 	}
 
 	return role, nil
+}
+
+func (s *userService) CreateRole(name, description string, permissionIDs []string) (*models.Role, error) {
+	role := &models.Role{
+		Name:        name,
+		Description: &description,
+		IsSystem:    false,
+	}
+
+	if err := s.roleRepo.CreateRole(role); err != nil {
+		return nil, err
+	}
+
+	// Sync permissions
+	if len(permissionIDs) > 0 {
+		if err := s.roleRepo.SyncRolePermissions(role.ID, permissionIDs); err != nil {
+			return nil, err
+		}
+	}
+
+	return s.ShowRole(role.ID)
+}
+
+func (s *userService) UpdateRole(id string, name, description string, permissionIDs []string) (*models.Role, error) {
+	role, err := s.roleRepo.FindRoleByID(id)
+	if err != nil {
+		return nil, errors.New("role not found")
+	}
+
+	if role.IsSystem {
+		return nil, errors.New("cannot modify system role")
+	}
+
+	role.Name = name
+	role.Description = &description
+
+	if err := s.roleRepo.UpdateRole(role); err != nil {
+		return nil, err
+	}
+
+	// Sync permissions
+	if err := s.roleRepo.SyncRolePermissions(role.ID, permissionIDs); err != nil {
+		return nil, err
+	}
+
+	return s.ShowRole(role.ID)
+}
+
+func (s *userService) DeleteRole(id string) error {
+	role, err := s.roleRepo.FindRoleByID(id)
+	if err != nil {
+		return errors.New("role not found")
+	}
+
+	if role.IsSystem {
+		return errors.New("cannot delete system role")
+	}
+
+	return s.roleRepo.DeleteRole(id)
 }
 
 func (s *userService) ListPermissions() ([]models.Permission, error) {

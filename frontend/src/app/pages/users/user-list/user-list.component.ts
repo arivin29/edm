@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -12,6 +12,8 @@ import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { User, DropdownItem } from '../user.models';
@@ -24,10 +26,11 @@ import { UserFormComponent } from '../user-form/user-form.component';
     CommonModule, FormsModule, RouterLink,
     NzTableModule, NzButtonModule, NzIconModule, NzTagModule,
     NzInputModule, NzCardModule, NzAvatarModule, NzDropDownModule, NzModalModule,
+    NzSelectModule, NzEmptyModule,
     UserFormComponent
   ],
   templateUrl: './user-list.component.html',
-  styleUrls: ['./user-list.component.scss']
+  styleUrl: './user-list.component.scss'
 })
 export class UserListPage implements OnInit {
   private http = inject(HttpClient);
@@ -37,6 +40,9 @@ export class UserListPage implements OnInit {
   users = signal<User[]>([]);
   loading = signal(false);
   searchText = '';
+  filterDept: string | null = null;
+  filterStatus: string | null = null;
+  viewMode: 'table' | 'card' = 'table';
 
   // Drawer
   drawerVisible = false;
@@ -46,9 +52,30 @@ export class UserListPage implements OnInit {
   positions = signal<DropdownItem[]>([]);
   roleOptions = signal<DropdownItem[]>([]);
 
+  filteredUsers = computed(() => {
+    let list = this.users();
+    if (this.filterDept) {
+      list = list.filter(u => u.department_id === this.filterDept || (u.department as any)?.id === this.filterDept);
+    }
+    if (this.filterStatus === 'active') {
+      list = list.filter(u => u.is_active);
+    } else if (this.filterStatus === 'inactive') {
+      list = list.filter(u => !u.is_active);
+    }
+    return list;
+  });
+
   ngOnInit() {
     this.loadUsers();
     this.loadDropdowns();
+  }
+
+  getActiveCount(): number {
+    return this.users().filter(u => u.is_active).length;
+  }
+
+  getInactiveCount(): number {
+    return this.users().filter(u => !u.is_active).length;
   }
 
   loadUsers() {
@@ -70,6 +97,10 @@ export class UserListPage implements OnInit {
 
   onSearch() {
     this.loadUsers();
+  }
+
+  onFilter() {
+    // Filtering is handled by computed signal
   }
 
   openDrawer(user?: User) {

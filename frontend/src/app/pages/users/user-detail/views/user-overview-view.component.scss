@@ -1,0 +1,152 @@
+.overview-grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-4;
+}
+
+.overview-col--main {
+  @apply lg:col-span-2 space-y-4;
+}
+
+.overview-col--side {
+  @apply space-y-4;
+}
+
+// Card
+.ov-card {
+  @apply bg-white rounded-xl;
+
+  ::ng-deep .ant-card-body {
+    @apply p-4;
+  }
+}
+
+.ov-card__header {
+  @apply flex items-center gap-2 mb-4 pb-3 border-b border-gray-100;
+}
+
+.ov-card__icon {
+  @apply w-8 h-8 rounded-lg flex items-center justify-center text-base;
+
+  &--blue { @apply bg-blue-50 text-blue-500; }
+  &--orange { @apply bg-orange-50 text-orange-500; }
+  &--purple { @apply bg-purple-50 text-purple-500; }
+  &--green { @apply bg-green-50 text-green-500; }
+  &--teal { @apply bg-teal-50 text-teal-500; }
+}
+
+.ov-card__title {
+  @apply flex-1 font-medium text-sm text-gray-800;
+}
+
+.ov-card__action {
+  @apply text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1;
+}
+
+.ov-card__badge {
+  @apply text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-500;
+}
+
+// Info Grid
+.ov-info-grid {
+  @apply grid grid-cols-2 gap-4;
+}
+
+.ov-info-item {
+  @apply flex flex-col gap-0.5;
+}
+
+.ov-info-item__label {
+  @apply text-[11px] text-gray-400 flex items-center gap-1;
+
+  span[nz-icon] {
+    @apply text-gray-300;
+  }
+}
+
+.ov-info-item__value {
+  @apply text-sm text-gray-800;
+}
+
+// Org Tree
+.ov-org-tree {
+  @apply pl-2;
+}
+
+.ov-org-node {
+  @apply flex items-center gap-3 py-2;
+}
+
+.ov-org-node__icon {
+  @apply w-8 h-8 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center;
+}
+
+.ov-org-node__body {
+  @apply flex-1;
+}
+
+.ov-org-node__level {
+  @apply block text-[10px] text-gray-400 uppercase tracking-wider;
+}
+
+.ov-org-node__name {
+  @apply block text-sm text-gray-800;
+}
+
+.ov-org-node--highlight {
+  .ov-org-node__icon {
+    @apply bg-blue-50 text-blue-500;
+  }
+  .ov-org-node__name {
+    @apply font-medium text-blue-600;
+  }
+}
+
+.ov-org-connector {
+  @apply w-0.5 h-4 bg-gray-200 ml-4;
+}
+
+// Roles
+.ov-roles {
+  @apply space-y-2;
+}
+
+.ov-role-badge {
+  @apply flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm;
+}
+
+.ov-role-badge__icon {
+  @apply text-gray-400;
+}
+
+.ov-empty-text {
+  @apply text-sm text-gray-400;
+}
+
+// Permissions
+.ov-perms {
+  @apply space-y-3;
+}
+
+.ov-perm-group {
+  // nothing
+}
+
+.ov-perm-group__label {
+  @apply text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1.5;
+}
+
+.ov-perm-group__tags {
+  @apply flex flex-wrap gap-1;
+}
+
+.ov-perm-tag {
+  @apply px-1.5 py-0.5 bg-green-50 text-green-700 rounded text-[10px];
+}
+
+// Signature Preview
+.ov-signature-preview {
+  @apply bg-gray-50 rounded-lg p-3 flex items-center justify-center;
+
+  img {
+    @apply max-h-20 object-contain;
+  }
+}

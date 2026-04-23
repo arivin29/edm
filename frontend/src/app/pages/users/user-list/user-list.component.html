@@ -1,91 +1,220 @@
-<div class="p-4">
+<div class="user-list-page">
   <!-- Header -->
-  <div class="flex justify-between items-center mb-4">
-    <div>
-      <h1 class="text-lg font-semibold m-0">Pengguna</h1>
-      <p class="text-gray-500 text-xs m-0">Kelola pengguna sistem</p>
+  <div class="page-header">
+    <div class="page-header__info">
+      <h1 class="page-header__title">Manajemen Pengguna</h1>
+      <p class="page-header__desc">Kelola user, role, dan akses sistem</p>
     </div>
     <button nz-button nzType="primary" nzSize="small" (click)="openDrawer()">
-      <span nz-icon nzType="plus"></span>
-      Tambah User
+      <span nz-icon nzType="user-add"></span> Tambah User
     </button>
   </div>
 
-  <!-- Search -->
-  <nz-card nzSize="small" class="mb-3">
-    <nz-input-group nzSize="small" [nzPrefix]="prefixIcon" class="w-64">
-      <input nz-input placeholder="Cari user..." [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
-    </nz-input-group>
-    <ng-template #prefixIcon><span nz-icon nzType="search"></span></ng-template>
+  <!-- Stats Cards -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--primary">
+        <span nz-icon nzType="team" nzTheme="outline"></span>
+      </div>
+      <div class="stat-card__body">
+        <span class="stat-card__value">{{ users().length }}</span>
+        <span class="stat-card__label">Total User</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--success">
+        <span nz-icon nzType="check-circle" nzTheme="outline"></span>
+      </div>
+      <div class="stat-card__body">
+        <span class="stat-card__value">{{ getActiveCount() }}</span>
+        <span class="stat-card__label">User Aktif</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--warning">
+        <span nz-icon nzType="stop" nzTheme="outline"></span>
+      </div>
+      <div class="stat-card__body">
+        <span class="stat-card__value">{{ getInactiveCount() }}</span>
+        <span class="stat-card__label">User Nonaktif</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--info">
+        <span nz-icon nzType="safety-certificate" nzTheme="outline"></span>
+      </div>
+      <div class="stat-card__body">
+        <span class="stat-card__value">{{ roleOptions().length }}</span>
+        <span class="stat-card__label">Total Role</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Search -->
+  <nz-card nzSize="small" class="filter-card">
+    <div class="filter-row">
+      <nz-input-group nzSize="small" [nzPrefix]="prefixIcon" class="search-input">
+        <input nz-input placeholder="Cari nama atau email..." [(ngModel)]="searchText" (ngModelChange)="onSearch()" />
+      </nz-input-group>
+      <ng-template #prefixIcon><span nz-icon nzType="search"></span></ng-template>
+
+      <nz-select nzSize="small" nzPlaceHolder="Departemen" nzAllowClear [(ngModel)]="filterDept" (ngModelChange)="onFilter()" class="filter-select">
+        @for (dept of departments(); track dept.id) {
+          <nz-option [nzValue]="dept.id" [nzLabel]="dept.name"></nz-option>
+        }
+      </nz-select>
+
+      <nz-select nzSize="small" nzPlaceHolder="Status" nzAllowClear [(ngModel)]="filterStatus" (ngModelChange)="onFilter()" class="filter-select">
+        <nz-option nzValue="active" nzLabel="Aktif"></nz-option>
+        <nz-option nzValue="inactive" nzLabel="Nonaktif"></nz-option>
+      </nz-select>
+
+      <div class="view-toggle">
+        <button nz-button nzSize="small" [nzType]="viewMode === 'table' ? 'primary' : 'default'" (click)="viewMode = 'table'">
+          <span nz-icon nzType="unordered-list"></span>
+        </button>
+        <button nz-button nzSize="small" [nzType]="viewMode === 'card' ? 'primary' : 'default'" (click)="viewMode = 'card'">
+          <span nz-icon nzType="appstore"></span>
+        </button>
+      </div>
+    </div>
   </nz-card>
 
-  <!-- Table -->
-  <nz-card nzSize="small">
-    <nz-table #userTable [nzData]="users()" [nzLoading]="loading()"
-              nzSize="small" [nzPageSize]="15">
-      <thead>
-        <tr>
-          <th nzWidth="250px">Nama</th>
-          <th>Email</th>
-          <th nzWidth="120px">Department</th>
-          <th nzWidth="120px">Jabatan</th>
-          <th nzWidth="150px">Role</th>
-          <th nzWidth="70px">Status</th>
-          <th nzWidth="70px">Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (user of userTable.data; track user.id) {
+  <!-- Table View -->
+  @if (viewMode === 'table') {
+    <nz-card nzSize="small">
+      <nz-table #userTable [nzData]="filteredUsers()" [nzLoading]="loading()"
+                nzSize="small" [nzPageSize]="15" [nzShowSizeChanger]="true">
+        <thead>
           <tr>
-            <td>
-              <div class="flex items-center gap-2">
-                <nz-avatar [nzSrc]="user.avatar" nzIcon="user" nzSize="small"></nz-avatar>
-                <a [routerLink]="['/profile/overview']">{{ user.name }}</a>
-              </div>
-            </td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.department_name || '-' }}</td>
-            <td>{{ user.position_name || '-' }}</td>
-            <td>
-              @for (role of user.roles; track role.name) {
-                <nz-tag>{{ role.name }}</nz-tag>
+            <th nzWidth="280px">User</th>
+            <th nzWidth="150px">Departemen</th>
+            <th nzWidth="130px">Jabatan</th>
+            <th nzWidth="150px">Role</th>
+            <th nzWidth="80px">Status</th>
+            <th nzWidth="100px" nzAlign="center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of userTable.data; track user.id) {
+            <tr class="user-row" [routerLink]="['/users', user.id]">
+              <td>
+                <div class="user-cell">
+                  <nz-avatar [nzSrc]="user.avatar" nzIcon="user" [nzSize]="36" class="user-cell__avatar"></nz-avatar>
+                  <div class="user-cell__info">
+                    <span class="user-cell__name">{{ user.name }}</span>
+                    <span class="user-cell__email">{{ user.email }}</span>
+                  </div>
+                </div>
+              </td>
+              <td><span class="text-xs">{{ user.department_name || '-' }}</span></td>
+              <td><span class="text-xs">{{ user.position_name || '-' }}</span></td>
+              <td>
+                @for (role of user.roles.slice(0,2); track role.name) {
+                  <nz-tag class="role-tag">{{ role.name }}</nz-tag>
+                }
+                @if (user.roles.length > 2) {
+                  <nz-tag>+{{ user.roles.length - 2 }}</nz-tag>
+                }
+              </td>
+              <td>
+                <nz-tag [nzColor]="user.is_active ? 'success' : 'default'" class="status-tag">
+                  <span nz-icon [nzType]="user.is_active ? 'check-circle' : 'stop'" class="mr-1"></span>
+                  {{ user.is_active ? 'Aktif' : 'Nonaktif' }}
+                </nz-tag>
+              </td>
+              <td nzAlign="center" (click)="$event.stopPropagation()">
+                <a nz-dropdown [nzDropdownMenu]="actionMenu" nzTrigger="click" class="action-btn">
+                  <span nz-icon nzType="more"></span>
+                </a>
+                <nz-dropdown-menu #actionMenu="nzDropdownMenu">
+                  <ul nz-menu nzSelectable class="action-menu">
+                    <li nz-menu-item [routerLink]="['/users', user.id]">
+                      <span nz-icon nzType="eye"></span> Lihat Detail
+                    </li>
+                    <li nz-menu-item [routerLink]="['/users', user.id, 'edit']">
+                      <span nz-icon nzType="edit"></span> Edit
+                    </li>
+                    <li nz-menu-divider></li>
+                    <li nz-menu-item (click)="toggleStatus(user)">
+                      <span nz-icon [nzType]="user.is_active ? 'stop' : 'check-circle'"></span>
+                      {{ user.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                    </li>
+                    <li nz-menu-item nzDanger (click)="deleteUser(user)">
+                      <span nz-icon nzType="delete"></span> Hapus
+                    </li>
+                  </ul>
+                </nz-dropdown-menu>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="text-center text-gray-500 py-8">
+                <nz-empty nzNotFoundContent="Tidak ada user ditemukan"></nz-empty>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </nz-table>
+    </nz-card>
+  }
+
+  <!-- Card View -->
+  @if (viewMode === 'card') {
+    <div class="user-grid">
+      @for (user of filteredUsers(); track user.id) {
+        <div class="user-card" [routerLink]="['/users', user.id]">
+          <div class="user-card__header">
+            <nz-avatar [nzSrc]="user.avatar" nzIcon="user" [nzSize]="56"></nz-avatar>
+            <nz-tag [nzColor]="user.is_active ? 'success' : 'default'" class="user-card__status">
+              {{ user.is_active ? 'Aktif' : 'Nonaktif' }}
+            </nz-tag>
+          </div>
+          <div class="user-card__body">
+            <h4 class="user-card__name">{{ user.name }}</h4>
+            <span class="user-card__email">{{ user.email }}</span>
+            <div class="user-card__meta">
+              @if (user.department_name) {
+                <span class="user-card__dept">
+                  <span nz-icon nzType="apartment"></span> {{ user.department_name }}
+                </span>
               }
-            </td>
-            <td>
-              <nz-tag [nzColor]="user.is_active ? 'success' : 'default'">
-                {{ user.is_active ? 'Aktif' : 'Nonaktif' }}
-              </nz-tag>
-            </td>
-            <td>
-              <a nz-dropdown [nzDropdownMenu]="actionMenu" nzTrigger="click">
-                <span nz-icon nzType="more" class="cursor-pointer"></span>
-              </a>
-              <nz-dropdown-menu #actionMenu="nzDropdownMenu">
-                <ul nz-menu nzSelectable>
-                  <li nz-menu-item (click)="openDrawer(user)">
-                    <span nz-icon nzType="edit"></span> Edit
-                  </li>
-                  <li nz-menu-item (click)="toggleStatus(user)">
-                    <span nz-icon [nzType]="user.is_active ? 'close' : 'check'"></span>
-                    {{ user.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                  </li>
-                  <li nz-menu-item nzDanger (click)="deleteUser(user)">
-                    <span nz-icon nzType="delete"></span> Hapus
-                  </li>
-                </ul>
-              </nz-dropdown-menu>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="7" class="text-center text-gray-500 py-8">
-              Tidak ada user ditemukan
-            </td>
-          </tr>
-        }
-      </tbody>
-    </nz-table>
-  </nz-card>
+              @if (user.position_name) {
+                <span class="user-card__position">
+                  <span nz-icon nzType="idcard"></span> {{ user.position_name }}
+                </span>
+              }
+            </div>
+            <div class="user-card__roles">
+              @for (role of user.roles.slice(0,2); track role.name) {
+                <nz-tag class="role-tag">{{ role.name }}</nz-tag>
+              }
+            </div>
+          </div>
+          <div class="user-card__footer" (click)="$event.stopPropagation()">
+            <button nz-button nzSize="small" [routerLink]="['/users', user.id, 'edit']">
+              <span nz-icon nzType="edit"></span>
+            </button>
+            <button nz-button nzSize="small" nz-dropdown [nzDropdownMenu]="cardMenu" nzTrigger="click">
+              <span nz-icon nzType="more"></span>
+            </button>
+            <nz-dropdown-menu #cardMenu="nzDropdownMenu">
+              <ul nz-menu>
+                <li nz-menu-item (click)="toggleStatus(user)">
+                  {{ user.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                </li>
+                <li nz-menu-item nzDanger (click)="deleteUser(user)">Hapus</li>
+              </ul>
+            </nz-dropdown-menu>
+          </div>
+        </div>
+      } @empty {
+        <div class="user-grid__empty">
+          <nz-empty nzNotFoundContent="Tidak ada user ditemukan"></nz-empty>
+        </div>
+      }
+    </div>
+  }
 </div>
 
 <!-- User Form Drawer -->

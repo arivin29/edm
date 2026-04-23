@@ -1,0 +1,166 @@
+.user-detail-shell {
+  @apply flex gap-6 min-h-[calc(100vh-120px)];
+}
+
+.loading-container {
+  @apply flex items-center justify-center w-full py-20;
+}
+
+.not-found {
+  @apply flex flex-col items-center justify-center w-full py-20 text-gray-400;
+
+  span[nz-icon] {
+    @apply text-6xl mb-4;
+  }
+
+  p {
+    @apply mb-4;
+  }
+}
+
+// Sidebar
+.user-sidebar {
+  @apply flex flex-col gap-4 flex-shrink-0;
+  width: 280px;
+}
+
+.user-back-link {
+  @apply flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors;
+}
+
+// Identity Card
+.user-id-card {
+  @apply bg-white rounded-xl border border-gray-200 overflow-hidden;
+}
+
+.user-id-card__cover {
+  @apply h-16 bg-gradient-to-r from-blue-500 to-blue-600;
+}
+
+.user-id-card__body {
+  @apply px-4 pb-4 text-center -mt-10;
+}
+
+.user-id-card__avatar-wrap {
+  @apply relative inline-block;
+}
+
+.user-id-card__avatar {
+  @apply border-4 border-white shadow-md;
+}
+
+.user-id-card__status {
+  @apply absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white bg-gray-400;
+
+  &.active {
+    @apply bg-green-500;
+  }
+}
+
+.user-id-card__name {
+  @apply text-lg font-semibold text-gray-900 mt-3;
+}
+
+.user-id-card__email {
+  @apply text-sm text-gray-500;
+}
+
+.user-id-card__position {
+  @apply text-xs text-gray-400 mt-1;
+}
+
+.user-id-card__roles {
+  @apply flex flex-wrap justify-center gap-1 mt-3;
+}
+
+// Navigation
+.user-nav {
+  @apply bg-white rounded-xl border border-gray-200 overflow-hidden;
+}
+
+.user-nav__item {
+  @apply flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-0;
+  @apply text-gray-700 no-underline cursor-pointer;
+  @apply hover:bg-gray-50 transition-colors;
+
+  &.active {
+    @apply bg-blue-50 border-l-2 border-l-blue-500;
+
+    .user-nav__icon {
+      @apply text-blue-500;
+    }
+
+    .user-nav__label {
+      @apply text-blue-600 font-medium;
+    }
+  }
+}
+
+.user-nav__icon {
+  @apply text-lg text-gray-400;
+}
+
+.user-nav__text {
+  @apply flex-1 min-w-0;
+}
+
+.user-nav__label {
+  @apply block text-sm;
+}
+
+.user-nav__desc {
+  @apply block text-[11px] text-gray-400;
+}
+
+.user-nav__arrow {
+  @apply text-gray-300 text-xs;
+}
+
+// Quick Actions
+.user-actions {
+  @apply bg-white rounded-xl border border-gray-200 p-3;
+}
+
+// Content
+.user-content {
+  @apply flex-1 min-w-0;
+}
+
+// Responsive
+@media (max-width: 1024px) {
+  .user-detail-shell {
+    @apply flex-col;
+  }
+
+  .user-sidebar {
+    @apply w-full;
+  }
+
+  .user-id-card {
+    @apply flex flex-row items-center;
+  }
+
+  .user-id-card__cover {
+    @apply w-24 h-full;
+  }
+
+  .user-id-card__body {
+    @apply text-left mt-0 flex-1;
+  }
+
+  .user-id-card__roles {
+    @apply justify-start;
+  }
+
+  .user-nav {
+    @apply flex flex-row overflow-x-auto;
+  }
+
+  .user-nav__item {
+    @apply flex-shrink-0 border-b-0 border-r border-gray-100 last:border-0;
+  }
+
+  .user-nav__desc, .user-nav__arrow {
+    @apply hidden;
+  }
+}

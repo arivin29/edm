@@ -58,8 +58,8 @@ export class DocParamEditComponent implements OnInit {
   loadingOptions = signal(false);
 
   /** Cached API options per tag_key */
-  apiOptions = new Map<string, { label: string; value: any }[]>();
-  apiLoading = new Map<string, boolean>();
+  apiOptions = signal<Record<string, { label: string; value: any }[]>>({});
+  apiLoadingKeys = signal<Record<string, boolean>>({});
 
   ngOnInit() {
     this.buildForm();
@@ -101,8 +101,13 @@ export class DocParamEditComponent implements OnInit {
     this.loadingOptions.set(true);
 
     const requests: Record<string, any> = {};
+    const initialLoading: Record<string, boolean> = {};
     for (const tag of apiTags) {
-      this.apiLoading.set(tag.tag_key, true);
+      initialLoading[tag.tag_key] = true;
+    }
+    this.apiLoadingKeys.set(initialLoading);
+
+    for (const tag of apiTags) {
       const cfg = parseSourceConfig(tag.source_config);
       const endpoint = cfg.endpoint || cfg.url;
       if (!endpoint) continue;
@@ -132,17 +137,25 @@ export class DocParamEditComponent implements OnInit {
 
     forkJoin(requests).subscribe({
       next: (results: Record<string, any>) => {
-        for (const [key, options] of Object.entries(results)) {
-          this.apiOptions.set(key, options as any[]);
-          this.apiLoading.set(key, false);
-        }
-        this.loadingOptions.set(false);
+        setTimeout(() => {
+          this.apiOptions.set({ ...this.apiOptions(), ...results as any });
+          const loading: Record<string, boolean> = { ...this.apiLoadingKeys() };
+          for (const key of Object.keys(results)) {
+            loading[key] = false;
+          }
+          this.apiLoadingKeys.set(loading);
+          this.loadingOptions.set(false);
+        });
       },
       error: () => {
-        this.loadingOptions.set(false);
-        for (const tag of apiTags) {
-          this.apiLoading.set(tag.tag_key, false);
-        }
+        setTimeout(() => {
+          const loading: Record<string, boolean> = { ...this.apiLoadingKeys() };
+          for (const tag of apiTags) {
+            loading[tag.tag_key] = false;
+          }
+          this.apiLoadingKeys.set(loading);
+          this.loadingOptions.set(false);
+        });
       }
     });
   }
@@ -153,14 +166,14 @@ export class DocParamEditComponent implements OnInit {
 
   getSelectOptions(tag: TemplateTag): { label: string; value: any }[] {
     if (tag.source_type === 'api') {
-      return this.apiOptions.get(tag.tag_key) || [];
+      return this.apiOptions()[tag.tag_key] || [];
     }
     const cfg = parseSourceConfig(tag.source_config);
     return cfg?.options || [];
   }
 
   isApiLoading(tag: TemplateTag): boolean {
-    return this.apiLoading.get(tag.tag_key) || false;
+    return this.apiLoadingKeys()[tag.tag_key] || false;
   }
 
   onSave() {

@@ -1,18 +1,99 @@
-::host ::ng-deep .ant-table-small .ant-table-thead > tr > th {
-  padding: 8px;
-  font-size: 12px;
+.user-list-page {
+  @apply p-4;
 }
 
-::host ::ng-deep .ant-table-small .ant-table-tbody > tr > td {
-  padding: 6px 8px;
-  font-size: 12px;
+// Header
+.page-header {
+  @apply flex justify-between items-center mb-4;
+}
+.page-header__title { @apply text-lg font-semibold m-0 text-gray-800; }
+.page-header__desc { @apply text-xs text-gray-500 m-0 mt-0.5; }
+
+// Stats
+.stats-row {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-3 mb-4;
+}
+.stat-card {
+  @apply flex items-center gap-3 bg-white rounded-lg p-3 border border-gray-100 shadow-sm;
+}
+.stat-card__icon {
+  @apply w-10 h-10 rounded-lg flex items-center justify-center text-lg;
+}
+.stat-card__icon--primary { @apply bg-blue-50 text-blue-600; }
+.stat-card__icon--success { @apply bg-green-50 text-green-600; }
+.stat-card__icon--warning { @apply bg-orange-50 text-orange-600; }
+.stat-card__icon--info { @apply bg-purple-50 text-purple-600; }
+.stat-card__body { @apply flex flex-col; }
+.stat-card__value { @apply text-xl font-bold text-gray-800; }
+.stat-card__label { @apply text-xs text-gray-500; }
+
+// Filters
+.filter-card { @apply mb-3; }
+.filter-row { @apply flex flex-wrap items-center gap-3; }
+.search-input { @apply w-64; }
+.filter-select { @apply w-36; }
+.view-toggle { @apply ml-auto flex gap-1; }
+
+// Table
+.user-row {
+  cursor: pointer;
+  transition: background-color 0.15s;
+  &:hover { background-color: #fafafa; }
+}
+.user-cell {
+  @apply flex items-center gap-3;
+}
+.user-cell__avatar { @apply flex-shrink-0; }
+.user-cell__info { @apply flex flex-col min-w-0; }
+.user-cell__name { @apply text-sm font-medium text-gray-800 truncate; }
+.user-cell__email { @apply text-xs text-gray-500 truncate; }
+
+.role-tag { @apply text-[10px] mr-1; }
+.status-tag { @apply text-[11px] flex items-center; }
+
+.action-btn {
+  @apply inline-flex items-center justify-center w-7 h-7 rounded hover:bg-gray-100;
+}
+.action-menu { @apply text-xs; }
+
+// Card View
+.user-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+}
+.user-grid__empty { @apply col-span-full; }
+
+.user-card {
+  @apply bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden cursor-pointer transition-shadow hover:shadow-md;
+}
+.user-card__header {
+  @apply relative flex flex-col items-center pt-5 pb-3 bg-gradient-to-b from-gray-50 to-white;
+}
+.user-card__status {
+  @apply absolute top-2 right-2 text-[10px];
+}
+.user-card__body {
+  @apply px-4 pb-3 text-center;
+}
+.user-card__name { @apply text-sm font-semibold text-gray-800 m-0 truncate; }
+.user-card__email { @apply text-xs text-gray-500 block truncate; }
+.user-card__meta {
+  @apply flex flex-col items-center gap-1 mt-2 text-xs text-gray-500;
+}
+.user-card__dept, .user-card__position {
+  @apply flex items-center gap-1;
+}
+.user-card__roles { @apply mt-2; }
+.user-card__footer {
+  @apply flex justify-center gap-2 py-2 border-t border-gray-100 bg-gray-50;
 }
 
-::host ::ng-deep .ant-tag {
-  font-size: 11px;
-  margin-right: 4px;
+// Table overrides
+::ng-deep .ant-table-small .ant-table-thead > tr > th {
+  @apply py-2 px-2 text-xs bg-gray-50;
 }
-
-::host ::ng-deep .ant-card-body {
-  padding: 12px;
+::ng-deep .ant-table-small .ant-table-tbody > tr > td {
+  @apply py-2 px-2 text-xs;
+}
+::ng-deep .ant-card-body {
+  @apply p-3;
 }

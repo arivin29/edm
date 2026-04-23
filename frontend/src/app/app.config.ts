@@ -139,6 +139,10 @@ import {
   MobileOutline,
   EnterOutline,
   ControlOutline,
+  StopOutline,
+  UserAddOutline,
+  FileAddOutline,
+  FileSyncOutline,
 } from '@ant-design/icons-angular/icons';
 
 import { routes } from './app.routes';
@@ -278,6 +282,10 @@ const icons = [
   MobileOutline,
   EnterOutline,
   ControlOutline,
+  StopOutline,
+  UserAddOutline,
+  FileAddOutline,
+  FileSyncOutline,
 ];
 
 export const appConfig: ApplicationConfig = {
