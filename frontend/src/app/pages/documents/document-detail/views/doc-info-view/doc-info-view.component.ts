@@ -35,14 +35,31 @@ export class DocInfoViewComponent implements OnInit {
     return count;
   }
 
-  getStepTypeLabel(type: string): string {
+  getStepTypeLabel(type: string | undefined): string {
+    if (!type) return '-';
     const labels: Record<string, string> = {
       'approve': 'Persetujuan',
       'approval': 'Persetujuan',
       'review': 'Review',
       'sign': 'Tanda Tangan',
-      'acknowledge': 'Acknowledgement'
+      'acknowledge': 'Acknowledgement',
+      'input': 'Input Data'
     };
     return labels[type] || type;
+  }
+
+  getAssignedUsers(): { id: string; name: string; stepName?: string }[] {
+    const wf = this.docService.workflow();
+    if (!wf?.steps) return [];
+    const seen = new Set<string>();
+    const users: { id: string; name: string; stepName?: string }[] = [];
+    for (const step of wf.steps) {
+      const actor = step.actor || step.actions?.[0]?.actor;
+      if (actor && !seen.has(actor.id)) {
+        seen.add(actor.id);
+        users.push({ id: actor.id, name: actor.name, stepName: step.name || step.step?.name });
+      }
+    }
+    return users;
   }
 }

@@ -12,7 +12,10 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { LayoutService } from '../../../core/services/layout.service';
 import { DocumentDetailService } from './document-detail.service';
-import { getStatusLabel } from '../document.models';
+import {
+  getStatusLabel, getPriorityLabel, getConfidentialityLabel,
+  getClassificationColor, getClassificationLabel, getClassificationIcon
+} from '../document.models';
 
 interface DetailMenuItem {
   key: string;
@@ -50,14 +53,30 @@ interface DetailMenuItem {
                     <span class="doc-status-tag__dot"></span>
                     {{ getStatusLabel(docService.document()!.status) }}
                   </span>
+                  <span class="doc-meta-tag" [attr.data-priority]="docService.document()!.priority">{{ getPriorityLabel(docService.document()!.priority) }}</span>
+                  <span class="doc-meta-tag">{{ getConfidentialityLabel(docService.document()!.confidentiality) }}</span>
+                  <nz-tag [nzColor]="getClassificationColor(docService.document()!.classification)" class="ml-1">
+                    <span nz-icon [nzType]="getClassificationIcon(docService.document()!.classification)" class="mr-0.5"></span>
+                    {{ getClassificationLabel(docService.document()!.classification) }}
+                  </nz-tag>
                 </div>
               </div>
               <div class="doc-header__subtitle">
-                <span class="doc-number">{{ docService.document()!.document_number || 'Belum ada nomor' }}</span>
+                <span class="doc-number">
+                  <span nz-icon nzType="number" nzTheme="outline"></span>
+                  {{ docService.document()!.document_number || 'Belum ada nomor' }}
+                </span>
                 <span class="doc-header__sep">·</span>
-                <span>{{ docService.document()!.document_type?.name }}</span>
+                <span class="doc-header__meta">{{ docService.document()!.document_type?.name || '' }}</span>
                 <span class="doc-header__sep">·</span>
-                <span>v{{ docService.document()!.major_version }}.{{ docService.document()!.minor_version }}</span>
+                <span class="doc-header__meta">v{{ docService.document()!.major_version }}.{{ docService.document()!.minor_version }}</span>
+                <span class="doc-header__sep">·</span>
+                <span class="doc-header__meta">
+                  <span nz-icon nzType="user" nzTheme="outline" style="font-size: 10px; margin-right: 2px;"></span>
+                  {{ docService.document()!.creator?.name || '-' }}
+                </span>
+                <span class="doc-header__sep">·</span>
+                <span class="doc-header__meta">{{ docService.document()!.department?.name || '-' }}</span>
               </div>
             </div>
           </div>
@@ -65,12 +84,29 @@ interface DetailMenuItem {
             <button nz-button nzSize="small" (click)="downloadDocument()" nz-tooltip nzTooltipTitle="Download">
               <span nz-icon nzType="download"></span>
             </button>
+            <button nz-button nzSize="small" nz-tooltip nzTooltipTitle="Print">
+              <span nz-icon nzType="printer"></span>
+            </button>
+            <button nz-button nzSize="small" nz-tooltip nzTooltipTitle="Share">
+              <span nz-icon nzType="share-alt"></span>
+            </button>
+            <span class="doc-header__divider"></span>
             <button nz-button nzSize="small" [routerLink]="['/documents', docService.documentId(), 'edit']">
               <span nz-icon nzType="edit"></span> Edit
             </button>
             @if (docService.document()!.status === 'draft' || docService.document()!.status === 'revision') {
               <button nz-button nzType="primary" nzSize="small" (click)="submitForReview()">
-                <span nz-icon nzType="send"></span> Submit
+                <span nz-icon nzType="send"></span> Submit Review
+              </button>
+            }
+            @if (docService.workflow()?.can_approve) {
+              <button nz-button nzSize="small" class="btn-approve" (click)="approveDocument()">
+                <span nz-icon nzType="check-circle"></span> Setujui
+              </button>
+            }
+            @if (docService.workflow()?.can_reject) {
+              <button nz-button nzDanger nzSize="small" (click)="openRejectModal()">
+                <span nz-icon nzType="close-circle"></span> Tolak
               </button>
             }
           </div>
@@ -130,6 +166,11 @@ export class DocumentDetailLayoutComponent implements OnInit, OnDestroy {
   ];
 
   getStatusLabel = getStatusLabel;
+  getPriorityLabel = getPriorityLabel;
+  getConfidentialityLabel = getConfidentialityLabel;
+  getClassificationColor = getClassificationColor;
+  getClassificationLabel = getClassificationLabel;
+  getClassificationIcon = getClassificationIcon;
 
   ngOnInit() {
     // Collapse main sidebar when entering document detail
@@ -163,8 +204,66 @@ export class DocumentDetailLayoutComponent implements OnInit, OnDestroy {
           next: () => {
             this.message.success('Dokumen berhasil disubmit');
             this.docService.loadDocument(this.docService.documentId());
+            this.docService.loadWorkflow();
           },
           error: () => this.message.error('Gagal submit dokumen')
+        });
+      }
+    });
+  }
+
+  approveDocument() {
+    this.modal.confirm({
+      nzTitle: 'Setujui Dokumen?',
+      nzContent: 'Apakah Anda yakin ingin menyetujui dokumen ini?',
+      nzOkText: 'Setujui',
+      nzCancelText: 'Batal',
+      nzOnOk: () => {
+        this.http.post(`${environment.apiUrl}/documents/${this.docService.documentId()}/approve`, {}).subscribe({
+          next: () => {
+            this.message.success('Dokumen berhasil disetujui');
+            this.docService.loadDocument(this.docService.documentId());
+            this.docService.loadWorkflow();
+          },
+          error: () => this.message.error('Gagal menyetujui dokumen')
+        });
+      }
+    });
+  }
+
+  openRejectModal() {
+    let rejectComment = '';
+    this.modal.create({
+      nzTitle: 'Tolak Dokumen',
+      nzContent: `
+        <div>
+          <p class="mb-2">Berikan alasan penolakan:</p>
+          <textarea id="reject-comment" rows="4" style="width:100%;padding:8px;border:1px solid #d9d9d9;border-radius:4px;" placeholder="Alasan penolakan (wajib)..."></textarea>
+        </div>
+      `,
+      nzOkText: 'Tolak',
+      nzOkDanger: true,
+      nzCancelText: 'Batal',
+      nzOnOk: () => {
+        const el = window.document.getElementById('reject-comment') as HTMLTextAreaElement;
+        rejectComment = el?.value?.trim() || '';
+        if (!rejectComment) {
+          this.message.warning('Alasan penolakan wajib diisi');
+          return false;
+        }
+        return new Promise<void>((resolve, reject) => {
+          this.http.post(`${environment.apiUrl}/documents/${this.docService.documentId()}/reject`, { comment: rejectComment }).subscribe({
+            next: () => {
+              this.message.success('Dokumen berhasil ditolak');
+              this.docService.loadDocument(this.docService.documentId());
+              this.docService.loadWorkflow();
+              resolve();
+            },
+            error: () => {
+              this.message.error('Gagal menolak dokumen');
+              reject();
+            }
+          });
         });
       }
     });
