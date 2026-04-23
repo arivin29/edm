@@ -101,7 +101,11 @@ func (s *OnlyOfficeService) GetEditorConfig(documentID string, userID string, us
 	}
 
 	// Get base URL from config
-	baseURL := facades.Config().GetString("app.url", "http://localhost:3000")
+	baseURL := facades.Config().GetString("http.url", "http://localhost:3000")
+	if baseURL == "http://localhost" {
+		port := facades.Config().GetString("http.port", "3000")
+		baseURL = baseURL + ":" + port
+	}
 
 	// Generate signed download URL (OnlyOffice can't send JWT auth)
 	fileURL := s.generateSignedDownloadURL(baseURL, doc.ID)
