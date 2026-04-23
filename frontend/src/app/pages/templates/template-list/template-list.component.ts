@@ -15,6 +15,7 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { DownloadService } from '../../../core/services/download.service';
 import { Template } from '../template.models';
 import { TemplateFormComponent } from '../template-form/template-form.component';
 
@@ -36,6 +37,7 @@ export class TemplateListComponent implements OnInit {
   private message = inject(NzMessageService);
   private modal = inject(NzModalService);
   private router = inject(Router);
+  private downloadSvc = inject(DownloadService);
 
   templates = signal<Template[]>([]);
   documentTypes = signal<{ id: string; name: string }[]>([]);
@@ -128,7 +130,7 @@ export class TemplateListComponent implements OnInit {
   // ── Actions ──
 
   download(tpl: Template) {
-    window.open(`${environment.apiUrl}/templates/${tpl.id}/download`, '_blank');
+    this.downloadSvc.download(`/templates/${tpl.id}/download`);
   }
 
   deleteTemplate(tpl: Template) {

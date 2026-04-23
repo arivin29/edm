@@ -21,6 +21,7 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { DownloadService } from '../../../core/services/download.service';
 import { Template, TemplateTag } from '../template.models';
 import { TemplateFormComponent } from '../template-form/template-form.component';
 
@@ -49,6 +50,7 @@ export class TemplateDetailComponent implements OnInit {
   private router = inject(Router);
   private message = inject(NzMessageService);
   private modal = inject(NzModalService);
+  private downloadSvc = inject(DownloadService);
 
   template = signal<Template | null>(null);
   loading = signal(false);
@@ -149,7 +151,7 @@ export class TemplateDetailComponent implements OnInit {
 
   download() {
     const tpl = this.template();
-    if (tpl) window.open(`${environment.apiUrl}/templates/${tpl.id}/download`, '_blank');
+    if (tpl) this.downloadSvc.download(`/templates/${tpl.id}/download`);
   }
 
   openEditForm() {

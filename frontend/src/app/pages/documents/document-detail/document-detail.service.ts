@@ -2,6 +2,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { environment } from '../../../../environments/environment';
+import { DownloadService } from '../../../core/services/download.service';
 import { DocumentDetail, DocumentVersion, Comment, WorkflowStatus, Distribution, Attachment, DigitalSignature } from '../document.models';
 
 export interface FileNode {
@@ -411,9 +412,11 @@ export class DocumentDetailService {
   }
 
   // Versions
+  private downloadSvc = inject(DownloadService);
+
   downloadVersion(versionNumber: number) {
     const id = this.documentId();
-    window.open(`${environment.apiUrl}/documents/${id}/versions/${versionNumber}/download`, '_blank');
+    this.downloadSvc.download(`/documents/${id}/versions/${versionNumber}/download`);
   }
 
   restoreVersion(versionNumber: number): Promise<void> {

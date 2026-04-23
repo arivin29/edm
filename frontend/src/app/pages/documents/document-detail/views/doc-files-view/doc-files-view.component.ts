@@ -5,6 +5,7 @@ import { FileManagerComponent } from '../../components/file-manager/file-manager
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../../environments/environment';
+import { DownloadService } from '../../../../../core/services/download.service';
 
 @Component({
   selector: 'app-doc-files-view',
@@ -35,13 +36,16 @@ export class DocFilesViewComponent implements OnInit {
     this.fileConfig.readonly = doc?.status === 'final' || doc?.status === 'archived';
   }
 
+  private downloadSvc = inject(DownloadService);
+
   onDownload(file: any) {
+    const docId = this.docService.documentId();
     if (file.id.startsWith('ver-')) {
       const verId = file.id.replace('ver-', '');
-      window.open(`${environment.apiUrl}/documents/${this.docService.documentId()}/versions/${verId}/download`, '_blank');
+      this.downloadSvc.download(`/documents/${docId}/versions/${verId}/download`);
     } else if (file.id.startsWith('att-')) {
       const attId = file.id.replace('att-', '');
-      window.open(`${environment.apiUrl}/documents/${this.docService.documentId()}/attachments/${attId}/download`, '_blank');
+      this.downloadSvc.download(`/documents/${docId}/attachments/${attId}/download`);
     }
   }
 

@@ -25,6 +25,7 @@ import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
+import { DownloadService } from '../../../core/services/download.service';
 import { FileManagerComponent, FileNode, FileUploadData } from './components/file-manager/file-manager.component';
 import { DocParametersComponent } from './components/doc-parameters/doc-parameters.component';
 import { DocPreviewComponent, PreviewFile } from './components/doc-preview/doc-preview.component';
@@ -58,6 +59,7 @@ export class DocumentDetailPage implements OnInit {
   private router = inject(Router);
   private message = inject(NzMessageService);
   private modal = inject(NzModalService);
+  private downloadSvc = inject(DownloadService);
 
   document = signal<DocumentDetail | null>(null);
   versions = signal<DocumentVersion[]>([]);
@@ -519,13 +521,13 @@ export class DocumentDetailPage implements OnInit {
   downloadDocument() {
     const doc = this.document();
     if (!doc) return;
-    window.open(`${environment.apiUrl}/documents/${doc.id}/download`, '_blank');
+    this.downloadSvc.download(`/documents/${doc.id}/download`);
   }
 
   downloadVersion(versionNumber: number) {
     const doc = this.document();
     if (!doc) return;
-    window.open(`${environment.apiUrl}/documents/${doc.id}/versions/${versionNumber}/download`, '_blank');
+    this.downloadSvc.download(`/documents/${doc.id}/versions/${versionNumber}/download`);
   }
 
   restoreVersion(versionNumber: number) {

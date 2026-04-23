@@ -10,6 +10,7 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { DownloadService } from '../../../core/services/download.service';
 import { LayoutService } from '../../../core/services/layout.service';
 import { DocumentDetailService } from './document-detail.service';
 import {
@@ -190,8 +191,10 @@ export class DocumentDetailLayoutComponent implements OnInit, OnDestroy {
     this.layoutService.expandMainSidebar();
   }
 
+  private downloadSvc = inject(DownloadService);
+
   downloadDocument() {
-    window.open(`${environment.apiUrl}/documents/${this.docService.documentId()}/download`, '_blank');
+    this.downloadSvc.download(`/documents/${this.docService.documentId()}/download`);
   }
 
   submitForReview() {
