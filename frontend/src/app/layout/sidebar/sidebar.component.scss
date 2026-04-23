@@ -50,7 +50,12 @@
 }
 
 .logo-icon {
-  @apply w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0;
+  @apply w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden;
+  background: transparent;
+  
+  .logo-img {
+    @apply w-full h-full object-contain;
+  }
   
   span {
     @apply text-white text-base;
