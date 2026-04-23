@@ -1,7 +1,7 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthStateService } from '../../core/auth/auth-state.service';
 import { environment } from '../../../environments/environment';
@@ -9,7 +9,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="min-h-screen flex items-center justify-center bg-gray-100">
       <div class="w-full max-w-md">
@@ -220,6 +220,9 @@ import { environment } from '../../../environments/environment';
 
         <!-- Footer -->
         <p class="text-center text-gray-500 text-sm mt-6">
+          <a routerLink="/landing" class="text-blue-600 hover:text-blue-700 font-medium">← Kembali ke Beranda</a>
+        </p>
+        <p class="text-center text-gray-400 text-xs mt-2">
           &copy; 2026 PT Askara Internal. All rights reserved.
         </p>
       </div>

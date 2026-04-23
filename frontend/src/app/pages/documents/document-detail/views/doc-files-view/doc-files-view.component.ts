@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DocumentDetailService } from '../../document-detail.service';
 import { FileManagerComponent } from '../../components/file-manager/file-manager.component';
@@ -17,6 +17,9 @@ export class DocFilesViewComponent implements OnInit {
   docService = inject(DocumentDetailService);
   private message = inject(NzMessageService);
   private http = inject(HttpClient);
+
+  // Expose fileTree as computed for reactive binding
+  fileTree = computed(() => this.docService.fileTree());
 
   fileConfig = {
     documentId: '',
@@ -59,8 +62,10 @@ export class DocFilesViewComponent implements OnInit {
     }
   }
 
-  onUpload(data: any) {
-    this.docService.loadAttachments();
+  async onUpload(data: any) {
+    if (data.file) {
+      await this.docService.uploadAttachment(data.file, data.description, data.referenceNumber);
+    }
   }
 
   onOcr(file: any) {

@@ -99,36 +99,48 @@ func (s *SearchService) searchDocuments(query string, limit int) (*SearchGroup, 
 		Status         string  `json:"status"`
 		TypeName       *string `json:"type_name"`
 		DeptName       *string `json:"dept_name"`
+		MatchSource    string  `json:"match_source"`
 	}
 
 	likePattern := "%" + strings.ToLower(query) + "%"
 
-	// Count total: ILIKE (catches doc numbers with /) + tsvector
+	// Count total: ILIKE + tsvector (includes attachment OCR via weight D) + direct attachment OCR text
 	var total int64
-	countSQL := `SELECT COUNT(*) FROM documents WHERE deleted_at IS NULL AND (
-		LOWER(document_number) LIKE ? OR LOWER(title) LIKE ? OR LOWER(COALESCE(description,'')) LIKE ?
-		OR search_vector @@ websearch_to_tsquery('simple', ?)
-	)`
-	_ = facades.Orm().Query().Raw(countSQL, likePattern, likePattern, likePattern, query).Scan(&total)
-
-	// Fetch results: ILIKE search (covers doc numbers, titles, partial matches)
-	searchSQL := fmt.Sprintf(`SELECT d.id, d.document_number, d.title, d.description, d.status,
-		dt.name as type_name, dep.name as dept_name
-		FROM documents d
-		LEFT JOIN document_types dt ON dt.id = d.document_type_id
-		LEFT JOIN departments dep ON dep.id = d.department_id
+	countSQL := `SELECT COUNT(DISTINCT d.id) FROM documents d
+		LEFT JOIN file_storage fs ON fs.entity_type = 'document' AND fs.entity_id = d.id AND fs.deleted_at IS NULL
 		WHERE d.deleted_at IS NULL AND (
 			LOWER(d.document_number) LIKE ? OR LOWER(d.title) LIKE ? OR LOWER(COALESCE(d.description,'')) LIKE ?
 			OR d.search_vector @@ websearch_to_tsquery('simple', ?)
+			OR LOWER(COALESCE(fs.ocr_text,'')) LIKE ?
+		)`
+	_ = facades.Orm().Query().Raw(countSQL, likePattern, likePattern, likePattern, query, likePattern).Scan(&total)
+
+	// Fetch results with match source indicator
+	searchSQL := fmt.Sprintf(`SELECT DISTINCT ON (d.id) d.id, d.document_number, d.title, d.description, d.status,
+		dt.name as type_name, dep.name as dept_name,
+		CASE
+			WHEN LOWER(d.document_number) LIKE $1 OR LOWER(d.title) LIKE $1 THEN 'direct'
+			WHEN d.search_vector @@ websearch_to_tsquery('simple', $2) THEN 'fulltext'
+			WHEN LOWER(COALESCE(fs.ocr_text,'')) LIKE $1 THEN 'ocr'
+			ELSE 'other'
+		END as match_source
+		FROM documents d
+		LEFT JOIN document_types dt ON dt.id = d.document_type_id
+		LEFT JOIN departments dep ON dep.id = d.department_id
+		LEFT JOIN file_storage fs ON fs.entity_type = 'document' AND fs.entity_id = d.id AND fs.deleted_at IS NULL
+		WHERE d.deleted_at IS NULL AND (
+			LOWER(d.document_number) LIKE $1 OR LOWER(d.title) LIKE $1 OR LOWER(COALESCE(d.description,'')) LIKE $1
+			OR d.search_vector @@ websearch_to_tsquery('simple', $2)
+			OR LOWER(COALESCE(fs.ocr_text,'')) LIKE $1
 		)
-		ORDER BY
-			CASE WHEN LOWER(d.document_number) LIKE ? THEN 0 ELSE 1 END,
-			CASE WHEN LOWER(d.title) LIKE ? THEN 0 ELSE 1 END,
+		ORDER BY d.id,
+			CASE WHEN LOWER(d.document_number) LIKE $1 THEN 0 ELSE 1 END,
+			CASE WHEN LOWER(d.title) LIKE $1 THEN 0 ELSE 1 END,
 			d.updated_at DESC
 		LIMIT %d`, limit)
 
 	var rows []docRow
-	if err := facades.Orm().Query().Raw(searchSQL, likePattern, likePattern, likePattern, query, likePattern, likePattern).Scan(&rows); err != nil {
+	if err := facades.Orm().Query().Raw(searchSQL, likePattern, query).Scan(&rows); err != nil {
 		return nil, err
 	}
 
@@ -146,6 +158,9 @@ func (s *SearchService) searchDocuments(query string, limit int) (*SearchGroup, 
 		}
 		if r.DeptName != nil && *r.DeptName != "" {
 			subtitle += " · " + *r.DeptName
+		}
+		if r.MatchSource == "ocr" {
+			subtitle += " · 📄 Ditemukan di file OCR"
 		}
 
 		desc := ""

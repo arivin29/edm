@@ -7,7 +7,9 @@ import {
   computed,
   OnInit,
   OnChanges,
-  SimpleChanges
+  SimpleChanges,
+  ChangeDetectorRef,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -57,8 +59,12 @@ export type { FileNode, FileManagerConfig, FileUploadData } from './file-manager
   styleUrl: './file-manager.component.scss'
 })
 export class FileManagerComponent implements OnInit, OnChanges {
+  private cdr = inject(ChangeDetectorRef);
+  
   @Input() config: FileManagerConfig = { documentId: '', readonly: false, showUpload: true, showCreateFolder: true, showVersions: true };
-  @Input() tree: FileNode[] = [];
+  @Input() set tree(value: FileNode[]) { this._tree.set(value); }
+  get tree(): FileNode[] { return this._tree(); }
+  private _tree = signal<FileNode[]>([]);
 
   @Output() fileDownload = new EventEmitter<FileNode>();
   @Output() filePreview = new EventEmitter<FileNode>();
@@ -91,11 +97,12 @@ export class FileManagerComponent implements OnInit, OnChanges {
   uploadRefNumber = '';
 
   currentFiles = computed(() => {
+    const treeData = this._tree();
     const folder = this.currentFolder();
-    const items = folder ? (folder.children || []) : this.tree;
+    const items = folder ? (folder.children || []) : treeData;
     const q = this.searchQuery().toLowerCase().trim();
     let filtered = q
-      ? this.searchInTree(this.tree, q)
+      ? this.searchInTree(treeData, q)
       : items;
 
     const field = this.sortField();
@@ -114,9 +121,9 @@ export class FileManagerComponent implements OnInit, OnChanges {
     });
   });
 
-  totalFiles = computed(() => this.countFiles(this.tree));
-  totalFolders = computed(() => this.countFolders(this.tree));
-  totalSize = computed(() => this.sumSize(this.tree));
+  totalFiles = computed(() => this.countFiles(this._tree()));
+  totalFolders = computed(() => this.countFolders(this._tree()));
+  totalSize = computed(() => this.sumSize(this._tree()));
 
   ngOnInit() {}
 
@@ -297,6 +304,7 @@ export class FileManagerComponent implements OnInit, OnChanges {
     this.uploadFile.set(null);
     this.uploadDescription = '';
     this.uploadRefNumber = '';
+    this.cdr.detectChanges();
   }
 
   // --- OCR ---

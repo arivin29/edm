@@ -1,6 +1,6 @@
 <app-file-manager
   [config]="fileConfig"
-  [tree]="docService.fileTree()"
+  [tree]="fileTree()"
   (fileDownload)="onDownload($event)"
   (filePreview)="onPreview($event)"
   (fileDelete)="onDelete($event)"

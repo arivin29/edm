@@ -229,6 +229,22 @@ func (s *OCRService) updateSearchVector(documentID, ocrText string) {
 	facades.Orm().Query().Exec(sql, ocrText, documentID)
 }
 
+// RebuildSearchVectorWithAttachments rebuilds a document's search_vector
+// including OCR text from all its attachments
+func (s *OCRService) RebuildSearchVectorWithAttachments(documentID string) {
+	sql := `UPDATE documents SET search_vector =
+		setweight(to_tsvector('simple', coalesce(document_number, '') || ' ' || coalesce(title, '')), 'A') ||
+		setweight(to_tsvector('simple', coalesce(description, '')), 'C') ||
+		setweight(to_tsvector('simple', coalesce((
+			SELECT string_agg(coalesce(fs.ocr_text, ''), ' ')
+			FROM file_storage fs
+			WHERE fs.entity_type = 'document' AND fs.entity_id = documents.id
+			AND fs.deleted_at IS NULL AND fs.ocr_text IS NOT NULL
+		), '')), 'D')
+		WHERE id = $1`
+	facades.Orm().Query().Exec(sql, documentID)
+}
+
 func (s *OCRService) countPages(text string) int {
 	count := 1
 	for _, line := range strings.Split(text, "\n") {

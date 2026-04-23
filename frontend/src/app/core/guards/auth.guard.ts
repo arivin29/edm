@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { Router, CanActivateFn } from '@angular/router';
+import { Router, CanActivateFn, CanMatchFn } from '@angular/router';
 import { AuthStateService } from '../auth/auth-state.service';
 
 /**
@@ -19,8 +19,16 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   // Store the attempted URL for redirecting after login
   const returnUrl = state.url;
-  router.navigate(['/auth/login'], { queryParams: { returnUrl } });
+  router.navigate(['/landing'], { queryParams: { returnUrl } });
   return false;
+};
+
+/**
+ * CanMatch guard - only match route if user is authenticated
+ */
+export const authMatch: CanMatchFn = () => {
+  const authState = inject(AuthStateService);
+  return !!authState.token();
 };
 
 /**

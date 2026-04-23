@@ -1,8 +1,16 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/guards/auth.guard';
+import { authGuard, authMatch, guestGuard } from './core/guards/auth.guard';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 
 export const routes: Routes = [
+  // Landing page (public)
+  {
+    path: 'landing',
+    loadComponent: () =>
+      import('./pages/landing/landing.page').then(m => m.LandingPage),
+    title: 'DMS - Document Management System'
+  },
+
   // Auth routes (guest only)
   {
     path: 'auth',
@@ -26,6 +34,7 @@ export const routes: Routes = [
   {
     path: '',
     component: MainLayoutComponent,
+    canMatch: [authMatch],
     canActivate: [authGuard],
     children: [
       {
@@ -356,6 +365,6 @@ export const routes: Routes = [
   // Fallback
   {
     path: '**',
-    redirectTo: 'dashboard'
+    redirectTo: 'landing'
   }
 ];

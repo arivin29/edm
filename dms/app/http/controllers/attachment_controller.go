@@ -274,6 +274,8 @@ func (c *AttachmentController) RunAttachmentOCR(ctx http.Context) http.Response 
 		if err := c.attachmentRepo.UpdateOCRText(attachmentID, result.Text); err != nil {
 			fmt.Printf("Warning: could not save OCR text to attachment: %v\n", err)
 		}
+		// Rebuild document search_vector to include this attachment's OCR text
+		c.ocrService.RebuildSearchVectorWithAttachments(documentID)
 	}
 
 	return ctx.Response().Success().Json(http.Json{

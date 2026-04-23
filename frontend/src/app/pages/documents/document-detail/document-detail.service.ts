@@ -227,6 +227,31 @@ export class DocumentDetailService {
     });
   }
 
+  uploadAttachment(file: File, description?: string, referenceNumber?: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const id = this.documentId();
+      if (!id) { reject(); return; }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      if (description) formData.append('description', description);
+      if (referenceNumber) formData.append('reference_number', referenceNumber);
+
+      this.http.post(`${environment.apiUrl}/documents/${id}/attachments`, formData).subscribe({
+        next: () => {
+          this.message.success('File berhasil diupload');
+          this.loadAttachments();
+          resolve();
+        },
+        error: (err) => {
+          const msg = err.error?.error || 'Gagal mengupload file';
+          this.message.error(msg);
+          reject();
+        }
+      });
+    });
+  }
+
   loadSignatures() {
     const id = this.documentId();
     if (!id) return;
@@ -291,6 +316,8 @@ export class DocumentDetailService {
           updated.set(nodeId, { ocrProcessing: false, ocrText });
           this.attachmentOcrState.set(updated);
           this.message.success('OCR selesai');
+          // Reload attachments to get updated data from server
+          this.loadAttachments();
           resolve(ocrText);
         },
         error: () => {
