@@ -298,7 +298,7 @@ func (s *OnlyOfficeService) signJWT(config *EditorConfig, secret string) (string
 // generateSignedDownloadURL creates a download URL using the OnlyOffice key as auth
 func (s *OnlyOfficeService) generateSignedDownloadURL(baseURL string, doc *models.Document) string {
 	key := s.getOrCreateKey(doc)
-	return fmt.Sprintf("%s/api/v1/onlyoffice/download/%s", baseURL, key)
+	return fmt.Sprintf("%s/dl/%s", baseURL, key)
 }
 
 // ValidateDownloadKey validates a download key and returns the document
