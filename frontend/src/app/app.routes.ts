@@ -67,50 +67,62 @@ export const routes: Routes = [
               {
                 path: 'info',
                 loadComponent: () =>
-                  import('./pages/documents/document-detail/views/doc-info-view.component').then(m => m.DocInfoViewComponent),
+                  import('./pages/documents/document-detail/views/doc-info-view/doc-info-view.component').then(m => m.DocInfoViewComponent),
                 title: 'Informasi Dokumen - DMS'
+              },
+              {
+                path: 'editor',
+                loadComponent: () =>
+                  import('./pages/documents/document-detail/views/doc-editor-view/doc-editor-view.component').then(m => m.DocEditorViewComponent),
+                title: 'Editor Dokumen - DMS'
               },
               {
                 path: 'files',
                 loadComponent: () =>
-                  import('./pages/documents/document-detail/views/doc-files-view.component').then(m => m.DocFilesViewComponent),
+                  import('./pages/documents/document-detail/views/doc-files-view/doc-files-view.component').then(m => m.DocFilesViewComponent),
                 title: 'Berkas Dokumen - DMS'
               },
               {
                 path: 'versions',
                 loadComponent: () =>
-                  import('./pages/documents/document-detail/views/doc-versions-view.component').then(m => m.DocVersionsViewComponent),
+                  import('./pages/documents/document-detail/views/doc-versions-view/doc-versions-view.component').then(m => m.DocVersionsViewComponent),
                 title: 'Riwayat Versi - DMS'
               },
               {
                 path: 'parameters',
                 loadComponent: () =>
-                  import('./pages/documents/document-detail/views/doc-parameters-view.component').then(m => m.DocParametersViewComponent),
+                  import('./pages/documents/document-detail/views/doc-parameters-view/doc-parameters-view.component').then(m => m.DocParametersViewComponent),
                 title: 'Parameter Dokumen - DMS'
               },
               {
                 path: 'comments',
                 loadComponent: () =>
-                  import('./pages/documents/document-detail/views/doc-comments-view.component').then(m => m.DocCommentsViewComponent),
+                  import('./pages/documents/document-detail/views/doc-comments-view/doc-comments-view.component').then(m => m.DocCommentsViewComponent),
                 title: 'Komentar Dokumen - DMS'
               },
               {
                 path: 'workflow',
                 loadComponent: () =>
-                  import('./pages/documents/document-detail/views/doc-workflow-view.component').then(m => m.DocWorkflowViewComponent),
+                  import('./pages/documents/document-detail/views/doc-workflow-view/doc-workflow-view.component').then(m => m.DocWorkflowViewComponent),
                 title: 'Workflow Dokumen - DMS'
               },
               {
                 path: 'distribution',
                 loadComponent: () =>
-                  import('./pages/documents/document-detail/views/doc-distribution-view.component').then(m => m.DocDistributionViewComponent),
+                  import('./pages/documents/document-detail/views/doc-distribution-view/doc-distribution-view.component').then(m => m.DocDistributionViewComponent),
                 title: 'Distribusi Dokumen - DMS'
               },
               {
                 path: 'signatures',
                 loadComponent: () =>
-                  import('./pages/documents/document-detail/views/doc-signatures-view.component').then(m => m.DocSignaturesViewComponent),
+                  import('./pages/documents/document-detail/views/doc-signatures-view/doc-signatures-view.component').then(m => m.DocSignaturesViewComponent),
                 title: 'Tanda Tangan Dokumen - DMS'
+              },
+              {
+                path: 'ocr',
+                loadComponent: () =>
+                  import('./pages/documents/document-detail/views/doc-ocr-view/doc-ocr-view.component').then(m => m.DocOcrViewComponent),
+                title: 'OCR Dokumen - DMS'
               }
             ]
           },

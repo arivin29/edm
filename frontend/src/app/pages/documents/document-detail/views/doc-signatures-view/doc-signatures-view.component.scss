@@ -1,0 +1,21 @@
+.signatures-view { @apply p-2; }
+.signatures-header { @apply flex justify-between items-start mb-4; }
+.signatures-title { @apply text-sm font-semibold m-0 flex items-center gap-1; }
+.signatures-subtitle { @apply text-xs text-gray-400 m-0; }
+.signatures-list { @apply space-y-3; }
+.signature-card { @apply flex gap-3 bg-white border rounded-lg p-3; }
+.signature-card--revoked { @apply border-red-200 opacity-60; }
+.signature-card__image { @apply w-24 h-16 border rounded flex items-center justify-center bg-gray-50 flex-shrink-0; }
+.signature-card__image img { @apply max-w-full max-h-full object-contain; }
+.signature-card__info { @apply flex-1 min-w-0; }
+.signature-card__header { @apply flex items-center gap-2 mb-1; }
+.signature-card__name { @apply text-sm font-semibold; }
+.signature-card__meta { @apply text-xs text-gray-500; }
+.signature-card__time { @apply text-[10px] text-gray-400 mt-1 flex items-center gap-1; }
+.signature-card__hash { @apply text-[10px] text-gray-300 font-mono truncate mt-0.5; }
+.signature-card__revoked { @apply text-[10px] text-red-400 mt-1 flex items-center gap-1; }
+.signature-card__actions { @apply flex gap-1 flex-shrink-0; }
+.signatures-empty { @apply text-center py-8 text-gray-400; }
+.signatures-empty span[nz-icon] { @apply text-4xl mb-2 block; }
+.signatures-empty p { @apply text-sm m-0; }
+.signatures-empty small { @apply text-xs text-gray-300; }

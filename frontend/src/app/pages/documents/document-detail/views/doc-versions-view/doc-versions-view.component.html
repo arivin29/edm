@@ -1,0 +1,50 @@
+@if (docService.versionsLoading()) {
+  <div class="text-center py-8"><nz-spin nzSimple></nz-spin></div>
+} @else if (docService.versions().length === 0) {
+  <nz-empty nzNotFoundContent="Belum ada riwayat versi"></nz-empty>
+} @else {
+  <div class="version-list">
+    <nz-timeline>
+      @for (v of docService.versions(); track v.id; let i = $index) {
+        <nz-timeline-item [nzColor]="v.is_current ? 'blue' : 'gray'" [nzDot]="v.is_current ? currentDot : undefined">
+          <div class="version-item" [class.version-item--current]="v.is_current">
+            <div class="version-item__header">
+              <div class="version-item__title">
+                <nz-tag [nzColor]="v.is_current ? 'blue' : 'default'">v{{ v.major_version }}.{{ v.minor_version }}</nz-tag>
+                @if (v.is_current) {
+                  <nz-tag nzColor="green">Saat Ini</nz-tag>
+                }
+                <span class="version-item__size">{{ formatFileSize(v.file_size) }}</span>
+              </div>
+              <div class="version-item__actions">
+                <button nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Download" (click)="docService.downloadVersion(v.version_number)">
+                  <span nz-icon nzType="download" nzTheme="outline"></span>
+                </button>
+                @if (!v.is_current) {
+                  <button nz-button nzSize="small" nzType="text" nzDanger nz-tooltip nzTooltipTitle="Restore" (click)="docService.restoreVersion(v.version_number)">
+                    <span nz-icon nzType="rollback" nzTheme="outline"></span>
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="version-item__meta">
+              @if (v.creator) {
+                <span class="version-item__user">
+                  <span class="version-item__avatar">{{ v.creator.name.charAt(0).toUpperCase() }}</span>
+                  {{ v.creator.name }}
+                </span>
+              }
+              <span class="version-item__date">{{ formatDate(v.created_at) }}</span>
+            </div>
+            @if (v.change_summary) {
+              <div class="version-item__summary">{{ v.change_summary }}</div>
+            }
+          </div>
+        </nz-timeline-item>
+      }
+    </nz-timeline>
+    <ng-template #currentDot>
+      <span nz-icon nzType="check-circle" nzTheme="fill" style="color: #1890ff; font-size: 14px;"></span>
+    </ng-template>
+  </div>
+}

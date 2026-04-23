@@ -1,0 +1,9 @@
+<app-file-manager
+  [config]="fileConfig"
+  [tree]="docService.fileTree()"
+  (fileDownload)="onDownload($event)"
+  (filePreview)="onPreview($event)"
+  (fileDelete)="onDelete($event)"
+  (fileUpload)="onUpload($event)"
+  (fileOcr)="onOcr($event)"
+></app-file-manager>

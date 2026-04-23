@@ -1,0 +1,143 @@
+@if (docService.workflowLoading()) {
+  <div class="text-center py-4"><nz-spin nzSimple nzSize="small"></nz-spin></div>
+} @else if (docService.workflow()?.is_preview && docService.workflow()?.preview_steps?.length) {
+  <!-- Preview mode -->
+  <nz-alert nzType="info" nzShowIcon nzBanner
+    nzMessage="Rencana Alur Persetujuan"
+    [nzDescription]="'Workflow &quot;' + docService.workflow()!.workflow_name + '&quot; akan dijalankan saat dokumen disubmit.'"
+    class="mb-4 rounded-lg">
+  </nz-alert>
+  <nz-timeline>
+    @for (step of docService.workflow()!.preview_steps!; track step.id; let i = $index) {
+      <nz-timeline-item nzColor="gray" [nzDot]="previewDot">
+        <ng-template #previewDot>
+          <div class="wf-dot wf-dot--preview">{{ i + 1 }}</div>
+        </ng-template>
+        <div class="wf-item">
+          <div class="wf-item__row">
+            <span class="wf-item__name">{{ step.name }}</span>
+            <nz-tag [nzColor]="step.step_type === 'approve' || step.step_type === 'approval' ? 'blue' : step.step_type === 'sign' ? 'purple' : 'cyan'" class="wf-item__tag">
+              {{ getStepTypeLabel(step.step_type) }}
+            </nz-tag>
+            @if (step.deadline_days) {
+              <nz-tag nzColor="orange" class="wf-item__tag">{{ step.deadline_days }}h</nz-tag>
+            }
+          </div>
+          <div class="wf-item__sub">
+            <span nz-icon nzType="team" nzTheme="outline"></span>
+            {{ step.assignee_type === 'role' ? 'Berdasarkan Role' : step.assignee_type === 'user' ? 'Pengguna Tertentu' : step.assignee_type === 'position' ? 'Berdasarkan Posisi' : step.assignee_type === 'department' ? 'Berdasarkan Departemen' : step.assignee_type }}
+            @if (step.can_delegate) {
+              · <span class="text-geekblue-6">Bisa Didelegasikan</span>
+            }
+          </div>
+          @if (step.instructions) {
+            <div class="wf-item__note">{{ step.instructions }}</div>
+          }
+        </div>
+      </nz-timeline-item>
+    }
+  </nz-timeline>
+} @else if (docService.workflow()?.steps?.length) {
+  <!-- Active workflow -->
+  @if (docService.workflow()!.workflow_name) {
+    <div class="wf-header">
+      <span nz-icon nzType="apartment" nzTheme="outline" class="wf-header__icon"></span>
+      <span class="wf-header__name">{{ docService.workflow()!.workflow_name }}</span>
+      <span class="wf-header__iter">Iterasi {{ docService.workflow()!.instance?.iteration || 1 }}</span>
+      <nz-tag class="ml-auto"
+        [nzColor]="docService.workflow()!.instance?.status === 'approved' ? 'success' : docService.workflow()!.instance?.status === 'rejected' ? 'error' : 'processing'">
+        {{ docService.workflow()!.instance?.status === 'approved' ? 'Selesai' : docService.workflow()!.instance?.status === 'rejected' ? 'Ditolak' : 'Berlangsung' }}
+      </nz-tag>
+    </div>
+  }
+  <nz-timeline>
+    @for (step of docService.workflow()!.steps; track step.id; let i = $index) {
+      <nz-timeline-item
+        [nzColor]="step.status === 'approved' ? 'green' : step.status === 'rejected' ? 'red' : step.status === 'active' ? 'blue' : 'gray'"
+        [nzDot]="stepDot">
+        <ng-template #stepDot>
+          <div class="wf-dot" [attr.data-status]="step.status">
+            @if (step.status === 'approved') {
+              <span nz-icon nzType="check" nzTheme="outline"></span>
+            } @else if (step.status === 'rejected') {
+              <span nz-icon nzType="close" nzTheme="outline"></span>
+            } @else if (step.status === 'active') {
+              <span nz-icon nzType="sync" nzTheme="outline" class="wf-spin"></span>
+            } @else {
+              {{ i + 1 }}
+            }
+          </div>
+        </ng-template>
+        <div class="wf-item" [attr.data-status]="step.status">
+          <!-- Row 1: name + status -->
+          <div class="wf-item__row">
+            <span class="wf-item__name">{{ step.name }}</span>
+            <nz-tag class="wf-item__tag"
+              [nzColor]="step.status === 'approved' ? 'success' : step.status === 'rejected' ? 'error' : step.status === 'active' ? 'processing' : step.status === 'skipped' ? 'warning' : 'default'">
+              {{ step.status === 'approved' ? 'Disetujui' : step.status === 'rejected' ? 'Ditolak' : step.status === 'active' ? 'Aktif' : step.status === 'skipped' ? 'Dilewati' : 'Menunggu' }}
+            </nz-tag>
+          </div>
+
+          <!-- Row 2: actor + time -->
+          <div class="wf-item__sub">
+            @if (step.actor) {
+              <span nz-icon nzType="user" nzTheme="outline"></span> {{ step.actor.name }}
+            } @else if (step.status === 'active') {
+              <span nz-icon nzType="hourglass" nzTheme="outline" class="text-blue-400"></span>
+              <span class="text-blue-500">Menunggu persetujuan</span>
+            }
+            @if (step.required_approvals > 1) {
+              · <span class="wf-item__approvals">{{ step.current_approvals || 0 }}/{{ step.required_approvals }}</span>
+            }
+            @if (step.completed_at) {
+              · <span class="wf-item__time">{{ step.completed_at | date:'dd MMM yyyy, HH:mm' }}</span>
+            } @else if (step.activated_at && step.status === 'active') {
+              · <span class="wf-item__time text-blue-400">Aktif sejak {{ step.activated_at | date:'dd MMM yyyy, HH:mm' }}</span>
+            }
+          </div>
+
+          <!-- SLA -->
+          @if (getStepSla(step); as sla) {
+            <div class="wf-item__sla" [attr.data-sla]="sla.status">
+              @if (sla.status === 'overdue') {
+                <span nz-icon nzType="warning" nzTheme="fill"></span>
+              } @else if (sla.status === 'danger') {
+                <span nz-icon nzType="fire" nzTheme="fill"></span>
+              } @else if (sla.status === 'completed') {
+                <span nz-icon nzType="check-circle" nzTheme="fill"></span>
+              } @else {
+                <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+              }
+              {{ sla.remaining }}
+              @if (step.deadline && step.status !== 'approved' && step.status !== 'rejected') {
+                <span class="wf-item__sla-date">· Tenggat {{ step.deadline | date:'dd MMM yyyy' }}</span>
+              }
+              @if (step.status === 'active') {
+                <div class="wf-item__sla-bar">
+                  <div class="wf-item__sla-fill" [style.width.%]="sla.percent"></div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Comment -->
+          @if (step.comment) {
+            <div class="wf-item__comment">"{{ step.comment }}"</div>
+          }
+
+          <!-- Instructions -->
+          @if (step.status === 'active' && step.instructions) {
+            <div class="wf-item__note">📋 {{ step.instructions }}</div>
+          }
+
+          <!-- Delegate flag -->
+          @if (step.status === 'active' && step.can_delegate) {
+            <nz-tag nzColor="geekblue" class="mt-1" style="font-size:10px">Bisa Didelegasikan</nz-tag>
+          }
+        </div>
+      </nz-timeline-item>
+    }
+  </nz-timeline>
+} @else {
+  <nz-empty nzNotFoundContent="Tidak ada workflow yang cocok untuk dokumen ini"></nz-empty>
+}

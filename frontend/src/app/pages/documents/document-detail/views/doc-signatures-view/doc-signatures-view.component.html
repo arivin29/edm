@@ -1,0 +1,73 @@
+<div class="signatures-view">
+  <div class="signatures-header">
+    <div>
+      <h4 class="signatures-title">
+        <span nz-icon nzType="safety-certificate" nzTheme="outline" class="text-blue-500"></span>
+        Tanda Tangan Digital
+      </h4>
+      <p class="signatures-subtitle">Daftar tanda tangan pada dokumen ini</p>
+    </div>
+    <button nz-button nzType="primary" nzSize="small" [nzLoading]="signing" (click)="signDocument()">
+      <span nz-icon nzType="edit" nzTheme="outline"></span> Tanda Tangani
+    </button>
+  </div>
+
+  @if (docService.signaturesLoading()) {
+    <div class="text-center py-8"><nz-spin nzSimple></nz-spin></div>
+  } @else if (docService.signatures().length > 0) {
+    <div class="signatures-list">
+      @for (sig of docService.signatures(); track sig.id) {
+        <div class="signature-card" [class.signature-card--revoked]="sig.status === 'revoked'">
+          <div class="signature-card__image">
+            @if (sig.signature_image_path) {
+              <img [src]="sig.signature_image_path" alt="Signature">
+            } @else {
+              <span nz-icon nzType="edit" nzTheme="outline" class="text-2xl text-gray-300"></span>
+            }
+          </div>
+          <div class="signature-card__info">
+            <div class="signature-card__header">
+              <span class="signature-card__name">{{ sig.signer_name }}</span>
+              <nz-tag [nzColor]="getStatusColor(sig.status)">{{ getStatusLabel(sig.status) }}</nz-tag>
+            </div>
+            <div class="signature-card__meta">
+              @if (sig.signer_position) { {{ sig.signer_position }} }
+              @if (sig.signer_position && sig.signer_department) { — }
+              @if (sig.signer_department) { {{ sig.signer_department }} }
+            </div>
+            <div class="signature-card__time">
+              <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+              {{ formatDate(sig.signed_at) }} · Versi {{ sig.version_number }}
+            </div>
+            @if (sig.document_hash) {
+              <div class="signature-card__hash">SHA-256: {{ sig.document_hash }}</div>
+            }
+            @if (sig.status === 'revoked' && sig.revoke_reason) {
+              <div class="signature-card__revoked">
+                <span nz-icon nzType="close-circle" nzTheme="outline"></span> Dicabut: {{ sig.revoke_reason }}
+              </div>
+            }
+          </div>
+          <div class="signature-card__actions">
+            @if (sig.status !== 'revoked') {
+              <button nz-button nzSize="small" nzType="text" nz-tooltip="Verifikasi">
+                <span nz-icon nzType="check-circle" nzTheme="outline" class="text-green-500"></span>
+              </button>
+              <button nz-button nzSize="small" nzType="text" nzDanger
+                      nz-popconfirm nzPopconfirmTitle="Yakin ingin mencabut?"
+                      (nzOnConfirm)="docService.revokeSignature(sig.id)">
+                <span nz-icon nzType="close-circle" nzTheme="outline"></span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="signatures-empty">
+      <span nz-icon nzType="safety-certificate" nzTheme="outline"></span>
+      <p>Belum ada tanda tangan digital</p>
+      <small>Klik "Tanda Tangani" untuk menandatangani dokumen</small>
+    </div>
+  }
+</div>

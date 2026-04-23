@@ -1,26 +1,17 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DocumentDetailService } from '../document-detail.service';
-import { FileManagerComponent } from '../components/file-manager/file-manager.component';
+import { DocumentDetailService } from '../../document-detail.service';
+import { FileManagerComponent } from '../../components/file-manager/file-manager.component';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-doc-files-view',
   standalone: true,
   imports: [CommonModule, FileManagerComponent],
-  template: `
-    <app-file-manager
-      [config]="fileConfig"
-      [tree]="docService.fileTree()"
-      (fileDownload)="onDownload($event)"
-      (filePreview)="onPreview($event)"
-      (fileDelete)="onDelete($event)"
-      (fileUpload)="onUpload($event)"
-      (fileOcr)="onOcr($event)"
-    ></app-file-manager>
-  `
+  templateUrl: './doc-files-view.component.html',
+  styleUrl: './doc-files-view.component.scss'
 })
 export class DocFilesViewComponent implements OnInit {
   docService = inject(DocumentDetailService);
@@ -52,7 +43,6 @@ export class DocFilesViewComponent implements OnInit {
   }
 
   onPreview(file: any) {
-    // Preview logic - could open modal
     console.log('Preview:', file);
   }
 
@@ -70,12 +60,10 @@ export class DocFilesViewComponent implements OnInit {
   }
 
   onUpload(data: any) {
-    // Upload handled by file manager
     this.docService.loadAttachments();
   }
 
   onOcr(file: any) {
-    // OCR logic
     console.log('OCR:', file);
   }
 }

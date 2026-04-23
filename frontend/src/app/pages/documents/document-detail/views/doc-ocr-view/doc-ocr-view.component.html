@@ -1,0 +1,49 @@
+<div class="ocr-view">
+  <div class="ocr-view__header">
+    <div>
+      <h4 class="ocr-view__title">Hasil OCR (Optical Character Recognition)</h4>
+      <p class="ocr-view__sub">Ekstrak teks dari dokumen scan (PDF/gambar)</p>
+    </div>
+    <div class="ocr-view__actions">
+      @if (docService.ocrStatus()?.available) {
+        <nz-tag nzColor="green">
+          <span nz-icon nzType="check-circle" nzTheme="outline"></span>
+          {{ docService.ocrStatus()!.version }}
+        </nz-tag>
+      } @else {
+        <nz-tag nzColor="red">
+          <span nz-icon nzType="close-circle" nzTheme="outline"></span>
+          Tesseract tidak tersedia
+        </nz-tag>
+      }
+      <button nz-button nzType="primary" nzSize="small"
+        [nzLoading]="docService.ocrRunning()"
+        (click)="runOCR()"
+        [disabled]="!docService.ocrStatus()?.available">
+        <span nz-icon nzType="scan" nzTheme="outline"></span> Jalankan OCR
+      </button>
+    </div>
+  </div>
+
+  @if (docService.ocrRunning()) {
+    <div class="ocr-view__loading">
+      <nz-spin nzSimple nzSize="large"></nz-spin>
+      <div class="ocr-view__loading-text">Memproses OCR, mohon tunggu...</div>
+    </div>
+  } @else if (docService.ocrResult()) {
+    <div class="ocr-view__meta">
+      <nz-tag nzColor="blue">{{ docService.ocrResult()!.page_count }} halaman</nz-tag>
+      <nz-tag nzColor="default">{{ docService.ocrResult()!.engine }}</nz-tag>
+      <nz-tag nzColor="default">{{ docService.ocrResult()!.duration }}</nz-tag>
+    </div>
+    <pre class="ocr-view__text">{{ docService.ocrResult()!.text || '(tidak ada teks terdeteksi)' }}</pre>
+  } @else if (docService.ocrText()) {
+    <pre class="ocr-view__text">{{ docService.ocrText() }}</pre>
+  } @else {
+    <div class="ocr-view__empty">
+      <span nz-icon nzType="file-search" nzTheme="outline" class="ocr-view__empty-icon"></span>
+      <div class="ocr-view__empty-title">Belum ada hasil OCR</div>
+      <div class="ocr-view__empty-sub">Klik "Jalankan OCR" untuk mengekstrak teks</div>
+    </div>
+  }
+</div>

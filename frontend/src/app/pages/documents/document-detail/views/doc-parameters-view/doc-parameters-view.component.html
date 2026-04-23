@@ -1,0 +1,14 @@
+@if (docService.document(); as doc) {
+  @if (doc.template?.id) {
+    <app-doc-parameters
+      [templateId]="doc.template!.id"
+      [templateName]="doc.template!.name"
+      [metadata]="doc.metadata || {}"
+      [documentStatus]="doc.status"
+      [documentId]="doc.id"
+      (metadataUpdated)="onMetadataUpdated($event)"
+    ></app-doc-parameters>
+  } @else {
+    <nz-empty nzNotFoundContent="Dokumen belum memiliki template"></nz-empty>
+  }
+}

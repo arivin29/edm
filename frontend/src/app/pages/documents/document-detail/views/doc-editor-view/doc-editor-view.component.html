@@ -1,0 +1,8 @@
+@if (docService.document()) {
+  <app-doc-editor [documentId]="docService.documentId()"></app-doc-editor>
+} @else {
+  <div class="editor-view__empty">
+    <span nz-icon nzType="loading" nzTheme="outline"></span>
+    <span>Memuat dokumen...</span>
+  </div>
+}

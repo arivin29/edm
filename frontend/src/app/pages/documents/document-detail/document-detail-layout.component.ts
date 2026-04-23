@@ -118,6 +118,7 @@ export class DocumentDetailLayoutComponent implements OnInit, OnDestroy {
 
   menuItems: DetailMenuItem[] = [
     { key: 'info', label: 'Informasi', icon: 'info-circle', route: 'info' },
+    { key: 'editor', label: 'Editor', icon: 'form', route: 'editor' },
     { key: 'files', label: 'Berkas', icon: 'folder-open', route: 'files' },
     { key: 'versions', label: 'Riwayat Versi', icon: 'history', route: 'versions' },
     { key: 'parameters', label: 'Parameter', icon: 'control', route: 'parameters' },
@@ -125,6 +126,7 @@ export class DocumentDetailLayoutComponent implements OnInit, OnDestroy {
     { key: 'workflow', label: 'Workflow', icon: 'apartment', route: 'workflow' },
     { key: 'distribution', label: 'Distribusi', icon: 'send', route: 'distribution' },
     { key: 'signatures', label: 'Tanda Tangan', icon: 'safety-certificate', route: 'signatures' },
+    { key: 'ocr', label: 'OCR', icon: 'scan', route: 'ocr' },
   ];
 
   getStatusLabel = getStatusLabel;
