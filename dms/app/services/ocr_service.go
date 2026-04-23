@@ -165,11 +165,19 @@ func (s *OCRService) ocrPDF(pdfPath string) (string, error) {
 
 // ocrImage runs Tesseract on a single image file
 func (s *OCRService) ocrImage(imagePath string) (string, error) {
-	// Run tesseract with Indonesian + English language
-	cmd := exec.Command("tesseract", imagePath, "stdout", "-l", "ind+eng", "--oem", "3", "--psm", "6")
+	// Detect available languages
+	lang := "eng"
+	listCmd := exec.Command("tesseract", "--list-langs")
+	if listOut, err := listCmd.CombinedOutput(); err == nil {
+		if strings.Contains(string(listOut), "ind") {
+			lang = "ind+eng"
+		}
+	}
+
+	cmd := exec.Command("tesseract", imagePath, "stdout", "-l", lang, "--oem", "3", "--psm", "6")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		// Try without Indonesian language pack
+		// Fallback to eng only
 		cmd2 := exec.Command("tesseract", imagePath, "stdout", "-l", "eng", "--oem", "3", "--psm", "6")
 		output2, err2 := cmd2.CombinedOutput()
 		if err2 != nil {
